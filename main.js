@@ -358,7 +358,7 @@ function createBubble() {
     b.className = "bubble";
 
     b.style.left = Math.random() * 100 + "%";
-    b.style.animationDuration = (4 + Math.random() * 4) + "s";
+    b.style.animationDuration = (3 + Math.random() * 3) + "s";
     b.style.width = b.style.height = (5 + Math.random() * 10) + "px";
 
     document.getElementById("bubbles").appendChild(b);
@@ -389,7 +389,7 @@ function createFish() {
     fish.className = "fish";
 
     // 隨機高度（在 ocean 裡）
-    fish.style.top = Math.random() * 80 + "%";
+    fish.style.top = Math.random() * 70 + "%";
 
     // 隨機大小
     const size = 20 + Math.random() * 20;
@@ -397,7 +397,7 @@ function createFish() {
     fish.style.height = size / 2 + "px";
 
     // 隨機速度
-    const duration = 6 + Math.random() * 8;
+    const duration = 8 + Math.random() * 8;
     fish.style.animationDuration = duration + "s";
 
     fish.style.background = `linear-gradient(90deg, ${color[0]}, ${color[1]})`;
@@ -407,7 +407,7 @@ function createFish() {
 
     setTimeout(
         () => fish.remove(), 
-        duration * 1000
+        duration * 1200
     );
 }
 

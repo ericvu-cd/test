@@ -239,7 +239,7 @@ body {
     height: 0;
     border-top: 4px solid transparent;
     border-bottom: 4px solid transparent;
-    border-left: 6px solid currentColor;
+    border-right: 6px solid currentColor;
 }
 
 /* 游動動畫 */
