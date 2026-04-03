@@ -80,8 +80,9 @@ function getFishTags(f) {
     let html = '<div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 1px;">';
     
     // 季節
-    if (f.s.includes("全年")) html += `<span class="tag tag-all">全年</span>`;
-    else {
+    if (f.s.includes("全年")) {
+        html += `<span class="tag tag-all">全年</span>`;
+    } else {
         if (f.s.includes("春")) html += `<span class="tag tag-spring">春</span>`;
         if (f.s.includes("夏")) html += `<span class="tag tag-summer">夏</span>`;
         if (f.s.includes("秋")) html += `<span class="tag tag-autumn">秋</span>`;
@@ -113,7 +114,7 @@ function getFishTags(f) {
 // --- 遊戲運行邏輯與 UI 渲染 ---
 function renderUI() {
     players.forEach((p, i) => { 
-        if(i > 0) {
+        if (i > 0) {
             // 透過容器設定負的字距，並強制不換行
             const cardsIcon = `<span style="letter-spacing: -5px; display: inline-block; white-space: nowrap; margin-top: 5px;">${"🎴".repeat(p.hand.length)}</span>`;
             document.getElementById(p.id).innerHTML = `${p.n}<br>${cardsIcon}`; 
@@ -132,8 +133,11 @@ function renderUI() {
         const c = document.createElement("div");
         c.className = `card light-${f.l}`;
         if (hasValid) {
-            if (currentS.c(f)) c.classList.add("is-valid");
-            else c.classList.add("is-not-valid");
+            if (currentS.c(f)) {
+                c.classList.add("is-valid");
+            } else {
+                c.classList.add("is-not-valid");
+            }
         }
         c.innerHTML = `<div class="card-n">${f.n}</div><div class="card-i">${getFishTags(f)}</div>`;
         c.onclick = () => playerAction(idx);
@@ -149,29 +153,84 @@ function renderTable() {
         c.className = `card light-${t.card.l}`;
         c.innerHTML = `<div class="card-n">${t.card.n}</div><div class="card-i">${getFishTags(t.card)}</div>`;
         zone.appendChild(c);
-        if (index === table.length - 1) { void c.offsetWidth; c.classList.add("card-played"); }
+        if (index === table.length - 1) { 
+            void c.offsetWidth; 
+            c.classList.add("card-played"); 
+        }
     });
 }
 
 // --- 其他輔助函式保持不變 ---
-function playPopSfx() { try { const ctx = new (window.AudioContext || window.webkitAudioContext)(); const osc = ctx.createOscillator(); const gain = ctx.createGain(); osc.connect(gain); gain.connect(ctx.destination); osc.frequency.setValueAtTime(500, ctx.currentTime); osc.frequency.exponentialRampToValueAtTime(100, ctx.currentTime + 0.1); gain.gain.setValueAtTime(0.2, ctx.currentTime); osc.start(); osc.stop(ctx.currentTime + 0.1); } catch(e) {} }
-function playMazuSfx() { try { const ctx = new (window.AudioContext || window.webkitAudioContext)(); const osc = ctx.createOscillator(); const gain = ctx.createGain(); osc.type = 'sine'; osc.connect(gain); gain.connect(ctx.destination); osc.frequency.setValueAtTime(880, ctx.currentTime); osc.frequency.exponentialRampToValueAtTime(1760, ctx.currentTime + 0.4); gain.gain.setValueAtTime(0.3, ctx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.6); osc.start(); osc.stop(ctx.currentTime + 0.6); } catch(e) {} }
-function playSuccessSfx() { try { const ctx = new (window.AudioContext || window.webkitAudioContext)(); const osc = ctx.createOscillator(); const gain = ctx.createGain(); osc.type = 'triangle'; osc.connect(gain); gain.connect(ctx.destination); osc.frequency.setValueAtTime(523.25, ctx.currentTime); osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.1); gain.gain.setValueAtTime(0.2, ctx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3); osc.start(); osc.stop(ctx.currentTime + 0.3); } catch(e) {} }
+function playPopSfx() { 
+    try { 
+        const ctx = new (window.AudioContext || window.webkitAudioContext)(); 
+        const osc = ctx.createOscillator(); 
+        const gain = ctx.createGain(); 
+        osc.connect(gain); 
+        gain.connect(ctx.destination); 
+        osc.frequency.setValueAtTime(500, ctx.currentTime); 
+        osc.frequency.exponentialRampToValueAtTime(100, ctx.currentTime + 0.1); 
+        gain.gain.setValueAtTime(0.2, ctx.currentTime); 
+        osc.start(); 
+        osc.stop(ctx.currentTime + 0.1); 
+    } catch(e) {} 
+}
+
+function playMazuSfx() { 
+    try { 
+        const ctx = new (window.AudioContext || window.webkitAudioContext)(); 
+        const osc = ctx.createOscillator(); 
+        const gain = ctx.createGain(); 
+        osc.type = 'sine'; 
+        osc.connect(gain); 
+        gain.connect(ctx.destination); 
+        osc.frequency.setValueAtTime(880, ctx.currentTime); 
+        osc.frequency.exponentialRampToValueAtTime(1760, ctx.currentTime + 0.4); 
+        gain.gain.setValueAtTime(0.3, ctx.currentTime); 
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.6); 
+        osc.start(); 
+        osc.stop(ctx.currentTime + 0.6); 
+    } catch(e) {} 
+}
+
+function playSuccessSfx() { 
+    try { 
+        const ctx = new (window.AudioContext || window.webkitAudioContext)(); 
+        const osc = ctx.createOscillator(); 
+        const gain = ctx.createGain(); 
+        osc.type = 'triangle'; 
+        osc.connect(gain); 
+        gain.connect(ctx.destination); 
+        osc.frequency.setValueAtTime(523.25, ctx.currentTime); 
+        osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.1); 
+        gain.gain.setValueAtTime(0.2, ctx.currentTime); 
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3); 
+        osc.start(); 
+        osc.stop(ctx.currentTime + 0.3); 
+    } catch(e) {} 
+}
 
 function addLog(m, type="") {
     const l = document.getElementById("log");
     let className = "log-entry";
-    if(type === "cmd") className += " log-cmd";
-    if(type === "secret") className += " log-secret";
-    if(type === "success") className += " log-success";
+    if (type === "cmd") className += " log-cmd";
+    if (type === "secret") className += " log-secret";
+    if (type === "success") className += " log-success";
     l.innerHTML = `<div class="${className}">> ${m}</div>` + l.innerHTML;
 }
 
 function toggleMusic() {
     const music = document.getElementById("bgm");
     const btn = document.getElementById("music-control");
-    if (music.paused) { music.play(); btn.innerText = "🎵"; btn.style.opacity = "1"; }
-    else { music.pause(); btn.innerText = "🔇"; btn.style.opacity = "0.4"; }
+    if (music.paused) { 
+        music.play(); 
+        btn.innerText = "🎵"; 
+        btn.style.opacity = "1"; 
+    } else { 
+        music.pause(); 
+        btn.innerText = "🔇"; 
+        btn.style.opacity = "0.4"; 
+    }
 }
 
 function createBubble() {
@@ -228,22 +287,28 @@ setInterval(createFish, 4000);
 function initGame() {
     document.getElementById("music-control").style.display = "flex";
     const music = document.getElementById("bgm");
-    music.play().then(() => { music.volume = 0.1; }).catch(err => console.log("播放受阻"));
+    music.play().then(() => { 
+        music.volume = 0.1; 
+    }).catch(err => console.log("播放受阻"));
+    
     document.getElementById("welcome-screen").style.opacity = "0";
-    setTimeout(() => { document.getElementById("welcome-screen").style.display = "none"; startGame(); }, 500);
+    setTimeout(() => { 
+        document.getElementById("welcome-screen").style.display = "none"; 
+        startGame(); 
+    }, 500);
 }
 
 function startGame() {
-    let names = ["阿海", "小波", "大龍", "水哥", "婷婷", "怪叔叔", "瓜瓜", "美代子", "風神", "阿福"].sort(()=>Math.random()-0.5);
+    let names = ["阿海", "小波", "大龍", "水哥", "婷婷", "怪叔叔", "瓜瓜", "美代子", "風神", "阿福"].sort(() => Math.random() - 0.5);
     players = [
         { n: "你", hand: [], isAI: false },
         { n: names[0], hand: [], isAI: true, id: "ai-1" },
         { n: names[1], hand: [], isAI: true, id: "ai-2" },
         { n: names[2], hand: [], isAI: true, id: "ai-3" }
     ];
-    let fishD = [...fishDB].sort(()=>Math.random()-0.5);
+    let fishD = [...fishDB].sort(() => Math.random() - 0.5);
     players.forEach(p => p.hand = fishD.splice(0, 6));
-    deckS = [...summonDB, ...mazuCards].sort(()=>Math.random()-0.5);
+    deckS = [...summonDB, ...mazuCards].sort(() => Math.random() - 0.5);
     addLog("勇者集結！注意觀察大家的出牌...");
     renderUI();
     autoStep();
@@ -253,14 +318,20 @@ function updateCallerHighlight() {
     players.forEach((p, idx) => {
         let el = (idx === 0) ? document.getElementById("player-zone") : document.getElementById(p.id);
         if (el) {
-            if (idx === callerIdx) el.classList.add("is-caller");
-            else el.classList.remove("is-caller");
+            if (idx === callerIdx) {
+                el.classList.add("is-caller");
+            } else {
+                el.classList.remove("is-caller");
+            }
         }
     });
 }
 
 function autoStep() {
-    if (deckS.length === 0) { addLog("召喚卡已用盡，海域恢復平靜。"); return; }
+    if (deckS.length === 0) { 
+        addLog("召喚卡已用盡，海域恢復平靜。"); 
+        return; 
+    }
     table = [];
     document.getElementById("table").innerHTML = "";
     document.getElementById("summon-display").classList.remove("mazu-glow"); 
@@ -285,7 +356,9 @@ function autoStep() {
         if (currentS.isMazu) {
             document.getElementById("summon-display").classList.add("mazu-glow"); 
             playMazuSfx(); 
-            if (callerIdx !== 0) { handleMazuAI(caller); }
+            if (callerIdx !== 0) { 
+                handleMazuAI(caller); 
+            }
         } else {
             if (callerIdx !== 0) {
                 let idx = players[callerIdx].hand.findIndex(f => currentS.c(f));
@@ -302,7 +375,10 @@ function handleMazuAI(caller) {
     document.getElementById("summon-display").innerText = "【神明庇佑揭曉】\n" + currentS.t;
     addLog(`揭曉神明召喚：${currentS.t.replace(/\n/g, " ")}`, "cmd");
     setTimeout(() => {
-        if (caller.hand.length === 0) { finishRound(); return; }
+        if (caller.hand.length === 0) { 
+            finishRound(); 
+            return; 
+        }
         let card = caller.hand.pop();
         let target = players.filter(p => p !== caller).sort((a,b) => a.hand.length - b.hand.length)[0];
         target.hand.push(card);
@@ -330,7 +406,10 @@ function playerAction(idx) {
         const fish = players[0].hand[idx];
         if (callerIdx === 0 && currentS.c) {
             let hasValid = players[0].hand.some(f => currentS.c(f));
-            if (hasValid && !currentS.c(fish)) { alert("必須符合你抽到的規律！"); return; }
+            if (hasValid && !currentS.c(fish)) { 
+                alert("必須符合你抽到的規律！"); 
+                return; 
+            }
         }
         players[0].hand.splice(idx, 1);
         playPopSfx();
@@ -359,7 +438,9 @@ function aiMove(pI, cI) {
 
 function showResult() {
     phase = "RESULT";
-    if (callerIdx !== 0) addLog(`揭曉神祕召喚：${currentS.t.replace(/\n/g, " ")}`, "cmd");
+    if (callerIdx !== 0) {
+        addLog(`揭曉神祕召喚：${currentS.t.replace(/\n/g, " ")}`, "cmd");
+    }
     document.getElementById("summon-display").innerText = "【召喚揭曉】\n" + currentS.t;
     setTimeout(() => {
         table.forEach(t => {
@@ -380,6 +461,7 @@ function showWinScreen(winner) {
     const overlay = document.createElement("div");
     overlay.id = "win-overlay";
     overlay.style = `position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #a8e6cf url('bgi.png') no-repeat center center; background-size: cover; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 2000; text-align: center; padding: 20px; box-sizing: border-box; font-family: "Microsoft JhengHei", sans-serif;`;
+    
     const isPlayer = !winner.isAI;
     const title = isPlayer ? "✦ 友魚勇者 任務達成 ✦" : "🌊 海域重歸寧靜";
     const subTitle = isPlayer ? "感謝您守護海洋資源，實踐永續食魚精神！" : `由【${winner.n}】率先與大海達成和解。`;
@@ -399,227 +481,11 @@ function showWinScreen(winner) {
 
 function finishRound() {
     let win = players.find(p => p.hand.length === 0);
-    if (win) { showWinScreen(win); return; }
+    if (win) { 
+        showWinScreen(win); 
+        return; 
+    }
     callerIdx = (callerIdx + 1) % 4;
     phase = "WAIT";
     autoStep();
-}
-
-// ======================
-// 🎓 手遊級教學系統（完整版）
-// ======================
-
-let tutorialMode = false;
-let tutorialStep = 0;
-
-// 啟動教學
-function startTutorial() {
-    tutorialMode = true;
-    tutorialStep = 0;
-
-    document.getElementById("welcome-screen").style.display = "none";
-
-    document.getElementById("tutorial-overlay").style.display = "block";
-    document.getElementById("tutorial-text").style.display = "block";
-    document.getElementById("tutorial-finger").style.display = "block";
-
-    setupTutorialGame();
-}
-
-// 初始化教學
-function setupTutorialGame() {
-
-    players = [
-        { n: "你", hand: [], isAI: false }
-    ];
-
-    players[0].hand = [
-        fishDB.find(f => f.d === "養殖"),
-        fishDB.find(f => f.d === "近海"),
-        fishDB.find(f => f.l === 3)
-    ];
-
-    table = [];
-    callerIdx = 0;
-
-    renderUI();
-    nextTutorialStep();
-}
-
-// ======================
-// 🎯 教學流程
-// ======================
-
-function nextTutorialStep() {
-    tutorialStep++;
-
-    clearFocus();
-
-    switch (tutorialStep) {
-
-        case 1:
-            showTutorial("👋 點擊任一張卡片");
-            focus("#player-hand");
-            fingerTo("#player-hand");
-            break;
-
-        case 2:
-            showTutorial("📜 請出【養殖魚】");
-
-            currentS = {
-                t: "請出養殖魚",
-                c: f => f.d === "養殖"
-            };
-
-            document.getElementById("summon-display").innerText = currentS.t;
-
-            renderUI();
-
-            setTimeout(() => {
-                focus("#player-hand");
-                fingerToValidCard();
-            }, 200);
-
-            break;
-
-        case 3:
-            showTutorial("✅ 成功！");
-            setTimeout(nextTutorialStep, 1200);
-            break;
-
-        case 4:
-            showTutorial("🧠 觀察其他玩家");
-
-            table = [
-                { card: fishDB.find(f => f.d === "養殖") },
-                { card: fishDB.find(f => f.d === "養殖") }
-            ];
-
-            renderTable();
-            focus("#table");
-
-            setTimeout(nextTutorialStep, 2000);
-            break;
-
-        case 5:
-            showTutorial("👉 選出符合規則的牌");
-
-            focus("#player-hand");
-
-            setTimeout(() => {
-                renderUI();
-                fingerToValidCard();
-            }, 200);
-
-            break;
-
-        case 6:
-            showTutorial("🎉 教學完成！");
-            setTimeout(endTutorial, 2000);
-            break;
-    }
-}
-
-// ======================
-// 🔦 聚光燈
-// ======================
-
-function focus(selector) {
-    const el = document.querySelector(selector);
-    if (el) el.classList.add("tutorial-focus");
-}
-
-function clearFocus() {
-    document.querySelectorAll(".tutorial-focus")
-        .forEach(el => el.classList.remove("tutorial-focus"));
-}
-
-// ======================
-// 👆 手指
-// ======================
-
-function fingerTo(selector) {
-    const el = document.querySelector(selector);
-    if (!el) return;
-
-    const rect = el.getBoundingClientRect();
-    moveFinger(rect.left + rect.width/2, rect.top + rect.height/2);
-}
-
-function fingerToValidCard() {
-    const cards = document.querySelectorAll(".card");
-
-    cards.forEach(card => {
-        if (card.classList.contains("is-valid")) {
-            const rect = card.getBoundingClientRect();
-            moveFinger(rect.left + rect.width/2, rect.top + rect.height/2);
-        }
-    });
-}
-
-function moveFinger(x, y) {
-    const finger = document.getElementById("tutorial-finger");
-    finger.style.left = x + "px";
-    finger.style.top = y + "px";
-}
-
-// ======================
-// 📝 UI
-// ======================
-
-function showTutorial(text) {
-    document.getElementById("tutorial-text").innerText = text;
-}
-
-// ======================
-// 🎯 攔截玩家操作
-// ======================
-
-const originalPlayerActionFinal = playerAction;
-
-playerAction = function(idx) {
-
-    if (!tutorialMode) return originalPlayerActionFinal(idx);
-
-    const fish = players[0].hand[idx];
-
-    if (tutorialStep === 1) {
-        nextTutorialStep();
-        return;
-    }
-
-    if (tutorialStep === 2 || tutorialStep === 5) {
-
-        if (!currentS.c(fish)) {
-            alert("請選正確的魚！");
-            return;
-        }
-
-        players[0].hand.splice(idx, 1);
-        table.push({ pIdx: 0, card: fish });
-
-        renderTable();
-        renderUI();
-
-        nextTutorialStep();
-        return;
-    }
-};
-
-// ======================
-// 🏁 結束
-// ======================
-
-function endTutorial() {
-
-    tutorialMode = false;
-
-    document.getElementById("tutorial-overlay").style.display = "none";
-    document.getElementById("tutorial-text").style.display = "none";
-    document.getElementById("tutorial-finger").style.display = "none";
-
-    clearFocus();
-
-    alert("教學完成！");
-    location.reload();
 }

@@ -1,47 +1,147 @@
-        :root { --p: #1976D2; --ai1: #D32F2F; --ai2: #388E3C; --ai3: #7B1FA2; }
-        body { font-family: "Microsoft JhengHei", sans-serif; background: #e0f2f1; margin: 0; display: flex; flex-direction: column; height: 100vh; height: 100dvh; overflow: hidden; }
-        
-        #welcome-screen {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: #a8e6cf url('bgi.png') no-repeat center center; background-size: cover;
-            display: flex; justify-content: center; align-items: center; z-index: 1000;
-            transition: opacity 0.5s;
-        }
-        #real-start-btn {
-            padding: 20px 60px; font-size: 2.5rem; background: rgba(255, 223, 186, 0.5); 
-            color: #d35400; border: 5px solid rgba(255, 179, 71, 0.5); border-radius: 50px;
-            font-weight: bold; cursor: pointer; box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-            transition: transform 0.2s, opacity 0.2s;
-        }
-        #real-start-btn:active { transform: scale(0.95); }
+:root { 
+    --p: #1976D2; 
+    --ai1: #D32F2F; 
+    --ai2: #388E3C; 
+    --ai3: #7B1FA2; 
+}
 
-        #header { background: #00796b; color: white; padding: 15px; text-align: center; font-weight: bold; font-size: 2rem; }
-        
-        #log { height: 140px; overflow-y: auto; background: white; margin: 10px; padding: 15px; font-size: 1.4rem; border: 3px solid #b2dfdb; border-radius: 12px; line-height: 1.6; font-weight: bold; color: #333; box-shadow: inset 0 2px 5px rgba(0,0,0,0.1); }
-        .log-entry { border-bottom: 1px solid #eee; padding: 2px 0; }
-        .log-cmd { color: #00796b; background: #e0f2f1; padding: 2px 5px; border-radius: 4px; }
-        .log-secret { color: #607d8b; font-style: italic; }
-        .log-success { color: #2e7d32; font-weight: 900; }
+body { 
+    font-family: "Microsoft JhengHei", sans-serif; 
+    background: #e0f2f1; 
+    margin: 0; 
+    display: flex; 
+    flex-direction: column; 
+    height: 100vh; 
+    height: 100dvh; 
+    overflow: hidden; 
+}
 
-        .char-area { display: flex; justify-content: space-around; padding: 5px 10px; transition: all 0.3s; }
-        .box { flex: 1; margin: 5px; padding: 15px 5px; border: 5px solid; border-radius: 15px; background: white; text-align: center; font-size: 1.4rem; font-weight: bold; transition: all 0.3s; }
-        #ai-1 { border-color: var(--ai1); color: var(--ai1); }
-        #ai-2 { border-color: var(--ai2); color: var(--ai2); }
-        #ai-3 { border-color: var(--ai3); color: var(--ai3); }
+#welcome-screen {
+    position: absolute; 
+    top: 0; 
+    left: 0; 
+    width: 100%; 
+    height: 100%;
+    background: #a8e6cf url('bgi.png') no-repeat center center; 
+    background-size: cover;
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    z-index: 1000;
+    transition: opacity 0.5s;
+}
 
-        .is-caller {
-            box-shadow: 0 0 15px #ffb347, inset 0 0 10px #ffdfba !important;
-            border-color: #ffb347 !important;
-            background-color: #fff9e6 !important;
-            transform: scale(1.05);
-        }
-        
-        .mazu-glow {
-            background: linear-gradient(135deg, #fff0f5 0%, #ffe6f0 100%) !important;
-            box-shadow: 0 0 25px #ffb3d9, inset 0 0 15px #ffffff !important;
-            border: 5px dashed #ff9ecd !important;
-            color: #d81b60 !important;
-        }
+#real-start-btn {
+    padding: 20px 60px; 
+    font-size: 2.5rem; 
+    background: rgba(255, 223, 186, 0.5); 
+    color: #d35400; 
+    border: 5px solid rgba(255, 179, 71, 0.5); 
+    border-radius: 50px;
+    font-weight: bold; 
+    cursor: pointer; 
+    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+    transition: transform 0.2s, opacity 0.2s;
+}
+
+#real-start-btn:active { 
+    transform: scale(0.95); 
+}
+
+#header { 
+    background: #00796b; 
+    color: white; 
+    padding: 15px; 
+    text-align: center; 
+    font-weight: bold; 
+    font-size: 2rem; 
+}
+
+#log { 
+    height: 140px; 
+    overflow-y: auto; 
+    background: white; 
+    margin: 10px; 
+    padding: 15px; 
+    font-size: 1.4rem; 
+    border: 3px solid #b2dfdb; 
+    border-radius: 12px; 
+    line-height: 1.6; 
+    font-weight: bold; 
+    color: #333; 
+    box-shadow: inset 0 2px 5px rgba(0,0,0,0.1); 
+}
+
+.log-entry { 
+    border-bottom: 1px solid #eee; 
+    padding: 2px 0; 
+}
+
+.log-cmd { 
+    color: #00796b; 
+    background: #e0f2f1; 
+    padding: 2px 5px; 
+    border-radius: 4px; 
+}
+
+.log-secret { 
+    color: #607d8b; 
+    font-style: italic; 
+}
+
+.log-success { 
+    color: #2e7d32; 
+    font-weight: 900; 
+}
+
+.char-area { 
+    display: flex; 
+    justify-content: space-around; 
+    padding: 5px 10px; 
+    transition: all 0.3s; 
+}
+
+.box { 
+    flex: 1; 
+    margin: 5px; 
+    padding: 15px 5px; 
+    border: 5px solid; 
+    border-radius: 15px; 
+    background: white; 
+    text-align: center; 
+    font-size: 1.4rem; 
+    font-weight: bold; 
+    transition: all 0.3s; 
+}
+
+#ai-1 { 
+    border-color: var(--ai1); 
+    color: var(--ai1); 
+}
+
+#ai-2 { 
+    border-color: var(--ai2); 
+    color: var(--ai2); 
+}
+
+#ai-3 { 
+    border-color: var(--ai3); 
+    color: var(--ai3); 
+}
+
+.is-caller {
+    box-shadow: 0 0 15px #ffb347, inset 0 0 10px #ffdfba !important;
+    border-color: #ffb347 !important;
+    background-color: #fff9e6 !important;
+    transform: scale(1.05);
+}
+
+.mazu-glow {
+    background: linear-gradient(135deg, #fff0f5 0%, #ffe6f0 100%) !important;
+    box-shadow: 0 0 25px #ffb3d9, inset 0 0 15px #ffffff !important;
+    border: 5px dashed #ff9ecd !important;
+    color: #d81b60 !important;
+}
 
 #ocean {
     flex-grow: 1;
@@ -49,11 +149,9 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-
     position: relative;
     margin: 5px 10px;
     border-radius: 20px;
-
     background: url('ozone.png') no-repeat center center;
     background-position: center center;
     background-size: cover;
@@ -74,13 +172,13 @@
         background-position: center center;
     }
 }
+
 #bubbles {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-
     overflow: hidden;
     pointer-events: none;
     z-index: 1; /* 在背景上，但不蓋UI */
@@ -89,7 +187,6 @@
 .bubble {
     position: absolute;
     bottom: 0;   /* ⬅️ 關鍵：從 ocean 底部開始 */
-    
     width: 10px;
     height: 10px;
     background: rgba(200, 220, 255, 0.5);
@@ -97,8 +194,6 @@
     box-shadow: 
         0 0 8px rgba(200, 220, 255, 0.6),
         inset 0 0 5px rgba(255,255,255,0.5);
-
-
     animation: rise 6s linear forwards;
 }
 
@@ -119,19 +214,17 @@
     height: 100%;
     pointer-events: none;
     overflow: hidden;
+    z-index: 0;
 }
 
 /* 單隻魚 */
 .fish {
     position: absolute;
     right: -80px; /* 從畫面外開始 */
-    
     width: 20px;
     height: 10px;
-
     background: linear-gradient(90deg, #ff9aa2, #ffb7b2);
     border-radius: 60% 40% 40% 60%;
-
     animation: swim linear forwards;
 }
 
@@ -139,19 +232,15 @@
 .fish::after {
     content: "";
     position: absolute;
-
     right: -5px;   
     top: 50%;
     transform: translateY(-50%);
-
     width: 0;
     height: 0;
-
     border-top: 4px solid transparent;
     border-bottom: 4px solid transparent;
     border-left: 6px solid currentColor;
 }
-
 
 /* 游動動畫 */
 @keyframes swim {
@@ -163,207 +252,298 @@
     }
 }
 
-#fish-layer {
-    z-index: 0;
-}
 #bubbles {
     z-index: 1;
 }
+
 #summon-display {
     z-index: 5;
     position: relative;
+    background: #fffbe6; 
+    padding: 25px; 
+    border-radius: 20px; 
+    width: 90%; 
+    text-align: center; 
+    box-shadow: 0 10px 25px rgba(0,0,0,0.3); 
+    margin-bottom: 20px; 
+    font-weight: bold; 
+    min-height: 80px; 
+    border: 5px solid #ffe58f; 
+    font-size: 1.7rem; 
+    color: #856404; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    line-height: 1.4; 
+    white-space: pre-wrap; 
+    box-sizing: border-box; 
+    transition: all 0.3s; 
 }
+
 #table {
     z-index: 5;
     position: relative;
+    display: flex; 
+    gap: 15px; 
+    min-height: 250px; 
+    align-items: center; 
+    width: 95%; 
+    justify-content: center; 
+    overflow-x: auto; 
 }
 
-        #deck-info { position: absolute; top: 15px; right: 20px; background: rgba(0,0,0,0.4); color: white; padding: 8px 20px; border-radius: 30px; font-size: 1.1rem; font-weight: bold; }
-        #summon-display { background: #fffbe6; padding: 25px; border-radius: 20px; width: 90%; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.3); margin-bottom: 20px; font-weight: bold; min-height: 80px; border: 5px solid #ffe58f; font-size: 1.7rem; color: #856404; display: flex; align-items: center; justify-content: center; line-height: 1.4; white-space: pre-wrap; box-sizing: border-box; transition: all 0.3s; }
-        
-        #table { display: flex; gap: 15px; min-height: 250px; align-items: center; width: 95%; justify-content: center; overflow-x: auto; }
+#deck-info { 
+    position: absolute; 
+    top: 15px; 
+    right: 20px; 
+    background: rgba(0,0,0,0.4); 
+    color: white; 
+    padding: 8px 20px; 
+    border-radius: 30px; 
+    font-size: 1.1rem; 
+    font-weight: bold; 
+}
 
-        #player-zone { background: white; padding: 15px; border-top: 10px solid var(--p); transition: all 0.3s; }
-        .hand { display: flex; overflow-x: auto; gap: 15px; padding-bottom: 10px; min-height: 270px; align-items: flex-end; }
+#player-zone { 
+    background: white; 
+    padding: 15px; 
+    border-top: 10px solid var(--p); 
+    transition: all 0.3s; 
+}
+
+.hand { 
+    display: flex; 
+    overflow-x: auto; 
+    gap: 15px; 
+    padding-bottom: 10px; 
+    min-height: 270px; 
+    align-items: flex-end; 
+    -webkit-overflow-scrolling: touch;
+}
 
 .sub-btn {
-    padding: 12px 35px; font-size: 1.6rem; background: rgba(255, 223, 186, 0.6); 
-    color: #00796b; border: 4px solid (178, 223, 219, 0.5); border-radius: 30px;
-    font-weight: bold; cursor: pointer; transition: 0.2s; opacity: 0.8;
+    padding: 12px 35px; 
+    font-size: 1.6rem; 
+    background: rgba(255, 223, 186, 0.6); 
+    color: #00796b; 
+    border: 4px solid (178, 223, 219, 0.5); 
+    border-radius: 30px;
+    font-weight: bold; 
+    cursor: pointer; 
+    transition: 0.2s; 
+    opacity: 0.8;
 }
-.sub-btn:active { transform: scale(0.95); }
+
+.sub-btn:active { 
+    transform: scale(0.95); 
+}
 
 .ctrl-btn {
-    padding: 5px 10px; background: rgba(255,255,255,0.6); border: none; 
-    border-radius: 20px; font-weight: bold; cursor: pointer; font-size: 1rem;
+    padding: 5px 10px; 
+    background: rgba(255,255,255,0.6); 
+    border: none; 
+    border-radius: 20px; 
+    font-weight: bold; 
+    cursor: pointer; 
+    font-size: 1rem;
 }
+
 /* 修正 info-overlay 的預設顯示問題 */
-#info-overlay { display: none; }
-
-     
-        .card { width: 165px; height: 245px; border-radius: 15px; border: 2px solid #bbb; background: white; flex-shrink: 0; display: flex; flex-direction: column; cursor: pointer; box-shadow: 4px 4px 10px rgba(0,0,0,0.15); transition: transform 0.2s, filter 0.2s; overflow: hidden; touch-action: manipulation; }
-
-        .card-n {
-            font-weight: 900;
-            text-align: center;
-            padding: 12px 5px;
-            border-bottom: 2px solid #eee;
-            font-size: 1.9rem;
-            color: #444;
-            background-color: #fff0f5;
-            background-image: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M10 20c2-5 8-5 10 0s-8 5-10 0zM18 18c2 0 3 2 0 4' fill='none' stroke='%23ffb3d9' stroke-width='1'/%3E%3C/svg%3E");
-            background-repeat: repeat;
-            background-blend-mode: multiply;
-            opacity: 0.9;
-        }
-
-        .light-1 { border-top: 20px solid #77D9A8 !important; } 
-        .light-2 { border-top: 20px solid #f9e1a9 !important; } 
-        .light-3 { border-top: 20px solid #ffb3ba !important; }        
-
-        .card-i {
-            padding: 8px;
-            flex-grow: 1;
-            color: #222;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            background-image: radial-gradient(#f1f1f1 1px, transparent 1px);
-            background-size: 15px 15px;
-        }
-
-        .card:active {
-            transform: scale(0.92);
-            filter: brightness(0.9);
-        }
-
-        .hand {
-            -webkit-overflow-scrolling: touch;
-        }
-
-        /* --- 標籤樣式優化：字體加大 --- */
-        .tag {
-            display: inline-block;
-            padding: 4px 10px;
-            border-radius: 8px;
-            font-size: 1.1rem; /* 從原本約 0.85 放大到 1.1 */
-            margin: 2px;
-            color: white;
-            font-weight: bold;
-            text-shadow: 1px 1px 1px rgba(0,0,0,0.3);
-            white-space: nowrap;
-            box-shadow: 1px 1px 3px rgba(0,0,0,0.1);
-            line-height: 1.2;
-        }
-        /* 顏色定義保持不變 */
-        .tag-spring { background-color: #f48fb1; } 
-        .tag-summer { background-color: #ffd54f; color: #5d4037; } 
-        .tag-autumn { background-color: #ff8a65; } 
-        .tag-winter { background-color: #4fc3f7; } 
-        .tag-all { background-color: #90a4ae; }    
-        .tag-eco { background-color: #1B5E20; }    
-        .tag-warn { background-color: #ba68c8; }   
-        .tag-migratory { background-color: #8B0000; } 
-        .tag-sedentary { background-color: #8d6e63; } 
-        .tag-coastal { background-color: #FBC02D; color: #5D4037 !important; }  
-        .tag-ocean   { background-color: #1565c0; }  
-        .tag-farm    { background-color: #66bb6a; }  
-
-        .is-not-valid { filter: brightness(0.6) grayscale(0.2); }
-        .card.is-valid { transform: translateY(-5px); box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
-
-        /* 手機版標籤同步優化 */
-        @media (max-width: 768px) {
-            #header { font-size: 1.3rem; padding: 10px; }
-            #log { height: 80px; font-size: 0.95rem; padding: 8px; margin: 5px; border-width: 2px; }
-            .char-area { padding: 2px 5px; }
-            .box { font-size: 0.95rem; padding: 6px 2px; margin: 3px; border-width: 3px; border-radius: 8px; }
-            #ocean { margin: 5px; border-radius: 12px; }
-            #deck-info { font-size: 0.8rem; padding: 4px 10px; top: 5px; right: 5px; background: rgba(0, 0, 0, 0.2); }
-            #summon-display { font-size: 1.05rem; padding: 10px; width: 92%; min-height: 50px; margin-bottom: 5px; border-width: 3px; border-radius: 12px; }
-            #table { min-height: 122px; gap: 6px; } 
-            #player-zone { padding: 8px; border-top-width: 6px; }
-            .hand { min-height: 126px; gap: 6px; padding-bottom: 5px; } 
-            .card { width: 74px; height: 115px; border-radius: 8px; border-width: 1px; }
-            .card-n { font-size: 0.8rem; padding: 4px 1px; border-bottom-width: 1px; }
-            .card-i { padding: 2px; }
-            .tag { font-size: 0.6rem; padding: 2px 4px; border-radius: 4px; margin: 1px; line-height: 1.1;} /* 手機版也略微調大 */
-            .light-1, .light-2, .light-3 { border-top-width: 8px; }
-            #real-start-btn { padding: 15px 40px; font-size: 1.8rem; }
-        }
-
-        @keyframes playCardAnim {
-            0% { transform: translateY(100px) scale(0.5); opacity: 0; }
-            70% { transform: translateY(-10px) scale(1.1); }
-            100% { transform: translateY(0) scale(1); opacity: 1; }
-        }
-        .card-played { animation: playCardAnim 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards !important; transition: none !important; }
-
-/* 教學按鈕 */
-#tutorial-btn {
-    position: fixed;
-    top: 10px;
-    right: 10px;
-    z-index: 3000;
-    padding: 10px 15px;
-    border-radius: 10px;
-    border: none;
-    background: #ffd54f;
-    font-weight: bold;
-    cursor: pointer;
+#info-overlay { 
+    display: none; 
 }
 
-/* 遮罩 */
-#tutorial-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.75);
-    z-index: 4000;
-    display: none;
+.card { 
+    width: 165px; 
+    height: 245px; 
+    border-radius: 15px; 
+    border: 2px solid #bbb; 
+    background: white; 
+    flex-shrink: 0; 
+    display: flex; 
+    flex-direction: column; 
+    cursor: pointer; 
+    box-shadow: 4px 4px 10px rgba(0,0,0,0.15); 
+    transition: transform 0.2s, filter 0.2s; 
+    overflow: hidden; 
+    touch-action: manipulation; 
 }
 
-/* 聚光燈 */
-.tutorial-focus {
-    position: relative;
-    z-index: 5000 !important;
-    box-shadow: 0 0 0 9999px rgba(0,0,0,0.75);
-    border-radius: 12px;
+.card:active {
+    transform: scale(0.92);
+    filter: brightness(0.9);
 }
 
-/* 教學文字 */
-#tutorial-text {
-    position: fixed;
-    bottom: 40px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: white;
-    padding: 15px 25px;
-    border-radius: 15px;
-    font-size: 1.2rem;
-    z-index: 5001;
-    max-width: 80%;
+.card-n {
+    font-weight: 900;
     text-align: center;
+    padding: 12px 5px;
+    border-bottom: 2px solid #eee;
+    font-size: 1.9rem;
+    color: #444;
+    background-color: #fff0f5;
+    background-image: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M10 20c2-5 8-5 10 0s-8 5-10 0zM18 18c2 0 3 2 0 4' fill='none' stroke='%23ffb3d9' stroke-width='1'/%3E%3C/svg%3E");
+    background-repeat: repeat;
+    background-blend-mode: multiply;
+    opacity: 0.9;
+}
+
+.light-1 { border-top: 20px solid #77D9A8 !important; } 
+.light-2 { border-top: 20px solid #f9e1a9 !important; } 
+.light-3 { border-top: 20px solid #ffb3ba !important; }        
+
+.card-i {
+    padding: 8px;
+    flex-grow: 1;
+    color: #222;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    background-image: radial-gradient(#f1f1f1 1px, transparent 1px);
+    background-size: 15px 15px;
+}
+
+/* --- 標籤樣式優化：字體加大 --- */
+.tag {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-size: 1.1rem; /* 從原本約 0.85 放大到 1.1 */
+    margin: 2px;
+    color: white;
     font-weight: bold;
-    display: none;
+    text-shadow: 1px 1px 1px rgba(0,0,0,0.3);
+    white-space: nowrap;
+    box-shadow: 1px 1px 3px rgba(0,0,0,0.1);
+    line-height: 1.2;
 }
 
-/* 手指 */
-#tutorial-finger {
-    position: fixed;
-    font-size: 42px;
-    z-index: 5002;
-    pointer-events: none;
-    display: none;
-    animation: fingerTap 1s infinite;
+/* 顏色定義保持不變 */
+.tag-spring { background-color: #f48fb1; } 
+.tag-summer { background-color: #ffd54f; color: #5d4037; } 
+.tag-autumn { background-color: #ff8a65; } 
+.tag-winter { background-color: #4fc3f7; } 
+.tag-all    { background-color: #90a4ae; }    
+.tag-eco    { background-color: #1B5E20; }    
+.tag-warn   { background-color: #ba68c8; }   
+.tag-migratory { background-color: #8B0000; } 
+.tag-sedentary { background-color: #8d6e63; } 
+.tag-coastal   { background-color: #FBC02D; color: #5D4037 !important; }  
+.tag-ocean     { background-color: #1565c0; }  
+.tag-farm      { background-color: #66bb6a; }  
+
+.is-not-valid { 
+    filter: brightness(0.6) grayscale(0.2); 
 }
 
-@keyframes fingerTap {
-    0% { transform: translateY(0); }
-    50% { transform: translateY(12px); }
-    100% { transform: translateY(0); }
+.card.is-valid { 
+    transform: translateY(-5px); 
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3); 
+}
+
+/* 手機版標籤同步優化 */
+@media (max-width: 768px) {
+    #header { 
+        font-size: 1.3rem; 
+        padding: 10px; 
+    }
+    #log { 
+        height: 80px; 
+        font-size: 0.95rem; 
+        padding: 8px; 
+        margin: 5px; 
+        border-width: 2px; 
+    }
+    .char-area { 
+        padding: 2px 5px; 
+    }
+    .box { 
+        font-size: 0.95rem; 
+        padding: 6px 2px; 
+        margin: 3px; 
+        border-width: 3px; 
+        border-radius: 8px; 
+    }
+    #ocean { 
+        margin: 5px; 
+        border-radius: 12px; 
+    }
+    #deck-info { 
+        font-size: 0.8rem; 
+        padding: 4px 10px; 
+        top: 5px; 
+        right: 5px; 
+        background: rgba(0, 0, 0, 0.2); 
+    }
+    #summon-display { 
+        font-size: 1.05rem; 
+        padding: 10px; 
+        width: 92%; 
+        min-height: 50px; 
+        margin-bottom: 5px; 
+        border-width: 3px; 
+        border-radius: 12px; 
+    }
+    #table { 
+        min-height: 122px; 
+        gap: 6px; 
+    } 
+    #player-zone { 
+        padding: 8px; 
+        border-top-width: 6px; 
+    }
+    .hand { 
+        min-height: 126px; 
+        gap: 6px; 
+        padding-bottom: 5px; 
+    } 
+    .card { 
+        width: 74px; 
+        height: 115px; 
+        border-radius: 8px; 
+        border-width: 1px; 
+    }
+    .card-n { 
+        font-size: 0.8rem; 
+        padding: 4px 1px; 
+        border-bottom-width: 1px; 
+    }
+    .card-i { 
+        padding: 2px; 
+    }
+    .tag { 
+        font-size: 0.6rem; 
+        padding: 2px 4px; 
+        border-radius: 4px; 
+        margin: 1px; 
+        line-height: 1.1;
+    } /* 手機版也略微調大 */
+    .light-1, .light-2, .light-3 { 
+        border-top-width: 8px; 
+    }
+    #real-start-btn { 
+        padding: 15px 40px; 
+        font-size: 1.8rem; 
+    }
+}
+
+@keyframes playCardAnim {
+    0% { 
+        transform: translateY(100px) scale(0.5); 
+        opacity: 0; 
+    }
+    70% { 
+        transform: translateY(-10px) scale(1.1); 
+    }
+    100% { 
+        transform: translateY(0) scale(1); 
+        opacity: 1; 
+    }
+}
+
+.card-played { 
+    animation: playCardAnim 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards !important; 
+    transition: none !important; 
 }
