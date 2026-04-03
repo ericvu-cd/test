@@ -151,7 +151,7 @@ body {
     justify-content: center;
     position: relative;
     margin: 5px 10px;
-    border-radius: 20px;
+    border-radius: 10px;
     background: url('ozone.png') no-repeat center center;
     background-position: center center;
     background-size: cover;
@@ -163,10 +163,10 @@ body {
         background-position: center center;
     }
     25% {
-        background-position: calc(50% - 20px) center;
+        background-position: calc(50% - 30px) center;
     }
     75% {
-        background-position: calc(50% + 20px) center;
+        background-position: calc(50% + 30px) center;
     }
     100% {
         background-position: center center;
