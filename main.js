@@ -194,85 +194,22 @@ function renderUI() {
         f => currentS.c(f)
     );
 
-players[0].hand.forEach((f, idx) => {
-    const c = document.createElement("div");
-    c.className = `card light-${f.l}`;
-    
-    // 視覺引導：如果這張牌符合當前召喚規則，加上發光類別
-    if ((phase === "PLAYER_TURN" || phase === "PLAYER_MAZU") && currentS && currentS.c(f)) {
-        c.classList.add("is-valid");
-    }
-
-    // 保持原本文字標籤內容
-    c.innerHTML = `<div class="card-n">${f.n}</div><div class="card-i">${getFishTags(f)}</div>`;
-
-    // --- 手機觸控拖曳變數 ---
-    let startX, startY;
-    let isDragging = false;
-
-    c.ontouchstart = (e) => {
-        // 只有輪到玩家出牌時才能拖拽
-        if (phase !== "PLAYER_TURN" && phase !== "PLAYER_MAZU") return;
-        
-        const touch = e.touches[0];
-        startX = touch.clientX;
-        startY = touch.clientY;
-        isDragging = true;
-        c.classList.add("dragging");
-        
-        // 觸覺回饋
-        if (window.navigator.vibrate) window.navigator.vibrate(10);
-    };
-
-    c.ontouchmove = (e) => {
-        if (!isDragging) return;
-        
-        const touch = e.touches[0];
-        const moveX = touch.clientX - startX;
-        const moveY = touch.clientY - startY;
-
-        // 卡片跟隨手指移動
-        c.style.transform = `translate(${moveX}px, ${moveY}px) scale(1.2)`;
-
-        // 碰撞偵測：判定手指是否在海洋區上方
-        const ocean = document.getElementById("ocean");
-        const rect = ocean.getBoundingClientRect();
-        if (touch.clientX > rect.left && touch.clientX < rect.right &&
-            touch.clientY > rect.top && touch.clientY < rect.bottom) {
-            ocean.classList.add("drag-over");
-        } else {
-            ocean.classList.remove("drag-over");
+    players[0].hand.forEach(
+        (f, idx) => {
+            const c = document.createElement("div");
+            c.className = `card light-${f.l}`;
+            if (hasValid) {
+                if (currentS.c(f)) {
+                    c.classList.add("is-valid");
+                } else {
+                    c.classList.add("is-not-valid");
+                }
+            }
+            c.innerHTML = `<div class="card-n">${f.n}</div><div class="card-i">${getFishTags(f)}</div>`;
+            c.onclick = () => playerAction(idx);
+            handEl.appendChild(c);
         }
-        
-        // 阻止預設行為（防止頁面隨拖拽捲動）
-        e.preventDefault();
-    };
-
-    c.ontouchend = (e) => {
-        if (!isDragging) return;
-        isDragging = false;
-        c.classList.remove("dragging");
-        
-        const touch = e.changedTouches[0];
-        const ocean = document.getElementById("ocean");
-        const rect = ocean.getBoundingClientRect();
-
-        // 判定是否成功投遞到海洋區
-        if (touch.clientX > rect.left && touch.clientX < rect.right &&
-            touch.clientY > rect.top && touch.clientY < rect.bottom) {
-            playerAction(idx); // 執行原本的出牌判定邏輯
-        } else {
-            // 沒對準海洋區，平滑彈回原位
-            c.style.transition = "transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)";
-            c.style.transform = "translate(0,0)";
-            // 動畫結束後清除 transition 以免影響下次拖拽
-            setTimeout(() => { c.style.transition = "none"; }, 300);
-        }
-        ocean.classList.remove("drag-over");
-    };
-
-    handEl.appendChild(c);
-});
+    );
 }
 
 function renderTable() {
