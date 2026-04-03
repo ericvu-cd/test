@@ -364,9 +364,27 @@ body {
     flex-direction: column; 
     cursor: pointer; 
     box-shadow: 4px 4px 10px rgba(0,0,0,0.15); 
-    transition: transform 0.2s, filter 0.2s; 
     overflow: hidden; 
-    touch-action: manipulation; 
+    touch-action: none;
+    user-select: none;
+    position: relative;
+    transition: transform 0.2s ease; 
+}
+
+/* 拖曳中的卡片：放大並浮起，避免被手指遮住文字 */
+.card.dragging {
+    opacity: 0.9;
+    transform: scale(1.2) !important;
+    z-index: 5000 !important;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+}
+
+/* 海洋區：當卡片懸浮其上時的感應效果 */
+#ocean.drag-over {
+    background: rgba(255, 255, 255, 0.4);
+    border: 4px dashed #ffffff;
+    box-shadow: inset 0 0 20px rgba(255,255,255,0.5);
+    transform: scale(1.02);
 }
 
 .card:active {
@@ -440,7 +458,15 @@ body {
 
 .card.is-valid { 
     transform: translateY(-5px); 
-    box-shadow: 0 5px 15px rgba(0,0,0,0.3); 
+    outline: 3px solid #fff;
+    box-shadow: 0 0 15px #fff;
+    animation: pulse-light 2s infinite;
+}
+
+@keyframes pulse-light {
+    0% { box-shadow: 0 0 5px #fff; }
+    50% { box-shadow: 0 0 15px #fff; }
+    100% { box-shadow: 0 0 5px #fff; }
 }
 
 /* 手機版標籤同步優化 */
