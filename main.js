@@ -215,6 +215,7 @@ document.getElementById("card-preview-overlay").onclick = (e) => {
     if(e.target.id === "card-preview-overlay") {
         closePreview();
     }
+};
 
 function renderTable() {
     const zone = document.getElementById("table");
