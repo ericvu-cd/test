@@ -177,7 +177,7 @@ function closePreview() {
 function renderUI() {
     players.forEach((p, i) => { 
         if(i > 0) {
-            const cardsIcon = `<span style="letter-spacing: -3px; display: inline-block; white-space: nowrap;">${"🎴".repeat(p.hand.length)}</span>`;
+            const cardsIcon = `<span style="letter-spacing: -8px; display: inline-block; white-space: nowrap;">${"🎴".repeat(p.hand.length)}</span>`;
             document.getElementById(p.id).innerHTML = `
                 <div class="avatar-img">${p.avatar}</div>
                 <div class="ai-name">${p.n}</div>
