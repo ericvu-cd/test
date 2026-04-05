@@ -17,11 +17,11 @@ body { font-family: "Microsoft JhengHei", sans-serif; background: #e0f2f1; margi
 
 #header { background: #00796b; color: white; padding: 15px; text-align: center; font-weight: bold; font-size: 2rem; position: relative; z-index: 50;}
 
-/* 歷史紀錄按鈕 (左上角浮動) */
+/* 歷史紀錄按鈕 (左上角浮動) */ 
 #log-btn {
     position: fixed;
     top: 15px;
-    right: 8px;
+    right: 6px;
     z-index: 2000;
     background: rgba(255, 255, 255, 0.9);
     border: 2px solid #b2dfdb;
@@ -31,7 +31,7 @@ body { font-family: "Microsoft JhengHei", sans-serif; background: #e0f2f1; margi
     cursor: pointer;
     box-shadow: 0 2px 8px rgba(0,0,0,0.2);
     color: #00796b;
-    font-size: 0.9rem;
+    font-size: 0.95rem;
     transition: 0.2s;
 }
 #log-btn:active { transform: scale(0.95); }
@@ -102,13 +102,15 @@ body { font-family: "Microsoft JhengHei", sans-serif; background: #e0f2f1; margi
 .preview-controls {
     display: flex;
     gap: 30px;
-    margin-top: 20px;
+    margin-top: 40px;
+    justify-content: center;
+    width: 100%;
 }
 
 .preview-btn {
-    font-size: 40px;
-    width: 70px;
-    height: 70px;
+    font-size: 20px;
+    width: 30px;
+    height: 30px;
     border-radius: 50%;
     border: none;
     display: flex;
@@ -197,6 +199,8 @@ body { font-family: "Microsoft JhengHei", sans-serif; background: #e0f2f1; margi
 #card-preview-container {
     transform: scale(2);
     transition: transform 0.2s;
+    justify-content: center;
+    align-items: center;
     cursor: pointer;
     filter: drop-shadow(0 15px 25px rgba(0,0,0,0.5));
 }
