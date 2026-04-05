@@ -113,44 +113,68 @@ function getFishTags(f) {
 
 // 卡牌預覽功能 (2X放大)
 let previewTimeout = null;
-function showCardPreview(idx, originalCardEl) {
+
+/**
+ * @param {number|null} idx - 手牌索引，如果是海洋區卡片則傳 null
+ * @param {HTMLElement} originalCardEl - 原始卡片 DOM
+ * @param {boolean} isHand - 是否為手牌 (決定是否顯示操作按鈕)
+ */
+function showCardPreview(idx, originalCardEl, isHand = true) {
     const overlay = document.getElementById("card-preview-overlay");
     const container = document.getElementById("card-preview-container");
 
     container.innerHTML = "";
     if (previewTimeout) clearTimeout(previewTimeout);
 
+    // 複製卡片
     const clone = originalCardEl.cloneNode(true);
-    // 預覽大卡可點擊出牌
-    clone.onclick = (e) => {
-        e.stopPropagation(); // 避免觸發 overlay 的點擊關閉
-        clearTimeout(previewTimeout);
-        overlay.style.display = "none";
-        playerAction(idx);
-    };
-
+    clone.classList.remove("card-played", "is-valid", "is-not-valid"); // 移除動態類名避免縮放問題
+    clone.onclick = null; // 移除複製品的點擊事件
     container.appendChild(clone);
+
+    // 如果是手牌，增加「打勾」與「打叉」按鈕
+    if (isHand && phase.includes("PLAYER")) {
+        const controls = document.createElement("div");
+        controls.className = "preview-controls";
+        
+        // 打勾按鈕 (出牌)
+        const btnConfirm = document.createElement("button");
+        btnConfirm.className = "preview-btn btn-confirm";
+        btnConfirm.innerHTML = "✔️";
+        btnConfirm.onclick = (e) => {
+            e.stopPropagation();
+            closePreview();
+            playerAction(idx);
+        };
+
+        // 打叉按鈕 (取消)
+        const btnCancel = document.createElement("button");
+        btnCancel.className = "preview-btn btn-cancel";
+        btnCancel.innerHTML = "❌";
+        btnCancel.onclick = (e) => {
+            e.stopPropagation();
+            closePreview();
+        };
+
+        controls.appendChild(btnConfirm);
+        controls.appendChild(btnCancel);
+        container.appendChild(controls);
+    }
+
     overlay.style.display = "flex";
 
-    // 3秒沒動作就消失
-    previewTimeout = setTimeout(() => {
-        overlay.style.display = "none";
-        container.innerHTML = "";
-    }, 3000);
+    // 3秒自動關閉
+    previewTimeout = setTimeout(closePreview, 3000);
 }
 
-// 點擊卡牌預覽層背景也會關閉
-document.getElementById("card-preview-overlay").onclick = (e) => {
-    if(e.target.id === "card-preview-overlay") {
-        clearTimeout(previewTimeout);
-        document.getElementById("card-preview-overlay").style.display = "none";
-    }
-};
-
+function closePreview() {
+    if (previewTimeout) clearTimeout(previewTimeout);
+    document.getElementById("card-preview-overlay").style.display = "none";
+    document.getElementById("card-preview-container").innerHTML = "";
+}
 
 // --- 遊戲運行邏輯與 UI 渲染 ---
 function renderUI() {
-    // 渲染 AI 頭像面板
     players.forEach((p, i) => { 
         if(i > 0) {
             const cardsIcon = `<span style="letter-spacing: -3px; display: inline-block; white-space: nowrap;">${"🎴".repeat(p.hand.length)}</span>`;
@@ -164,7 +188,7 @@ function renderUI() {
 
     document.getElementById("deck-info").innerText = `剩餘${deckS.length}次召喚`;
     
-    const handEl = document.getElementById("player-hand");
+const handEl = document.getElementById("player-hand");
     handEl.innerHTML = "";
     
     const isNormalTask = currentS && !currentS.isMazu && phase === "PLAYER_TURN" && callerIdx === 0;
@@ -179,11 +203,18 @@ function renderUI() {
         }
         c.innerHTML = `<div class="card-n">${f.n}</div><div class="card-i">${getFishTags(f)}</div>`;
         
-        // 改為點擊觸發預覽放大
-        c.onclick = () => showCardPreview(idx, c);
+        // 手牌點擊：放大預覽，並帶有出牌功能
+        c.onclick = () => showCardPreview(idx, c, true);
+        
         handEl.appendChild(c);
     });
 }
+
+// 確保點擊遮罩背景也能關閉預覽
+document.getElementById("card-preview-overlay").onclick = (e) => {
+    if(e.target.id === "card-preview-overlay") {
+        closePreview();
+    }
 
 function renderTable() {
     const zone = document.getElementById("table");
@@ -192,8 +223,15 @@ function renderTable() {
         const c = document.createElement("div");
         c.className = `card light-${t.card.l}`;
         c.innerHTML = `<div class="card-n">${t.card.n}</div><div class="card-i">${getFishTags(t.card)}</div>`;
+        
+        // 海洋區卡片點擊：放大預覽，但不帶功能
+        c.onclick = () => showCardPreview(null, c, false);
+        
         zone.appendChild(c);
-        if (index === table.length - 1) { void c.offsetWidth; c.classList.add("card-played"); }
+        if (index === table.length - 1) { 
+            void c.offsetWidth; 
+            c.classList.add("card-played"); 
+        }
     });
 }
 
@@ -201,7 +239,6 @@ function playPopSfx() { try { const ctx = new (window.AudioContext || window.web
 function playMazuSfx() { try { const ctx = new (window.AudioContext || window.webkitAudioContext)(); const osc = ctx.createOscillator(); const gain = ctx.createGain(); osc.type = 'sine'; osc.connect(gain); gain.connect(ctx.destination); osc.frequency.setValueAtTime(880, ctx.currentTime); osc.frequency.exponentialRampToValueAtTime(1760, ctx.currentTime + 0.4); gain.gain.setValueAtTime(0.3, ctx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.6); osc.start(); osc.stop(ctx.currentTime + 0.6); } catch(e) {} }
 function playSuccessSfx() { try { const ctx = new (window.AudioContext || window.webkitAudioContext)(); const osc = ctx.createOscillator(); const gain = ctx.createGain(); osc.type = 'triangle'; osc.connect(gain); gain.connect(ctx.destination); osc.frequency.setValueAtTime(523.25, ctx.currentTime); osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.1); gain.gain.setValueAtTime(0.2, ctx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3); osc.start(); osc.stop(ctx.currentTime + 0.3); } catch(e) {} }
 
-// 寫入彈出式日誌視窗
 function addLog(m, type="") {
     const l = document.getElementById("log-messages");
     let className = "log-entry";
@@ -227,22 +264,16 @@ function createBubble() {
     document.getElementById("bubbles").appendChild(b);
     setTimeout(() => b.remove(), 8000);
 }
-
 setInterval(createBubble, 500);
 
-const fishColors = [
-    ["#ff9aa2", "#ffb7b2"], ["#a0e7e5", "#b4f8c8"], 
-    ["#a0c4ff", "#bdb2ff"], ["#ffd6a5", "#fdffb6"]
-];
-
+const fishColors = [ ["#ff9aa2", "#ffb7b2"], ["#a0e7e5", "#b4f8c8"], ["#a0c4ff", "#bdb2ff"], ["#ffd6a5", "#fdffb6"] ];
 function createFish() {
     const fish = document.createElement("div");
     const color = fishColors[Math.floor(Math.random() * fishColors.length)];
     fish.className = "fish";
     fish.style.top = Math.random() * 80 + "%";
     const size = 20 + Math.random() * 20;
-    fish.style.width = size + "px";
-    fish.style.height = size / 2 + "px";
+    fish.style.width = size + "px"; fish.style.height = size / 2 + "px";
     const duration = 6 + Math.random() * 8;
     fish.style.animationDuration = duration + "s";
     fish.style.background = `linear-gradient(90deg, ${color[0]}, ${color[1]})`;
@@ -250,12 +281,11 @@ function createFish() {
     document.getElementById("fish-layer").appendChild(fish);
     setTimeout(() => fish.remove(), duration * 1000);
 }
-
 setInterval(createFish, 4000);
 
 function initGame() {
     document.getElementById("music-control").style.display = "flex";
-    document.getElementById("log-btn").style.display = "block"; // 顯示日誌鈕
+    document.getElementById("log-btn").style.display = "block";
     const music = document.getElementById("bgm");
     music.play().then(() => { music.volume = 0.1; }).catch(err => console.log("播放受阻"));
     document.getElementById("welcome-screen").style.opacity = "0";
@@ -264,7 +294,7 @@ function initGame() {
 
 function startGame() {
     let names = ["阿海", "小波", "大龍", "水哥", "婷婷", "怪叔叔", "瓜瓜", "美代子", "風神", "阿福"].sort(()=>Math.random()-0.5);
-    let avatars = ["🧑‍🦱", "👨‍🦰", "🧔", "👱‍♂️", "👩‍🦰", "👨‍🦳", "🧜‍♀️", "🧜‍♂️", "🦈", "🐙"].sort(()=>Math.random()-0.5);
+    let avatars = ["🧑‍🦱", "👨‍🦰", "🧔", "👱‍♂️", "👩‍🦰", "👨‍🦳", "👧", "👩🏼‍🦱", "👶", "👨🏾‍🦱"].sort(()=>Math.random()-0.5);
     
     players = [
         { n: "你", hand: [], isAI: false },
@@ -320,6 +350,7 @@ function autoStep() {
             if (callerIdx !== 0) { handleMazuAI(caller); }
         } else {
             if (callerIdx !== 0) {
+                // 發起者 (Caller) 依然遵循召喚卡規則出牌
                 let idx = players[callerIdx].hand.findIndex(f => currentS.c(f));
                 if (idx === -1) idx = Math.floor(Math.random() * players[callerIdx].hand.length);
                 aiMove(callerIdx, idx);
@@ -368,12 +399,16 @@ function playerAction(idx) {
         table.push({ pIdx: 0, card: fish });
         renderTable();
         phase = "AI_FOLLOWING";
+        
+        // 修改處：AI 跟牌邏輯改為「觀察海洋區最後一張魚卡特性」
         setTimeout(() => {
             players.forEach((p, pi) => { 
                 if (p.isAI && pi !== callerIdx) {
-                    let idx = p.hand.findIndex(f => (currentS.c ? currentS.c(f) : true));
-                    if (idx === -1) idx = Math.floor(Math.random() * p.hand.length);
-                    aiMove(pi, idx); 
+                    let lastCard = table[table.length - 1].card;
+                    // AI 優先尋找同燈號 (l) 或 同行為特性 (h) 的魚卡
+                    let matchIdx = p.hand.findIndex(f => f.l === lastCard.l || f.h === lastCard.h);
+                    if (matchIdx === -1) matchIdx = Math.floor(Math.random() * p.hand.length);
+                    aiMove(pi, matchIdx); 
                 }
             });
             showResult();
@@ -414,7 +449,6 @@ function showWinScreen(winner) {
     const isPlayer = !winner.isAI;
     const title = isPlayer ? "✦ 友魚勇者 任務達成 ✦" : "🌊 海域重歸寧靜";
     const subTitle = isPlayer ? "感謝您守護海洋資源，實踐永續食魚精神！" : `由【${winner.n}】率先與大海達成和解。`;
-    
     const badgeHtml = isPlayer ? `<div style="position: absolute; top: -65px; right: -25px; width: 110px; height: 110px; background: #FFB3BA; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; transform: rotate(15deg); font-weight: bold; border: 4px double white; box-shadow: 0 5px 15px rgba(255,179,186,0.4); font-size: 1.1rem; letter-spacing: 1px; z-index: 10;">合格認證</div>` : "";
 
     overlay.innerHTML = `<div style="border: 12px double #B2E2D2; padding: 45px 30px; border-radius: 40px; background: rgba(255, 255, 255, 0.92); box-shadow: 0 20px 60px rgba(0,0,0,0.15); max-width: 500px; position: relative; backdrop-filter: blur(3px);">

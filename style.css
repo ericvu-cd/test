@@ -21,7 +21,7 @@ body { font-family: "Microsoft JhengHei", sans-serif; background: #e0f2f1; margi
 #log-btn {
     position: fixed;
     top: 15px;
-    left: 60px;
+    right: 10px;
     z-index: 2000;
     background: rgba(255, 255, 255, 0.9);
     border: 2px solid #b2dfdb;
@@ -97,6 +97,31 @@ body { font-family: "Microsoft JhengHei", sans-serif; background: #e0f2f1; margi
 #ai-3 .avatar-img { border-color: var(--ai3); }
 .ai-name { font-size: 1rem; font-weight: bold; text-shadow: 1px 1px 2px black; }
 .ai-cards { font-size: 1rem; }
+
+/* 預覽視窗中的按鈕樣式 */
+.preview-controls {
+    display: flex;
+    gap: 30px;
+    margin-top: 20px;
+}
+
+.preview-btn {
+    font-size: 40px;
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    border: none;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    transition: transform 0.1s;
+}
+
+.preview-btn:active { transform: scale(0.9); }
+.btn-confirm { background: #A8E6CF; color: white; }
+.btn-cancel { background: #FFB3BA; color: white; }
 
 /* 輪到誰的動畫特效 */
 @keyframes aiBounceGlow {
