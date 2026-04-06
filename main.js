@@ -136,7 +136,16 @@ function showCardPreview(idx, originalCardEl, isHand = true) {
     if (isHand && phase.includes("PLAYER")) {
         const controls = document.createElement("div");
         controls.className = "preview-controls";
-        
+ 
+        // 打叉按鈕 (取消)
+        const btnCancel = document.createElement("button");
+        btnCancel.className = "preview-btn btn-cancel";
+        btnCancel.innerHTML = "❌";
+        btnCancel.onclick = (e) => {
+            e.stopPropagation();
+            closePreview();
+        };
+		
         // 打勾按鈕 (出牌)
         const btnConfirm = document.createElement("button");
         btnConfirm.className = "preview-btn btn-confirm";
@@ -147,14 +156,6 @@ function showCardPreview(idx, originalCardEl, isHand = true) {
             playerAction(idx);
         };
 
-        // 打叉按鈕 (取消)
-        const btnCancel = document.createElement("button");
-        btnCancel.className = "preview-btn btn-cancel";
-        btnCancel.innerHTML = "❌";
-        btnCancel.onclick = (e) => {
-            e.stopPropagation();
-            closePreview();
-        };
 
         controls.appendChild(btnConfirm);
         controls.appendChild(btnCancel);
@@ -286,7 +287,7 @@ setInterval(createFish, 4000);
 
 function initGame() {
     document.getElementById("music-control").style.display = "flex";
-    document.getElementById("log-btn").style.display = "block";
+    document.getElementById("log-btn").style.display = "flex";
     const music = document.getElementById("bgm");
     music.play().then(() => { music.volume = 0.1; }).catch(err => console.log("播放受阻"));
     document.getElementById("welcome-screen").style.opacity = "0";
@@ -454,7 +455,8 @@ function showWinScreen(winner) {
 
     overlay.innerHTML = `<div style="border: 12px double #B2E2D2; padding: 45px 30px; border-radius: 40px; background: rgba(255, 255, 255, 0.92); box-shadow: 0 20px 60px rgba(0,0,0,0.15); max-width: 500px; position: relative; backdrop-filter: blur(3px);">
         ${badgeHtml}
-        <h1 style="color: #455A64; font-size: 2rem; margin-bottom: 15px; letter-spacing: 2px;">${title}</h1>
+        <h1 style="color: #455A64; 
+font-size: 2rem; margin-bottom: 15px; letter-spacing: 2px;">${title}</h1>
         <p style="font-size: 1.2rem; color: #78909C; line-height: 1.6; margin-bottom: 25px;">${subTitle}</p>
         <div style="background: #FDFCF8; border: 2px dashed #B2E2D2; padding: 20px; border-radius: 20px; margin-bottom: 30px;"><p style="color: #00796B; font-weight: bold; margin: 0; font-size: 1.2rem;">懂魚、愛魚、吃對魚</p></div>
         <button onclick="location.reload()" style="padding: 15px 50px; font-size: 1.2rem; background: #FFDFBA; color: #D35400; border: 3px solid #FFB347; border-radius: 50px; font-weight: bold; cursor: pointer; transition: transform 0.2s; box-shadow: 0 4px 15px rgba(255,179,186,0.3);">重新開始</button>
