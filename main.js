@@ -352,9 +352,7 @@ function autoStep() {
             if (callerIdx !== 0) { handleMazuAI(caller); }
         } else {
             if (callerIdx !== 0) {
-                // 發起者 (Caller) 依然遵循召喚卡規則出牌
-                let idx = players[callerIdx].hand.findIndex(f => currentS.c(f));
-                if (idx === -1) idx = Math.floor(Math.random() * players[callerIdx].hand.length);
+ 				let idx = aiChooseCard(players[callerIdx], 0.7);
                 aiMove(callerIdx, idx);
                 phase = "PLAYER_TURN";
                 renderUI();
@@ -402,14 +400,11 @@ function playerAction(idx) {
         renderTable();
         phase = "AI_FOLLOWING";
         
-        // 修改處：AI 跟牌邏輯改為「觀察海洋區最後一張魚卡特性」
         setTimeout(() => {
             players.forEach((p, pi) => { 
                 if (p.isAI && pi !== callerIdx) {
                     let lastCard = table[table.length - 1].card;
-                    // AI 優先尋找同燈號 (l) 或 同行為特性 (h) 的魚卡
-                    let matchIdx = p.hand.findIndex(f => f.l === lastCard.l || f.h === lastCard.h);
-                    if (matchIdx === -1) matchIdx = Math.floor(Math.random() * p.hand.length);
+					let matchIdx = aiChooseCard(p, 0.7);
                     aiMove(pi, matchIdx); 
                 }
             });
@@ -470,4 +465,43 @@ function finishRound() {
     callerIdx = (callerIdx + 1) % 4;
     phase = "WAIT";
     autoStep();
+}
+
+function aiChooseCard(p, difficulty = 0.7) {
+    // difficulty = 0~1（越高越聰明）
+
+    // 👉 1. 如果桌上沒牌 → 隨機出
+    if (table.length === 0) {
+        return Math.floor(Math.random() * p.hand.length);
+    }
+
+    // 👉 2. 收集桌上特徵
+    const played = table.map(t => t.card);
+
+    const sameSeason = played.every(f => f.s === played[0].s);
+    const sameMethod = played.every(f => f.m.some(m => played[0].m.includes(m)));
+    const sameLevel = played.every(f => f.l === played[0].l);
+    const sameHabitat = played.every(f => f.h === played[0].h);
+
+    // 👉 3. 找「可能符合」的牌
+    let candidates = p.hand.map((f, idx) => ({ f, idx, score: 0 }));
+
+    candidates.forEach(c => {
+        if (sameSeason && c.f.s === played[0].s) c.score++;
+        if (sameLevel && c.f.l === played[0].l) c.score++;
+        if (sameHabitat && c.f.h === played[0].h) c.score++;
+        if (sameMethod && c.f.m.some(m => played[0].m.includes(m))) c.score++;
+    });
+
+    // 👉 4. 排序（分數高的比較像正確答案）
+    candidates.sort((a, b) => b.score - a.score);
+
+    // 👉 5. 加入「犯錯機率」
+    const shouldBeSmart = Math.random() < difficulty;
+
+    if (shouldBeSmart && candidates[0].score > 0) {
+        return candidates[0].idx; // 選最合理
+    } else {
+        return Math.floor(Math.random() * p.hand.length); // 亂出
+    }
 }
