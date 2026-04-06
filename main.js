@@ -1,7 +1,12 @@
 let gameDifficulty = 0.7;
-function setDifficulty(d) {
+let speakingAI = null;
+
+function setDifficulty(d, btn) {
     gameDifficulty = d;
+	document.querySelectorAll('.sub-btnd').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
 }
+// <button class="sub-btnd active" onclick="setDifficulty(0.7, this)">普通</button>
 
 // --- 故事與說明功能 ---
 let storyIdx = 1;
@@ -331,7 +336,9 @@ function updateCallerHighlight() {
 function autoStep() {
     if (deckS.length === 0) { addLog("召喚卡已用盡，海域恢復平靜。"); return; }
     table = [];
-    document.getElementById("table").innerHTML = "";
+    const aiPlayers = players.filter(p => p.isAI);
+    speakingAI = aiPlayers[Math.floor(Math.random() * aiPlayers.length)];
+	document.getElementById("table").innerHTML = "";
     document.getElementById("summon-display").classList.remove("mazu-glow"); 
     
     currentS = deckS.pop();
@@ -533,15 +540,31 @@ function showChat(p, msg) {
     bubble.className = "chat-bubble";
     bubble.innerText = msg;
 
-    bubble.style.left = rect.left + rect.width / 2 + "px";
-    bubble.style.top = rect.top - 10 + "px";
-
     layer.appendChild(bubble);
 
-    setTimeout(() => bubble.remove(), 2500);
+    // 👉 先讓它出現在畫面（才能拿寬度）
+    const bubbleWidth = bubble.offsetWidth;
+
+    // 🎯 計算中心位置
+    let left = rect.left + rect.width / 2 - bubbleWidth / 2;
+
+    // 🚧 邊界限制（重點）
+    const padding = 10;
+    const maxLeft = window.innerWidth - bubbleWidth - padding;
+
+    if (left < padding) left = padding;
+    if (left > maxLeft) left = maxLeft;
+
+    bubble.style.left = left + "px";
+    bubble.style.top = rect.top - 10 + "px";
+
+    setTimeout(() => bubble.remove(), 3000);
 }
 
 function aiTalk(p, card, isCorrectGuess = null) {
+    // ❗ 不是本回合發言者 → 不講話
+    if (p !== speakingAI) return;
+
     let lines = [];
 
     if (p.personality === "smart") {
@@ -562,7 +585,7 @@ function aiTalk(p, card, isCorrectGuess = null) {
 
     const msg = lines[Math.floor(Math.random() * lines.length)];
 
-    showChat(p, msg); // ⭐ 不用 log
+    showChat(p, msg);
 }
 
 function aiTalkMazuGive(p, target, card) {
