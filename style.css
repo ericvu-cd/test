@@ -338,3 +338,15 @@ body { font-family: "Microsoft JhengHei", sans-serif; background: #e0f2f1; margi
     white-space: normal;
     word-break: break-word;
 }
+
+/* 簡單的呼吸發光效果 */
+@keyframes breathe {
+    from { box-shadow: 0 0 3px #81d4fa; }
+    to { box-shadow: 0 0 20px #4fc3f7; }
+}
+
+/* 輪到玩家時套用的類別 */
+.my-turn {
+    animation: breathe 1.5s infinite alternate;
+    border-top: 4px solid #4fc3f7 !important;
+}

@@ -219,6 +219,8 @@ const handEl = document.getElementById("player-hand");
         
         handEl.appendChild(c);
     });
+	// 只要階段包含 PLAYER，就幫玩家區加上 my-turn 類別
+    document.getElementById("player-zone").classList.toggle("my-turn", phase.includes("PLAYER"));
 }
 
 // 確保點擊遮罩背景也能關閉預覽
@@ -334,7 +336,21 @@ function updateCallerHighlight() {
 }
 
 function autoStep() {
-    if (deckS.length === 0) { addLog("召喚卡已用盡，海域恢復平靜。"); return; }
+    if (deckS.length === 0) { 
+        addLog("召喚卡已用盡！開始結算剩餘手牌...", "cmd");
+                // 找出手中剩餘卡牌最少的玩家
+        let winner = players[0];
+        for (let i = 1; i < players.length; i++) {
+            // 若牌數相同，目前邏輯會保留順位較前（例如玩家本人）的優先權
+            if (players[i].hand.length < winner.hand.length) {
+                winner = players[i];
+            }
+        }
+        // 延遲一秒後顯示勝利畫面
+        setTimeout(() => showWinScreen(winner), 1000);
+        return; 
+    }
+	
     table = [];
     const aiPlayers = players.filter(p => p.isAI);
     speakingAI = aiPlayers[Math.floor(Math.random() * aiPlayers.length)];
