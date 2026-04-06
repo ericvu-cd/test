@@ -1,3 +1,8 @@
+let gameDifficulty = 0.7;
+function setDifficulty(d) {
+    gameDifficulty = d;
+}
+
 // --- 故事與說明功能 ---
 let storyIdx = 1;
 let storyTimer = null;
@@ -300,9 +305,9 @@ function startGame() {
     
     players = [
         { n: "你", hand: [], isAI: false },
-        { n: names[0], hand: [], isAI: true, id: "ai-1", avatar: avatars[0] },
-        { n: names[1], hand: [], isAI: true, id: "ai-2", avatar: avatars[1] },
-        { n: names[2], hand: [], isAI: true, id: "ai-3", avatar: avatars[2] }
+        { n: names[0], hand: [], isAI: true, id: "ai-1", personality: "tricky", avatar: avatars[0] },
+        { n: names[1], hand: [], isAI: true, id: "ai-2", personality: "smart", avatar: avatars[1] },
+        { n: names[2], hand: [], isAI: true, id: "ai-3", personality: "chaotic", avatar: avatars[2] }
     ];
     let fishD = [...fishDB].sort(()=>Math.random()-0.5);
     players.forEach(p => p.hand = fishD.splice(0, 6));
@@ -371,6 +376,12 @@ function handleMazuAI(caller) {
         target.hand.push(card);
         playPopSfx();
         addLog(`✨ ${caller.n} 分享了一張【${card.n}】給 ${target.n}！`, "success");
+		// 🎭 說話（送的人）
+        aiTalkMazuGive(caller, target, card);
+        // 🎭 說話（收的人）
+        if (target.isAI) {
+            aiTalkMazuReceive(target, caller, card);
+        }
         renderUI();
         setTimeout(finishRound, 2000);
     }, 1000);
@@ -385,6 +396,9 @@ function playerAction(idx) {
         target.hand.push(card);
         playPopSfx();
         addLog(`✨ 你分享了【${card.n}】給 ${target.n}！`, "success");
+		if (target.isAI) {
+            aiTalkMazuReceive(target, players[0], card);
+        }
         phase = "RESULT"; 
         renderUI();
         setTimeout(finishRound, 1500); 
@@ -414,10 +428,16 @@ function playerAction(idx) {
 }
 
 function aiMove(pI, cI) {
-    const f = players[pI].hand.splice(cI, 1)[0];
+    const p = players[pI];
+    const f = p.hand.splice(cI, 1)[0];
+
     playPopSfx();
     table.push({ pIdx: pI, card: f });
     renderTable();
+
+    let isCorrect = currentS && currentS.c ? currentS.c(f) : null;
+
+    aiTalk(p, f, isCorrect);
 }
 
 function showResult() {
@@ -467,41 +487,128 @@ function finishRound() {
     autoStep();
 }
 
-function aiChooseCard(p, difficulty = 0.7) {
-    // difficulty = 0~1（越高越聰明）
+function aiChooseCard(p) {
+    let difficulty = gameDifficulty;
 
-    // 👉 1. 如果桌上沒牌 → 隨機出
+    if (p.personality === "smart") difficulty += 0.1;
+    if (p.personality === "chaotic") difficulty -= 0.2;
+
+    difficulty = Math.max(0.1, Math.min(0.95, difficulty));
+
     if (table.length === 0) {
         return Math.floor(Math.random() * p.hand.length);
     }
 
-    // 👉 2. 收集桌上特徵
     const played = table.map(t => t.card);
 
-    const sameSeason = played.every(f => f.s === played[0].s);
-    const sameMethod = played.every(f => f.m.some(m => played[0].m.includes(m)));
-    const sameLevel = played.every(f => f.l === played[0].l);
-    const sameHabitat = played.every(f => f.h === played[0].h);
-
-    // 👉 3. 找「可能符合」的牌
     let candidates = p.hand.map((f, idx) => ({ f, idx, score: 0 }));
 
     candidates.forEach(c => {
-        if (sameSeason && c.f.s === played[0].s) c.score++;
-        if (sameLevel && c.f.l === played[0].l) c.score++;
-        if (sameHabitat && c.f.h === played[0].h) c.score++;
-        if (sameMethod && c.f.m.some(m => played[0].m.includes(m))) c.score++;
+        if (played.every(f => f.l === played[0].l) && c.f.l === played[0].l) c.score++;
+        if (played.every(f => f.h === played[0].h) && c.f.h === played[0].h) c.score++;
+        if (played.every(f => f.d === played[0].d) && c.f.d === played[0].d) c.score++;
     });
 
-    // 👉 4. 排序（分數高的比較像正確答案）
     candidates.sort((a, b) => b.score - a.score);
 
-    // 👉 5. 加入「犯錯機率」
-    const shouldBeSmart = Math.random() < difficulty;
-
-    if (shouldBeSmart && candidates[0].score > 0) {
-        return candidates[0].idx; // 選最合理
-    } else {
-        return Math.floor(Math.random() * p.hand.length); // 亂出
+    if (p.personality === "tricky" && Math.random() < 0.4) {
+        return Math.floor(Math.random() * p.hand.length);
     }
+
+    if (Math.random() < difficulty && candidates[0].score > 0) {
+        return candidates[0].idx;
+    }
+
+    return Math.floor(Math.random() * p.hand.length);
+}
+
+function showChat(p, msg) {
+    const layer = document.getElementById("chat-layer");
+    const el = document.getElementById(p.id);
+    if (!el) return;
+
+    const rect = el.getBoundingClientRect();
+
+    const bubble = document.createElement("div");
+    bubble.className = "chat-bubble";
+    bubble.innerText = msg;
+
+    bubble.style.left = rect.left + rect.width / 2 + "px";
+    bubble.style.top = rect.top - 10 + "px";
+
+    layer.appendChild(bubble);
+
+    setTimeout(() => bubble.remove(), 2500);
+}
+
+function aiTalk(p, card, isCorrectGuess = null) {
+    let lines = [];
+
+    if (p.personality === "smart") {
+        lines = ["這規律很明顯。", "我應該抓到了。"];
+    }
+
+    if (p.personality === "chaotic") {
+        lines = ["隨便啦！", "我亂猜🤣"];
+    }
+
+    if (p.personality === "tricky") {
+        lines = ["這張很合理吧😉", "大家可以跟我～"];
+    }
+
+    if (isCorrectGuess === false && p.personality === "tricky") {
+        lines.push("穩了，這一定對（笑）");
+    }
+
+    const msg = lines[Math.floor(Math.random() * lines.length)];
+
+    showChat(p, msg); // ⭐ 不用 log
+}
+
+function aiTalkMazuGive(p, target, card) {
+    let lines = [];
+    if (p.personality === "smart") {
+        lines = [
+            "資源要平衡分配。",
+            "這張給你比較好。"
+        ];
+    }
+    if (p.personality === "chaotic") {
+        lines = [
+            "給你啦🤣",
+            "我不需要這張！"
+        ];
+    }
+    if (p.personality === "tricky") {
+        lines = [
+            "這張很適合你😉",
+            "送你一份禮物～"
+        ];
+    }
+    const msg = lines[Math.floor(Math.random() * lines.length)];
+    showChat(p, msg);
+}
+
+function aiTalkMazuReceive(p, from, card) {
+    let lines = [];
+    if (p.personality === "smart") {
+        lines = [
+            "感謝你的分享。",
+            "這對我有幫助。"
+        ];
+    }
+    if (p.personality === "chaotic") {
+        lines = [
+            "欸？突然多一張🤣",
+            "發生什麼事了哈哈"
+        ];
+    }
+    if (p.personality === "tricky") {
+        lines = [
+            "謝啦，我會好好利用😉",
+            "這張…很有意思呢"
+        ];
+    }
+    const msg = lines[Math.floor(Math.random() * lines.length)];
+    showChat(p, msg);
 }

@@ -279,3 +279,30 @@ body { font-family: "Microsoft JhengHei", sans-serif; background: #e0f2f1; margi
     100% { transform: translateY(0) scale(1); opacity: 1; }
 }
 .card-played { animation: playCardAnim 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards !important; transition: none !important; }
+
+#chat-layer {
+    position: fixed;
+    top: 80px;
+    left: 0;
+    width: 100%;
+    pointer-events: none;
+    z-index: 2500;
+}
+
+.chat-bubble {
+    position: absolute;
+    background: white;
+    padding: 8px 14px;
+    border-radius: 15px;
+    font-size: 1.1rem;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    white-space: nowrap;
+    animation: fadeInOut 2.5s ease forwards;
+}
+
+@keyframes fadeInOut {
+    0% { opacity: 0; transform: translateY(10px); }
+    15% { opacity: 1; }
+    85% { opacity: 1; }
+    100% { opacity: 0; transform: translateY(-10px); }
+}

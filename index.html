@@ -28,6 +28,12 @@
 
     <div id="welcome-screen">
         <div style="text-align: center;">
+		<div style="margin-bottom: 20px;">
+            <div style="margin-bottom:10px; font-weight:bold;">選擇難度</div>
+            <button class="sub-btn" onclick="setDifficulty(0.4)">簡單</button>
+            <button class="sub-btn" onclick="setDifficulty(0.7)">普通</button>
+            <button class="sub-btn" onclick="setDifficulty(0.9)">困難</button>
+        </div>
             <button id="real-start-btn" onclick="initGame()" style="margin-bottom: 20px; display: block; width: 100%;">啟航</button>
             <div style="display: flex; gap: 20px; justify-content: center;">
                 <button class="sub-btn" onclick="openStory()">故事</button>
@@ -80,6 +86,8 @@
 
     <script src="db.js"></script>
     <script src="main.js"></script>
+	
+	<div id="chat-layer"></div>
 
 </body>
 </html>
