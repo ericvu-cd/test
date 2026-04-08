@@ -516,7 +516,8 @@ function playerAction(idx) {
         players[0].hand.splice(idx, 1);
         playPopSfx();
         table.push({ pIdx: 0, card: fish });
-        renderTable();
+        renderUI();
+		renderTable();
         phase = "AI_FOLLOWING";
         
         setTimeout(() => {
