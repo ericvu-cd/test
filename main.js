@@ -298,24 +298,69 @@ function createFish() {
 setInterval(createFish, 4000);
 
 function initGame() {
+    // 1. 取得開始按鈕與其父容器
+    const startBtn = document.querySelector("#welcome-screen button");
+    const welcomeScreen = document.getElementById("welcome-screen");
+
+    if (startBtn) {
+        // 禁用按鈕防止重複點擊
+        startBtn.style.pointerEvents = "none";
+        startBtn.style.opacity = "0.5";
+
+        // 2. 建立並顯示「尋找對手中...」文字
+        const loadingText = document.createElement("div");
+        loadingText.innerText = "🔍 尋找對手中...";
+        loadingText.style.marginTop = "30px";
+        loadingText.style.color = "#455A64"; // 搭配你的配色
+        loadingText.style.fontSize = "1.1rem";
+        loadingText.style.fontWeight = "bold";
+        loadingText.id = "loading-text";
+        
+        // 將文字加在按鈕後面（下方）
+        startBtn.parentNode.appendChild(loadingText);
+    }
+
+    // 啟動音樂與日誌（維持原樣）
     document.getElementById("music-control").style.display = "flex";
     document.getElementById("log-btn").style.display = "flex";
     const music = document.getElementById("bgm");
     music.play().then(() => { music.volume = 0.1; }).catch(err => console.log("播放受阻"));
-    document.getElementById("welcome-screen").style.opacity = "0";
-    setTimeout(() => { document.getElementById("welcome-screen").style.display = "none"; startGame(); }, 500);
+
+    // 3. 延遲進入遊戲
+    setTimeout(() => {
+        welcomeScreen.style.opacity = "0";
+        setTimeout(() => { 
+            welcomeScreen.style.display = "none"; 
+            // 移除載入文字以便下次重新開始遊戲時乾淨
+            const lt = document.getElementById("loading-text");
+            if(lt) lt.remove();
+            startGame(); 
+        }, 1500);
+    }, 1500);
 }
 
 function startGame() {
-    let names = ["阿海", "小波", "大龍", "水哥", "婷婷", "怪叔叔", "瓜瓜", "美代子", "風神", "阿福"].sort(()=>Math.random()-0.5);
-    let avatars = ["🧑‍🦱", "👨‍🦰", "🧔", "👱‍♂️", "👩‍🦰", "👨‍🦳", "👧", "👩🏼‍🦱", "👶", "👨🏾‍🦱"].sort(()=>Math.random()-0.5);
+// 1. 從資料庫中隨機挑選 3 個角色
+    let aiPool = [...characterDB].sort(() => Math.random() - 0.5).slice(0, 3);
     
+    // 2. 初始化玩家與隨機選出的 AI
     players = [
-        { n: "你", hand: [], isAI: false },
-        { n: names[0], hand: [], isAI: true, id: "ai-1", personality: "tricky", avatar: avatars[0] },
-        { n: names[1], hand: [], isAI: true, id: "ai-2", personality: "smart", avatar: avatars[1] },
-        { n: names[2], hand: [], isAI: true, id: "ai-3", personality: "chaotic", avatar: avatars[2] }
+        { n: "你", hand: [], isAI: false }
     ];
+
+    // 3. 將選出的 AI 加入 players 陣列
+    aiPool.forEach((char, index) => {
+        players.push({
+            n: char.n,
+            hand: [],
+            isAI: true,
+            id: `ai-${index + 1}`,
+            personality: char.personality,
+            // 統一頭像渲染方式
+            avatar: `<img src="${char.img}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`
+        });
+    });	
+	
     let fishD = [...fishDB].sort(()=>Math.random()-0.5);
     players.forEach(p => p.hand = fishD.splice(0, 6));
     deckS = [...summonDB, ...mazuCards].sort(()=>Math.random()-0.5);
@@ -392,21 +437,34 @@ function autoStep() {
 function handleMazuAI(caller) {
     document.getElementById("summon-display").innerText = "【神明庇佑揭曉】\n" + currentS.t;
     addLog(`揭曉神明召喚：${currentS.t.replace(/\n/g, " ")}`, "cmd");
+
     setTimeout(() => {
         if (caller.hand.length === 0) { finishRound(); return; }
+
         let card = caller.hand.pop();
         let target = players.filter(p => p !== caller).sort((a,b) => a.hand.length - b.hand.length)[0];
-        target.hand.push(card);
-        playPopSfx();
-        addLog(`✨ ${caller.n} 分享了一張【${card.n}】給 ${target.n}！`, "success");
-		// 🎭 說話（送的人）
+
+        // 1. 送牌者先說話
         aiTalkMazuGive(caller, target, card);
-        // 🎭 說話（收的人）
-        if (target.isAI) {
-            aiTalkMazuReceive(target, caller, card);
-        }
-        renderUI();
-        setTimeout(finishRound, 2000);
+
+        // 2. 停頓 2 秒後，執行送牌動作與接收者說話
+        setTimeout(() => {
+            target.hand.push(card);
+            playPopSfx();
+            addLog(`✨ ${caller.n} 分享了一張【${card.n}】給 ${target.n}！`, "success");
+            
+            // 3. 如果接收者是 AI，接著說話
+            if (target.isAI) {
+                aiTalkMazuReceive(target, caller, card);
+            }
+            
+            renderUI();
+
+            // 4. 全部說完後，再停頓 2 秒才結束回合
+            setTimeout(finishRound, 2000);
+            
+        }, 2000); // 這裡是兩次說話之間的 2 秒停頓
+
     }, 1000);
 }
 
@@ -578,76 +636,29 @@ function showChat(p, msg) {
 }
 
 function aiTalk(p, card, isCorrectGuess = null) {
-    // ❗ 不是本回合發言者 → 不講話
     if (p !== speakingAI) return;
 
-    let lines = [];
+    const persona = p.personality;
+    let lines = [...dialogueDB[persona].play];
 
-    if (p.personality === "smart") {
-        lines = ["這規律很明顯。", "我應該抓到了。"];
-    }
-
-    if (p.personality === "chaotic") {
-        lines = ["隨便啦！", "我亂猜🤣"];
-    }
-
-    if (p.personality === "tricky") {
-        lines = ["這張很合理吧😉", "大家可以跟我～"];
-    }
-
-    if (isCorrectGuess === false && p.personality === "tricky") {
-        lines.push("穩了，這一定對（笑）");
+    // 針對狡猾性格的特殊邏輯：如果亂出牌且有設定特殊台詞
+    if (isCorrectGuess === false && dialogueDB[persona].playWrong) {
+        lines.push(...dialogueDB[persona].playWrong);
     }
 
     const msg = lines[Math.floor(Math.random() * lines.length)];
-
     showChat(p, msg);
 }
 
 function aiTalkMazuGive(p, target, card) {
-    let lines = [];
-    if (p.personality === "smart") {
-        lines = [
-            "資源要平衡分配。",
-            "這張給你比較好。"
-        ];
-    }
-    if (p.personality === "chaotic") {
-        lines = [
-            "給你啦🤣",
-            "我不需要這張！"
-        ];
-    }
-    if (p.personality === "tricky") {
-        lines = [
-            "這張很適合你😉",
-            "送你一份禮物～"
-        ];
-    }
+    const lines = dialogueDB[p.personality].mazuGive;
     const msg = lines[Math.floor(Math.random() * lines.length)];
     showChat(p, msg);
+	setTimeout(2000);
 }
 
 function aiTalkMazuReceive(p, from, card) {
-    let lines = [];
-    if (p.personality === "smart") {
-        lines = [
-            "感謝你的分享。",
-            "這對我有幫助。"
-        ];
-    }
-    if (p.personality === "chaotic") {
-        lines = [
-            "欸？突然多一張🤣",
-            "發生什麼事了哈哈"
-        ];
-    }
-    if (p.personality === "tricky") {
-        lines = [
-            "謝啦，我會好好利用😉",
-            "這張…很有意思呢"
-        ];
-    }
+    const lines = dialogueDB[p.personality].mazuReceive;
     const msg = lines[Math.floor(Math.random() * lines.length)];
     showChat(p, msg);
 }

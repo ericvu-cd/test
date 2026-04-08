@@ -144,3 +144,31 @@ const mazuCards = [
         isMazu: true 
     }
 ];
+
+const characterDB = [
+    { n: "阿海", img: "阿海.jpg", personality: "tricky" },
+    { n: "波哥", img: "波哥.jpg", personality: "smart" },
+    { n: "龍船長", img: "龍船長.jpg", personality: "chaotic" },
+    { n: "琳博士", img: "琳博士.jpg", personality: "smart" },
+    { n: "婷婷", img: "婷婷.jpg", personality: "tricky" },
+    { n: "春嬌姨", img: "春嬌姨.jpg", personality: "chaotic" }
+];
+
+const dialogueDB = {
+    smart: {
+        play: ["這規律很明顯。", "我應該抓到了。", "邏輯上來說，這張是對的。"],
+        mazuGive: ["資源要平衡分配。", "這張給你比較好。"],
+        mazuReceive: ["感謝你的分享。", "這對我有幫助。"]
+    },
+    chaotic: {
+        play: ["隨便啦！", "我亂猜🤣", "這張看起來很好吃（誤）。"],
+        mazuGive: ["給你啦🤣", "我不需要這張！"],
+        mazuReceive: ["欸？突然多一張🤣", "發生什麼事了哈哈"]
+    },
+    tricky: {
+        play: ["這張很合理吧😉", "大家可以跟我～"],
+        playWrong: ["穩了，這一定對（笑）"], // 狡猾性格亂出牌時的特殊對話
+        mazuGive: ["這張很適合你😉", "送你一份禮物～"],
+        mazuReceive: ["謝啦，我會好好利用😉", "這張…很有意思呢"]
+    }
+};
