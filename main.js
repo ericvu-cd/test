@@ -249,7 +249,52 @@ function renderTable() {
     });
 }
 
-function playPopSfx() { try { const ctx = new (window.AudioContext || window.webkitAudioContext)(); const osc = ctx.createOscillator(); const gain = ctx.createGain(); osc.connect(gain); gain.connect(ctx.destination); osc.frequency.setValueAtTime(500, ctx.currentTime); osc.frequency.exponentialRampToValueAtTime(100, ctx.currentTime + 0.1); gain.gain.setValueAtTime(0.2, ctx.currentTime); osc.start(); osc.stop(ctx.currentTime + 0.1); } catch(e) {} }
+function playPopSfx() { 
+try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        // 1. 低頻震盪器 - 模擬撞擊的沉悶感
+        const osc = ctx.createOscillator();
+        const gainOsc = ctx.createGain();
+        
+        // 2. 雜訊緩衝區 - 模擬紙張摩擦的「刷」聲
+        const bufferSize = ctx.sampleRate * 0.05; // 只需要極短的 0.05 秒
+        const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+            data[i] = Math.random() * 2 - 1; // 白雜訊
+        }
+        const noise = ctx.createBufferSource();
+        noise.buffer = buffer;
+        const gainNoise = ctx.createGain();
+
+        // --- 設定低頻撞擊 (Oscillator) ---
+        osc.type = 'triangle'; // 使用三角波，比正弦波紮實一點
+        osc.frequency.setValueAtTime(150, ctx.currentTime); // 起始頻率較低
+        osc.frequency.exponentialRampToValueAtTime(40, ctx.currentTime + 0.08);
+        
+        gainOsc.gain.setValueAtTime(0.6, ctx.currentTime);
+        gainOsc.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.08);
+
+        // --- 設定摩擦雜訊 (Noise) ---
+        gainNoise.gain.setValueAtTime(0.3, ctx.currentTime);
+        gainNoise.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.05);
+
+        // --- 連接並啟動 ---
+        osc.connect(gainOsc);
+        gainOsc.connect(ctx.destination);
+        
+        noise.connect(gainNoise);
+        gainNoise.connect(ctx.destination);
+
+        osc.start();
+        noise.start();
+        
+        osc.stop(ctx.currentTime + 0.1);
+        noise.stop(ctx.currentTime + 0.1);
+        
+    } catch(e) {}
+	}
 function playMazuSfx() { try { const ctx = new (window.AudioContext || window.webkitAudioContext)(); const osc = ctx.createOscillator(); const gain = ctx.createGain(); osc.type = 'sine'; osc.connect(gain); gain.connect(ctx.destination); osc.frequency.setValueAtTime(880, ctx.currentTime); osc.frequency.exponentialRampToValueAtTime(1760, ctx.currentTime + 0.4); gain.gain.setValueAtTime(0.3, ctx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.6); osc.start(); osc.stop(ctx.currentTime + 0.6); } catch(e) {} }
 function playSuccessSfx() { try { const ctx = new (window.AudioContext || window.webkitAudioContext)(); const osc = ctx.createOscillator(); const gain = ctx.createGain(); osc.type = 'triangle'; osc.connect(gain); gain.connect(ctx.destination); osc.frequency.setValueAtTime(523.25, ctx.currentTime); osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.1); gain.gain.setValueAtTime(0.2, ctx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3); osc.start(); osc.stop(ctx.currentTime + 0.3); } catch(e) {} }
 
@@ -298,45 +343,24 @@ function createFish() {
 setInterval(createFish, 4000);
 
 function initGame() {
-    // 1. 取得開始按鈕與其父容器
-    const startBtn = document.querySelector("#welcome-screen button");
     const welcomeScreen = document.getElementById("welcome-screen");
+	const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    const bgmVolume = isMobile ? 0.03 : 0.1; // 手機用 0.03，電腦用 0.1
 
-    if (startBtn) {
-        // 禁用按鈕防止重複點擊
-        startBtn.style.pointerEvents = "none";
-        startBtn.style.opacity = "0.5";
-
-        // 2. 建立並顯示「尋找對手中...」文字
-        const loadingText = document.createElement("div");
-        loadingText.innerText = "🔍 尋找對手中...";
-        loadingText.style.marginTop = "30px";
-        loadingText.style.color = "#455A64"; // 搭配你的配色
-        loadingText.style.fontSize = "1.1rem";
-        loadingText.style.fontWeight = "bold";
-        loadingText.id = "loading-text";
-        
-        // 將文字加在按鈕後面（下方）
-        startBtn.parentNode.appendChild(loadingText);
-    }
-
-    // 啟動音樂與日誌（維持原樣）
+    // 啟動音樂與日誌
     document.getElementById("music-control").style.display = "flex";
     document.getElementById("log-btn").style.display = "flex";
     const music = document.getElementById("bgm");
-    music.play().then(() => { music.volume = 0.1; }).catch(err => console.log("播放受阻"));
+    music.play().then(() => {
+        music.volume = bgmVolume;
+    }).catch(err => console.log("播放受阻"));
 
-    // 3. 延遲進入遊戲
+    // 直接切換畫面並開始遊戲
+    welcomeScreen.style.opacity = "0";
     setTimeout(() => {
-        welcomeScreen.style.opacity = "0";
-        setTimeout(() => { 
-            welcomeScreen.style.display = "none"; 
-            // 移除載入文字以便下次重新開始遊戲時乾淨
-            const lt = document.getElementById("loading-text");
-            if(lt) lt.remove();
-            startGame(); 
-        }, 1500);
-    }, 1500);
+        welcomeScreen.style.display = "none";
+        startGame();
+    }, 2500); // 保留 0.5 秒的淡出過渡效果
 }
 
 function startGame() {
