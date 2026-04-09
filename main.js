@@ -13,12 +13,51 @@ let storyIdx = 1;
 let storyTimer = null;
 const totalStories = 6;
 
+// --- 故事滑動控制變數 ---
+let touchStartX = 0;
+let touchEndX = 0;
+
+// 新增：回前一頁的功能
+function prevStory() {
+    stopStoryTimer();
+    if (storyIdx > 1) {
+        storyIdx--;
+        updateStory();
+        startStoryTimer(); // 重新開始自動換頁計時
+    }
+}
+
+// 判斷滑動方向
+function handleSwipe() {
+    const swipeThreshold = 50; // 滑動超過 50px 才觸發
+    const diff = touchEndX - touchStartX;
+
+    if (diff < -swipeThreshold) {
+        // 向左滑 -> 下一頁 (Next)
+        nextStory();
+    } else if (diff > swipeThreshold) {
+        // 向右滑 -> 前一頁 (Prev)
+        prevStory();
+    }
+}
+
 // 故事功能
 function openStory() {
     storyIdx = 1;
     updateStory();
-    document.getElementById("story-overlay").style.display = "block";
+    const overlay = document.getElementById("story-overlay");
+    overlay.style.display = "block";
     startStoryTimer();
+
+    // 綁定觸控事件
+    overlay.addEventListener('touchstart', e => {
+        touchStartX = e.changedTouches[0].screenX;
+    }, { passive: true });
+
+    overlay.addEventListener('touchend', e => {
+        touchEndX = e.changedTouches[0].screenX;
+        handleSwipe();
+    }, { passive: true });
 }
 
 function updateStory() {
