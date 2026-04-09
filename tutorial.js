@@ -46,11 +46,11 @@ function runTutorialIntro() {
     }
 
     else if (tutorialIntroStep === 2) {
-        highlightArea("#ocean", "🌊 這裡是【出牌區】，所有人會把魚放在這裡");
+        highlightArea("#ocean", "🃏 這裡是【你的手牌】，從這裡選擇要出的魚, 點一下繼續");
     }
 
     else if (tutorialIntroStep === 3) {
-        highlightArea("#player-zone", "🃏 這裡是【你的手牌】，從這裡選擇要出的魚");
+        highlightArea("#player-zone", "🌊 這裡是【出牌區】，所有人會把魚放在這裡, 點一下繼續");
     }
 
     else {
@@ -126,7 +126,13 @@ function clearHighlight() {
 function setupTutorialPlayers() {
     players = [
         { n: "你", hand: [], isAI: false },
-        { n: "教學AI", hand: [], isAI: true, id: "ai-1" }
+        {
+            n: "教學老師",
+            hand: [],
+            isAI: true,
+            id: "ai-1",
+            avatar: "🤖"
+        }
     ];
 }
 
@@ -268,5 +274,5 @@ function showTutorialEnd() {
     setTimeout(() => {
         tutorialMode = false;
         location.reload();
-    }, 2500);
+    }, 2000);
 }
