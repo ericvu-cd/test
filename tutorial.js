@@ -12,15 +12,17 @@ let tutorialClickLock = false;
 // ======================
 function startTutorial() {
     tutorialMode = true;
-    tutorialStep = 0;        // 👉 先跑導覽
+    tutorialStep = 0;
     tutorialIntroStep = 1;
 
-    document.getElementById("welcome-screen").style.display = "none";
-    document.getElementById("music-control").style.display = "flex";
+	const welcome = document.getElementById("welcome-screen");
+    welcome.classList.add("fade-out");
 
+    document.getElementById("music-control").style.display = "flex";
     setupTutorialPlayers();
     runTutorialIntro();
 }
+
 
 // ======================
 // 👆 點擊切換導覽
@@ -46,11 +48,11 @@ function runTutorialIntro() {
     }
 
     else if (tutorialIntroStep === 2) {
-        highlightArea("#ocean", "🃏 這裡是【你的手牌】，從這裡選擇要出的魚\n 點一下繼續");
+        highlightArea("#ocean", "🃏 這裡是【你的手牌】\n 從這裡選擇要出的魚\n 點一下繼續");
     }
 
     else if (tutorialIntroStep === 3) {
-        highlightArea("#player-zone", "🌊 這裡是【出牌區】，所有人會把魚放在這裡\n 點一下繼續");
+        highlightArea("#player-zone", "🌊 這裡是【出牌區】\n 所有人會把魚放在這裡\n 點一下繼續");
     }
 
     else {

@@ -382,7 +382,11 @@ function createFish() {
 setInterval(createFish, 4000);
 
 function initGame() {
+
+    // ✅ 改用加入 class 的方式觸發淡出
     const welcomeScreen = document.getElementById("welcome-screen");
+    welcomeScreen.classList.add("fade-out");
+	
 	const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     const bgmVolume = isMobile ? 0.03 : 0.1; // 手機用 0.03，電腦用 0.1
 
@@ -395,9 +399,7 @@ function initGame() {
     }).catch(err => console.log("播放受阻"));
 
     // 直接切換畫面並開始遊戲
-    welcomeScreen.style.opacity = "0";
     setTimeout(() => {
-        welcomeScreen.style.display = "none";
         startGame();
     }, 2500); // 保留 0.5 秒的淡出過渡效果
 }
@@ -732,3 +734,14 @@ document.getElementById("welcome-screen").style.opacity = 0;
 setTimeout(()=>{
     document.getElementById("welcome-screen").style.opacity = 1;
 }, 100);
+
+window.addEventListener('load', () => {
+    const welcome = document.getElementById("welcome-screen");
+    welcome.style.opacity = "0"; // 先設為 0
+    
+    // 強制瀏覽器重繪後再改回 1，達成淡入效果
+    setTimeout(() => {
+        welcome.style.transition = "opacity 1.2s ease";
+        welcome.style.opacity = "1";
+    }, 100);
+});
