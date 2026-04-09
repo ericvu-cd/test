@@ -46,11 +46,11 @@ function runTutorialIntro() {
     }
 
     else if (tutorialIntroStep === 2) {
-        highlightArea("#ocean", "🃏 這裡是【你的手牌】，從這裡選擇要出的魚, 點一下繼續");
+        highlightArea("#ocean", "🃏 這裡是【你的手牌】，從這裡選擇要出的魚\n 點一下繼續");
     }
 
     else if (tutorialIntroStep === 3) {
-        highlightArea("#player-zone", "🌊 這裡是【出牌區】，所有人會把魚放在這裡, 點一下繼續");
+        highlightArea("#player-zone", "🌊 這裡是【出牌區】，所有人會把魚放在這裡\n 點一下繼續");
     }
 
     else {
@@ -219,7 +219,7 @@ function tutorialStep3() {
     ];
 
     document.getElementById("summon-display").innerText =
-        "【教學 3】\n請送一張卡給對手";
+        "【教學 3】\n特別行動, 請送一張卡給對手";
 
     phase = "PLAYER_MAZU";
     renderUI();
