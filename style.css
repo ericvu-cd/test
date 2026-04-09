@@ -1,12 +1,24 @@
 :root { --p: #1976D2; --ai1: #D32F2F; --ai2: #388E3C; --ai3: #7B1FA2; }
 body { font-family: "Microsoft JhengHei", sans-serif; background: #e0f2f1; margin: 0; display: flex; flex-direction: column; height: 100vh; height: 100dvh; overflow: hidden; }
 
+
 #welcome-screen {
-    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-    background: #a8e6cf url('bgi.png') no-repeat center center; background-size: cover;
-    display: flex; justify-content: center; align-items: center; z-index: 1000;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+
+    background:
+        linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.4)),
+        url('bgi.png') no-repeat center center;
+
+    background-size: cover;
+	display: flex; justify-content: center; align-items: center; z-index: 1000;
     transition: opacity 0.5s;
+
 }
+
 #real-start-btn {
     padding: 20px 60px; font-size: 2.5rem; background: rgba(255, 223, 186, 0.5); 
     color: #d35400; border: 5px solid rgba(255, 179, 71, 0.5); border-radius: 50px;
@@ -349,4 +361,132 @@ body { font-family: "Microsoft JhengHei", sans-serif; background: #e0f2f1; margi
 .my-turn {
     animation: breathe 1.5s infinite alternate;
     border-top: 4px solid #4fc3f7 !important;
+}
+
+.game-title {
+    font-size: 3rem;
+    font-weight: 900;
+    color: white;
+    text-align: center;
+    text-shadow: 
+        0 0 10px rgba(255,255,255,0.8),
+        0 0 20px rgba(79,195,247,0.8),
+        0 0 40px rgba(3,169,244,0.8);
+    margin-bottom: 10px;
+}
+
+.subtitle {
+    font-size: 1rem;
+    opacity: 0.8;
+    letter-spacing: 3px;
+}
+
+#real-start-btn {
+    padding: 18px 60px;
+    font-size: 2rem;
+    border-radius: 50px;
+    border: none;
+
+    background: linear-gradient(135deg, #ffb74d, #ff7043);
+    color: white;
+
+    box-shadow:
+        0 5px 15px rgba(0,0,0,0.3),
+        0 0 20px rgba(255,183,77,0.6);
+
+    transition: all 0.2s;
+}
+
+#real-start-btn:hover {
+    transform: scale(1.08);
+}
+
+#real-start-btn:active {
+    transform: scale(0.95);
+}
+
+.sub-menu {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.sub-btn {
+    padding: 12px 30px;
+    font-size: 1.2rem;
+
+    border-radius: 30px;
+    border: 2px solid rgba(255,255,255,0.5);
+
+    background: rgba(255,255,255,0.15);
+    color: white;
+
+    backdrop-filter: blur(5px);
+
+    transition: 0.2s;
+}
+
+.sub-btn:hover {
+    background: rgba(255,255,255,0.3);
+    transform: translateY(-2px);
+}
+
+.mbubble {
+    position: absolute;
+    bottom: -100px;
+    width: 20px;
+    height: 20px;
+    background: rgba(255,255,255,0.3);
+    border-radius: 50%;
+    animation: floatUp 10s infinite ease-in;
+}
+
+.mbubble:nth-child(1) {
+    left: 20%;
+    animation-duration: 8s;
+}
+.mbubble:nth-child(2) {
+    left: 50%;
+    animation-duration: 12s;
+}
+.mbubble:nth-child(3) {
+    left: 80%;
+    animation-duration: 10s;
+}
+
+@keyframes floatUp {
+    0% {
+        transform: translateY(0);
+        opacity: 0.5;
+    }
+    100% {
+        transform: translateY(-120vh);
+        opacity: 0;
+    }
+}
+
+.welcome-container {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+}
+
+.difficulty-select {
+    margin-bottom: 25px;
+    text-align: center;
+}
+
+.diff-title {
+    color: white;
+    margin-bottom: 10px;
+    font-weight: bold;
+    letter-spacing: 2px;
+	font-size: 2rem;
+}
+
+.diff-options {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
 }

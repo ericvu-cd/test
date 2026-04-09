@@ -26,25 +26,48 @@
         </div>
     </div>
 
-    <div id="welcome-screen">
-        <div style="text-align: center;">
-		<div style="margin-bottom: 20px;">
-            <div style="margin-bottom:12px; font-weight:bold; font-size:1.4rem; color:#004d40;">🎯 選擇難度</div>
-            <button class="sub-btnd" onclick="setDifficulty(0.4, this)">簡單</button>
-            <button class="sub-btnd active" onclick="setDifficulty(0.7, this)">普通</button>
-            <button class="sub-btnd" onclick="setDifficulty(0.9, this)">困難</button>
-        </div>
-            <button id="real-start-btn" onclick="initGame()" style="margin-bottom: 20px; display: block; width: 100%;">啟航</button>
-            <div style="display: flex; gap: 20px; justify-content: center;">
-                <button class="sub-btn" onclick="openStory()">故事</button>
-                <button class="sub-btn" onclick="openInfo()">說明</button>
-            </div>
-        </div>
-    </div>
+	<div id="welcome-screen">
+		<div class="welcome-container">
+
+			<div class="game-title">
+				友魚勇者之路
+				<div class="subtitle">單人挑戰</div>
+			</div>
+			
+			<div class="difficulty-select">
+				<div class="diff-title">🎯 選擇難度</div>
+
+				<div class="diff-options">
+					<button class="sub-btnd" onclick="setDifficulty(0.4, this)">簡單</button>
+					<button class="sub-btnd active" onclick="setDifficulty(0.7, this)">普通</button>
+					<button class="sub-btnd" onclick="setDifficulty(0.9, this)">困難</button>
+					
+					
+					
+				</div>
+			</div>
+
+			<div class="menu-buttons">
+				<button id="real-start-btn" onclick="initGame()">啟航冒險</button>
+
+				<div class="sub-menu">
+					<button class="sub-btn" onclick="openStory()">📖 故事</button>
+					<button class="sub-btn" onclick="openInfo()">📘 說明</button>
+				</div>
+			</div>
+
+		</div>
+
+		<!-- 背景光點 -->
+		<div class="mbubble"></div>
+		<div class="mbubble"></div>
+		<div class="mbubble"></div>
+
+	</div>
 
     <div id="story-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:black; z-index:3000;">
         <img id="story-img" src="" style="width:100%; height:100%; object-fit: cover;">
-        <div style="position:absolute; bottom:30px; width:100%; display:flex; justify-content:center; gap:20px;">
+        <div style="position:absolute; top:20px; right:20px; width:100%; display:flex; justify-content:right; gap:20px;">
             <button class="ctrl-btn" onclick="closeStory()">X</button>
         </div>
         <div id="story-page-num" style="position:absolute; top:20px; left:20px; color:white; background:rgba(0,0,0,0.2); padding:5px 10px; border-radius:20px;">1 / 6</div>
@@ -62,7 +85,7 @@
         <div id="card-preview-container"></div>
     </div>
 
-    <div id="header">友魚勇者之路</div>
+    <div id="header">友魚勇者之路單人挑戰</div>
 
     <div class="char-area">
         <div id="ai-1" class="box"></div>
@@ -75,7 +98,7 @@
         <div id="bubbles"></div>
         <div id="deck-info">剩餘召喚卡: --</div>
 		<div id="log-btn" onclick="openLog()">📜出牌記錄</div>
-        <div id="summon-display">🔍尋找對手...等待中...</div>
+        <div id="summon-display">🔍尋找勇者...等待中...</div>
         <div id="table"></div>
     </div>
 

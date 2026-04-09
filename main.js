@@ -726,3 +726,9 @@ function aiTalkMazuReceive(p, from, card) {
     const msg = lines[Math.floor(Math.random() * lines.length)];
     showChat(p, msg);
 }
+
+document.getElementById("welcome-screen").style.opacity = 0;
+
+setTimeout(()=>{
+    document.getElementById("welcome-screen").style.opacity = 1;
+}, 100);
