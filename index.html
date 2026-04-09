@@ -36,14 +36,10 @@
 			
 			<div class="difficulty-select">
 				<div class="diff-title">🎯 選擇難度</div>
-
 				<div class="diff-options">
 					<button class="sub-btnd" onclick="setDifficulty(0.4, this)">簡單</button>
 					<button class="sub-btnd active" onclick="setDifficulty(0.7, this)">普通</button>
 					<button class="sub-btnd" onclick="setDifficulty(0.9, this)">困難</button>
-					
-					
-					
 				</div>
 			</div>
 
@@ -53,6 +49,7 @@
 				<div class="sub-menu">
 					<button class="sub-btn" onclick="openStory()">📖 故事</button>
 					<button class="sub-btn" onclick="openInfo()">📘 說明</button>
+					<button class="sub-btn" onclick="startTutorial()">新手教學</button>
 				</div>
 			</div>
 
@@ -108,8 +105,10 @@
 
     <script src="db.js"></script>
     <script src="main.js"></script>
+	<script src="tutorial.js"></script>
 	
 	<div id="chat-layer"></div>
+	<div id="tutorial-tooltip"></div>
 
 </body>
 </html>
