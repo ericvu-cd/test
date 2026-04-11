@@ -525,8 +525,8 @@ function handleMazuAI(caller) {
             
             renderUI();
 
-            // 4. 全部說完後，再停頓 2 秒才結束回合
-            setTimeout(finishRound, 2000);
+            // 4. 全部說完後，再停頓 3 秒才結束回合
+            setTimeout(finishRound, 3000);
             
         }, 2000); // 這裡是兩次說話之間的 2 秒停頓
 
@@ -587,22 +587,42 @@ function aiMove(pI, cI) {
     aiTalk(p, f, isCorrect);
 }
 
+// 建立一個全域或區域變數來儲存當前回合的結算資料
+let roundReport = [];
+
 function showResult() {
     phase = "RESULT";
+    roundReport = []; // 清空舊資料
+
     if (callerIdx !== 0) addLog(`揭曉神祕召喚：${currentS.t.replace(/\n/g, " ")}`, "cmd");
     document.getElementById("summon-display").innerText = "【召喚揭曉】\n" + currentS.t;
+
     setTimeout(() => {
         table.forEach(t => {
-            if (currentS.c(t.card)) {
+            const isSuccess = currentS.c(t.card);
+            const player = players[t.pIdx];
+            
+            // 記錄每一手的結果
+            roundReport.push({
+                name: player.n,
+                fishName: t.card.n,
+                isSuccess: isSuccess,
+                // 這裡可以根據資料庫中的條件邏輯簡單描述原因
+                reason: isSuccess ? "成功送出: 符合召喚條件" : "退回: 不符合召喚要求"
+            });
+
+            if (isSuccess) {
                 playSuccessSfx();
-                addLog(`${players[t.pIdx].n} 成功送出【${t.card.n}】`, "success");
+                addLog(`${player.n} 成功送出【${t.card.n}】`, "success");
             } else {
-                players[t.pIdx].hand.push(t.card);
-                addLog(`${players[t.pIdx].n} 的【${t.card.n}】不符規律，退回。`);
+                player.hand.push(t.card);
+                addLog(`${player.n} 的【${t.card.n}】不符規律，退回。`);
             }
         });
         renderUI();
-        setTimeout(finishRound, 5000);
+        
+        // 延遲一段時間後顯示詳細結算視窗
+        setTimeout(finishRound, 500); 
     }, 1000);
 }
 
@@ -628,10 +648,87 @@ font-size: 2rem; margin-bottom: 15px; letter-spacing: 2px;">${title}</h1>
 
 function finishRound() {
     let win = players.find(p => p.hand.length === 0);
-    if (win) { showWinScreen(win); return; }
+    if (win) { 
+        showWinScreen(win); 
+        return; 
+    }
+
+    // 檢查是否「不」是媽祖卡
+    if (currentS && !currentS.isMazu) {
+        showRoundSummary(); // 呼叫彈出視窗
+    } else {
+        // 如果是媽祖卡，直接進入下一回合
+        proceedToNextRound();
+    }
+}
+
+// 新增：處理下一回合的邏輯轉換
+function proceedToNextRound() {
     callerIdx = (callerIdx + 1) % 4;
     phase = "WAIT";
     autoStep();
+}
+
+// 新增：彈出視窗函式
+function showRoundSummary() {
+    const overlay = document.createElement("div");
+    overlay.id = "round-summary-overlay";
+    overlay.style = `
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+        background: rgba(0,0,0,0.7); display: flex; justify-content: center; 
+        align-items: center; z-index: 4000; backdrop-filter: blur(4px);
+    `;
+
+    // 格式化出牌清單 HTML
+    const reportHtml = roundReport.map(r => `
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #eee;">
+            <div style="text-align: left;">
+                <strong style="color: #444;">${r.name}</strong>: ${r.fishName}
+                <div style="font-size: 0.8rem; color: #888;">${r.reason}</div>
+            </div>
+            <div style="font-size: 1.2rem;">
+                ${r.isSuccess ? '<span style="color: #2ecc71;">✔️</span>' : '<span style="color: #e74c3c;">❌</span>'}
+            </div>
+        </div>
+    `).join('');
+
+    const modal = document.createElement("div");
+    modal.style = `
+        background: white; padding: 25px; border-radius: 20px; 
+        width: 90%; max-width: 450px; max-height: 80vh; overflow-y: auto;
+        box-shadow: 0 15px 40px rgba(0,0,0,0.4); font-family: sans-serif;
+    `;
+
+    modal.innerHTML = `
+        <h2 style="color: #00796b; margin: 0 0 15px 0; font-size: 1.4rem; border-bottom: 2px solid #FFDFBA; padding-bottom: 10px;">回合任務結算</h2>
+        
+        <div style="background: #f9f9f9; padding: 15px; border-radius: 12px; margin-bottom: 20px; text-align: left;">
+            <div style="font-weight: bold; color: #d35400; margin-bottom: 5px;">📜 召喚規律：</div>
+            <div style="color: #333; line-height: 1.4;">${currentS.t}</div>
+            <div style="font-size: 0.9rem; color: #666; margin-top: 8px; font-style: italic;">
+                神之解說：${currentS.why || "此為本次海洋環境的特殊規律"}
+            </div>
+        </div>
+
+        <div style="margin-bottom: 25px;">
+            <div style="font-weight: bold; color: #00796b; margin-bottom: 10px; text-align: left;">🐟 勇者出牌紀錄：</div>
+            ${reportHtml}
+        </div>
+
+        <button id="close-summary-btn" style="
+            width: 100%; padding: 12px; background: #FFDFBA; border: none; 
+            border-radius: 50px; font-weight: bold; color: #d35400;
+            cursor: pointer; box-shadow: 0 4px 0 #FFB347; transition: all 0.1s;
+        ">整理魚獲，繼續冒險</button>
+    `;
+
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+
+    document.getElementById("close-summary-btn").onclick = () => {
+        overlay.remove();
+        proceedToNextRound();
+    };
 }
 
 function aiChooseCard(p) {
