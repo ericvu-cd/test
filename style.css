@@ -1,5 +1,17 @@
 :root { --p: #1976D2; --ai1: #D32F2F; --ai2: #388E3C; --ai3: #7B1FA2; }
 body { font-family: "Microsoft JhengHei", sans-serif; background: #4f6a6e; margin: 0; display: flex; flex-direction: column; height: 100vh; height: 100dvh; overflow: hidden; }
+/* 讓 body 底下的所有東西預設先消失 */
+body > *:not(#welcome-screen) {
+    visibility: hidden;
+    opacity: 0;
+}
+
+/* 當遊戲開始，給 body 加一個類別，讓內容顯現 */
+body.game-started > *:not(#welcome-screen) {
+    visibility: visible;
+    opacity: 1;
+    transition: opacity 1s ease;
+}
 
 #welcome-screen {
     position: absolute;
@@ -191,8 +203,10 @@ body { font-family: "Microsoft JhengHei", sans-serif; background: #4f6a6e; margi
 }
 
 #ocean {
-    flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
     position: relative; margin: 5px 10px; border-radius: 20px;
+	padding-top: 50px; 
+    min-height: 0;
     background: url('ozone.png') no-repeat center center;
     background-size: cover; animation: oceanMoveX 40s linear infinite;
     z-index: 1;
@@ -216,7 +230,7 @@ body { font-family: "Microsoft JhengHei", sans-serif; background: #4f6a6e; margi
 @keyframes swim { 0% { transform: translateX(0); } 100% { transform: translateX(-120vw); } }
 
 #summon-display { z-index: 5; position: relative; background: #fffbe6; padding: 25px; border-radius: 20px; width: 90%; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.3); margin-bottom: 20px; font-weight: bold; min-height: 80px; border: 5px solid #ffe58f; font-size: 1.7rem; color: #856404; display: flex; align-items: center; justify-content: center; line-height: 1.4; white-space: pre-wrap; box-sizing: border-box; transition: all 0.3s; }
-#table { z-index: 5; position: relative; display: flex; gap: 15px; min-height: 250px; align-items: center; width: 95%; justify-content: center; overflow-x: auto; }
+#table { z-index: 5; position: relative; display: flex; gap: 15px; flex-grow: 1; min-height: 250px; align-items: center; width: 95%; justify-content: center; overflow-x: auto; }
 #deck-info { position: absolute; top: 15px; left: 20px; background: rgba(252, 230, 127, 0.6); color: black; padding: 8px 20px; border-radius: 30px; font-size: 1.1rem; font-weight: bold; z-index: 5; }
 
 /* 玩家區：磨砂玻璃設計 */
@@ -324,7 +338,7 @@ body { font-family: "Microsoft JhengHei", sans-serif; background: #4f6a6e; margi
     .char-area { padding: 5px 2px; }
     .avatar-img { width: 40px; height: 40px; font-size: 1.3rem; border-width: 2px; }
     .ai-name { font-size: 0.85rem; }
-    #ocean { margin: 5px; border-radius: 12px; }
+    #ocean { margin: 5px; border-radius: 12px; padding-top: 35px; }
     #deck-info { font-size: 0.8rem; padding: 4px 10px; top: 5px; left: 5px; background: rgba(252, 230, 127, 0.6); }
     #summon-display { font-size: 1.05rem; padding: 10px; width: 92%; min-height: 50px; margin-bottom: 5px; border-width: 3px; border-radius: 12px; }
     #table { min-height: 122px; gap: 6px; } 

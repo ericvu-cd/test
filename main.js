@@ -14,7 +14,6 @@ function setDifficulty(d, btn) {
 	document.querySelectorAll('.sub-btnd').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
 }
-// <button class="sub-btnd active" onclick="setDifficulty(0.7, this)">普通</button>
 
 // --- 故事與說明功能 ---
 let storyIdx = 1;
@@ -407,13 +406,10 @@ function createFish() {
 setInterval(createFish, 4000);
 
 function initGame() {
-
+	document.body.classList.add('game-started');
     // ✅ 改用加入 class 的方式觸發淡出
     const welcomeScreen = document.getElementById("welcome-screen");
-	const gameContent = document.getElementById("game-main-content");
     welcomeScreen.classList.add("fade-out");
-	gameContent.style.visibility = "visible";
-    gameContent.style.opacity = "1";
 	
 	const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     const bgmVolume = isMobile ? 0.03 : 0.1; // 手機用 0.03，電腦用 0.1
@@ -640,8 +636,6 @@ let roundReport = [];
 function showResult() {
     phase = "RESULT";
     roundReport = []; 
-
-//    document.getElementById("summon-display").innerText = "【召喚揭曉】\n" + currentS.t;
 
     setTimeout(() => {
         table.forEach(t => {
