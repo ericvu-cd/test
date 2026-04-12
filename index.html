@@ -85,28 +85,30 @@
         <div id="card-preview-container"></div>
     </div>
 
-    <div id="header">友魚勇者之路單人挑戰</div>
+	<div id="game-main-content" style="visibility: hidden; opacity: 0; transition: opacity 0.5s;">	
+		<div id="header">友魚勇者之路單人挑戰</div>
 
-    <div class="char-area">
-        <div id="ai-1" class="box"></div>
-        <div id="ai-2" class="box"></div>
-        <div id="ai-3" class="box"></div>
-    </div>
+		<div class="char-area">
+			<div id="ai-1" class="box"></div>
+			<div id="ai-2" class="box"></div>
+			<div id="ai-3" class="box"></div>
+		</div>
 
-    <div id="ocean">
-        <div id="fish-layer"></div>
-        <div id="bubbles"></div>
-        <div id="deck-info">剩餘召喚卡: --</div>
-		<div id="log-btn" onclick="openLog()">📜出牌記錄</div>
-        <div id="summon-display">🔍尋找勇者...等待中...</div>
-        <div id="table"></div>
-    </div>
+		<div id="ocean">
+			<div id="fish-layer"></div>
+			<div id="bubbles"></div>
+			<div id="deck-info">剩餘召喚卡: --</div>
+			<div id="log-btn" onclick="openLog()">📜出牌記錄</div>
+			<div id="summon-display">🔍尋找勇者...等待中...</div>
+			<div id="table"></div>
+		</div>
 
-    <div id="player-zone" style="position: relative; overflow: hidden;">
-		<div id="arrow-left" class="hand-arrow">〈</div>
-        <div id="player-hand" class="hand"></div>
-		<div id="arrow-right" class="hand-arrow">〉</div>	
-    </div>
+		<div id="player-zone" style="position: relative; overflow: hidden;">
+			<div id="arrow-left" class="hand-arrow">〈</div>
+			<div id="player-hand" class="hand"></div>
+			<div id="arrow-right" class="hand-arrow">〉</div>	
+		</div>
+	</div>
 
     <script src="db.js"></script>
     <script src="main.js"></script>

@@ -1,6 +1,5 @@
 :root { --p: #1976D2; --ai1: #D32F2F; --ai2: #388E3C; --ai3: #7B1FA2; }
-body { font-family: "Microsoft JhengHei", sans-serif; background: #e0f2f1; margin: 0; display: flex; flex-direction: column; height: 100vh; height: 100dvh; overflow: hidden; }
-
+body { font-family: "Microsoft JhengHei", sans-serif; background: #4f6a6e; margin: 0; display: flex; flex-direction: column; height: 100vh; height: 100dvh; overflow: hidden; }
 
 #welcome-screen {
     position: absolute;
@@ -8,27 +7,40 @@ body { font-family: "Microsoft JhengHei", sans-serif; background: #e0f2f1; margi
     left: 0;
     width: 100%;
     height: 100%;
-	z-index: 1000;
+    z-index: 1000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 
-    background:
+    /* 步驟 2: 確保背景圖片屬性完整 */
+    background: 
         linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.4)),
         url('bgi.png') no-repeat center center;
-
     background-size: cover;
-	display: flex; justify-content: center; align-items: center; z-index: 1000;
-    transition: opacity 0.8s ease;
-	opacity: 1;
-    visibility: visible;
+
+    /* 步驟 3: 設定初始透明度為 0，並執行淡入動畫 */
+    opacity: 0;
+    animation: welcomeFadeIn 1.5s ease-in-out forwards;
+    
+    /* 這裡保留原本消失用的過渡效果 */
+    transition: opacity 1.2s ease-in-out, visibility 1.2s;
+}
+
+/* 步驟 4: 定義淡入動畫 */
+@keyframes welcomeFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* 點擊按鈕後消失用的類別 */
+#welcome-screen.fade-out {
+    opacity: 0;
+    visibility: hidden;
 }
 #welcome-screen.hidden {
     opacity: 0;
     visibility: hidden; /* 使用 visibility 讓它在動畫完後不干涉點擊，且能保有過渡效果 */
     pointer-events: none; /* 確保徹底無法被點擊 */
-}
-#welcome-screen.fade-out {
-    opacity: 0;
-    visibility: hidden;
-    pointer-events: none; /* 確保淡出時不會擋到後面的點擊 */
 }
 
 #real-start-btn {

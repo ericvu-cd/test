@@ -410,7 +410,10 @@ function initGame() {
 
     // ✅ 改用加入 class 的方式觸發淡出
     const welcomeScreen = document.getElementById("welcome-screen");
+	const gameContent = document.getElementById("game-main-content");
     welcomeScreen.classList.add("fade-out");
+	gameContent.style.visibility = "visible";
+    gameContent.style.opacity = "1";
 	
 	const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     const bgmVolume = isMobile ? 0.03 : 0.1; // 手機用 0.03，電腦用 0.1
@@ -429,7 +432,7 @@ function initGame() {
     // 直接切換畫面並開始遊戲
     setTimeout(() => {
         startGame();
-    }, 2500); // 保留 0.5 秒的淡出過渡效果
+    }, 3500); // 保留 3.5 秒的淡出過渡效果
 }
 
 function startGame() {
@@ -941,16 +944,14 @@ setTimeout(()=>{
     document.getElementById("welcome-screen").style.opacity = 1;
 }, 100);
 
-window.addEventListener('load', () => {
+// ✅ 修改後的穩定版本
+window.onload = () => {
     const welcome = document.getElementById("welcome-screen");
-    welcome.style.opacity = "0"; // 先設為 0
-    
-    // 強制瀏覽器重繪後再改回 1，達成淡入效果
-    setTimeout(() => {
-        welcome.style.transition = "opacity 1.2s ease";
+    if (welcome) {
+        // 直接讓它淡入，不要再用 setTimeout 延遲 100ms
         welcome.style.opacity = "1";
-    }, 100);
-});
+    }
+};
 
 function showMazuGiftEffect(fromName, toName, card) {
     const effect = document.createElement("div");
