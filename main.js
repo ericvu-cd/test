@@ -638,7 +638,7 @@ function showResult() {
     phase = "RESULT";
     roundReport = []; 
 
-    document.getElementById("summon-display").innerText = "【召喚揭曉】\n" + currentS.t;
+//    document.getElementById("summon-display").innerText = "【召喚揭曉】\n" + currentS.t;
 
     setTimeout(() => {
         table.forEach(t => {
