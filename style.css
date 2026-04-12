@@ -529,3 +529,32 @@ body { font-family: "Microsoft JhengHei", sans-serif; background: #e0f2f1; margi
     transition: all 0.2s;
 	display: none;
 }
+
+#report-control {
+    position: fixed;
+    top: 20px;
+    right: 80px; 
+    width: 45px;
+    height: 45px;
+    background: white;
+    border-radius: 50%;
+    display: flex; /* 預設啟航後顯示 */
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    cursor: pointer;
+    z-index: 2000;
+    font-size: 1.5rem;
+    transition: all 0.3s;
+    user-select: none;
+}
+
+#report-control.off {
+    background: #ccc;
+    filter: grayscale(1);
+    opacity: 0.7;
+}
+
+#report-control:hover {
+    transform: scale(1.1);
+}

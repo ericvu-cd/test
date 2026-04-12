@@ -1,5 +1,6 @@
 let gameDifficulty = 0.7;
 let speakingAI = null;
+let showSummaryMode = true; // 預設開啟結算頁面
 
 function setDifficulty(d, btn) {
     gameDifficulty = d;
@@ -392,6 +393,7 @@ function initGame() {
 
     // 啟動音樂與日誌
     document.getElementById("music-control").style.display = "flex";
+	document.getElementById("report-control").style.display = "flex";
     document.getElementById("log-btn").style.display = "flex";
     const music = document.getElementById("bgm");
     music.play().then(() => {
@@ -508,6 +510,8 @@ function handleMazuAI(caller) {
 
         let card = caller.hand.pop();
         let target = players.filter(p => p !== caller).sort((a,b) => a.hand.length - b.hand.length)[0];
+		
+		showMazuGiftEffect(caller.n, target.n, card); // 顯示特寫		
 
         // 1. 送牌者先說話
         aiTalkMazuGive(caller, target, card);
@@ -539,6 +543,7 @@ function playerAction(idx) {
     if (phase === "PLAYER_MAZU") {
         let card = players[0].hand.splice(idx, 1)[0];
         let target = players.filter((p, i) => i !== 0).sort((a,b) => a.hand.length - b.hand.length)[0];
+		showMazuGiftEffect("你", target.n, card);
         target.hand.push(card);
         playPopSfx();
         addLog(`✨ 你分享了【${card.n}】給 ${target.n}！`, "success");
@@ -569,7 +574,7 @@ function playerAction(idx) {
                     aiMove(pi, matchIdx); 
                 }
             });
-            showResult();
+		showResult();
         }, 800);
     }
 }
@@ -592,23 +597,54 @@ let roundReport = [];
 
 function showResult() {
     phase = "RESULT";
-    roundReport = []; // 清空舊資料
+    roundReport = []; 
 
-    if (callerIdx !== 0) addLog(`揭曉神祕召喚：${currentS.t.replace(/\n/g, " ")}`, "cmd");
     document.getElementById("summon-display").innerText = "【召喚揭曉】\n" + currentS.t;
 
     setTimeout(() => {
         table.forEach(t => {
             const isSuccess = currentS.c(t.card);
             const player = players[t.pIdx];
+            const condText = currentS.t; 
             
-            // 記錄每一手的結果
+            // 使用陣列來收集所有相關的特性
+            let featuresFound = [];
+
+            // 1. 檢查是否包含「燈號/永續等級」相關關鍵字
+            if (["燈", "綠", "黃", "紅"].some(k => condText.includes(k))) {
+                featuresFound.push(t.card.l === 1 ? "綠燈" : (t.card.l === 2 ? "黃燈" : "紅燈"));
+            }
+
+            // 2. 檢查是否包含「捕撈方式」相關關鍵字
+            if (["網", "釣", "一支", "延繩", "圍網", "刺網", "籠具", "禁止捕撈", "標槍"].some(k => condText.includes(k))) {
+                featuresFound.push(t.card.m.join("、"));
+            }
+
+            // 3. 檢查是否包含「來源/產地」相關關鍵字
+            if (["養殖", "近海", "遠洋"].some(k => condText.includes(k))) {
+                featuresFound.push(t.card.d);
+            }
+
+            // 4. 檢查是否包含「季節」相關關鍵字
+            if (["春", "夏", "秋", "冬", "全年"].some(k => condText.includes(k))) {
+                featuresFound.push(t.card.s);
+            }
+
+            // 5. 檢查是否包含「棲息地」相關關鍵字
+            if (["洄游", "定棲", "底棲"].some(k => condText.includes(k))) {
+                featuresFound.push(t.card.h);
+            }
+
+            // 最終呈現字串：如果以上都沒對應到，預設顯示燈號；若有多項則用 " | " 隔開
+            let finalFeatureStr = featuresFound.length > 0 
+                ? featuresFound.join(" | ") 
+                : (t.card.l === 1 ? "綠燈" : (t.card.l === 2 ? "燈" : "紅燈"));
+
             roundReport.push({
                 name: player.n,
                 fishName: t.card.n,
                 isSuccess: isSuccess,
-                // 這裡可以根據資料庫中的條件邏輯簡單描述原因
-                reason: isSuccess ? "成功送出: 符合召喚條件" : "退回: 不符合召喚要求"
+                feature: finalFeatureStr
             });
 
             if (isSuccess) {
@@ -619,11 +655,25 @@ function showResult() {
                 addLog(`${player.n} 的【${t.card.n}】不符規律，退回。`);
             }
         });
+
         renderUI();
         
-        // 延遲一段時間後顯示詳細結算視窗
-        setTimeout(finishRound, 500); 
-    }, 1000);
+        let win = players.find(p => p.hand.length === 0);
+		if (win) {
+            setTimeout(() => showWinScreen(win), 1000);
+            return;
+        }
+
+        // --- 關鍵修改：控制下一步去向 ---
+        if (showSummaryMode) {
+            // 模式 A：顯示詳細報告彈窗
+            setTimeout(showRoundSummary, 1000); 
+        } else {
+            // 模式 B：快速模式
+            // 停頓 1.5 秒讓玩家看清場上的 ✔️/❌，然後自動清理進入下一輪
+            setTimeout(finishRound, 1500); 
+        }
+	}, 1000);
 }
 
 function showWinScreen(winner) {
@@ -671,6 +721,12 @@ function proceedToNextRound() {
 
 // 新增：彈出視窗函式
 function showRoundSummary() {
+	
+	if (!showSummaryMode) {
+        proceedToNextRound(); // 或 finishRound()，視您的架構而定
+        return;
+    }
+	
     const overlay = document.createElement("div");
     overlay.id = "round-summary-overlay";
     overlay.style = `
@@ -679,15 +735,25 @@ function showRoundSummary() {
         align-items: center; z-index: 4000; backdrop-filter: blur(4px);
     `;
 
-    // 格式化出牌清單 HTML
     const reportHtml = roundReport.map(r => `
-        <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #eee;">
-            <div style="text-align: left;">
-                <strong style="color: #444;">${r.name}</strong>: ${r.fishName}
-                <div style="font-size: 0.8rem; color: #888;">${r.reason}</div>
-            </div>
-            <div style="font-size: 1.2rem;">
+        <div style="display: flex; align-items: center; padding: 10px 0; border-bottom: 1px solid #eee; text-align: left;">
+            <div style="font-size: 1.2rem; margin-right: 15px; width: 25px;">
                 ${r.isSuccess ? '<span style="color: #2ecc71;">✔️</span>' : '<span style="color: #e74c3c;">❌</span>'}
+            </div>
+            <div style="flex-grow: 1;">
+                <span style="font-weight: bold; color: #333;">${r.name}</span>：
+                <span>${r.fishName}</span>
+                <span style="
+                    margin-left: 8px; 
+                    padding: 2px 8px; 
+                    background: ${r.isSuccess ? '#d7ded9' : '#d7ded9'}; 
+                    color: ${r.isSuccess ? '#247173' : '#c62828'}; 
+                    border-radius: 4px; 
+                    font-size: 0.85rem;
+                    border: 1px solid ${r.isSuccess ? '#247173' : '#247173'};
+                ">
+                    ${r.feature}
+                </span>
             </div>
         </div>
     `).join('');
@@ -695,30 +761,24 @@ function showRoundSummary() {
     const modal = document.createElement("div");
     modal.style = `
         background: white; padding: 25px; border-radius: 20px; 
-        width: 90%; max-width: 450px; max-height: 80vh; overflow-y: auto;
-        box-shadow: 0 15px 40px rgba(0,0,0,0.4); font-family: sans-serif;
+        width: 90%; max-width: 450px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
     `;
 
     modal.innerHTML = `
-        <h2 style="color: #00796b; margin: 0 0 15px 0; font-size: 1.4rem; border-bottom: 2px solid #FFDFBA; padding-bottom: 10px;">回合任務結算</h2>
+        <h2 style="color: #00796b; margin-top: 0; font-size: 1.1rem;">回合成果結算</h2>
         
-        <div style="background: #f9f9f9; padding: 15px; border-radius: 12px; margin-bottom: 20px; text-align: left;">
-            <div style="font-weight: bold; color: #d35400; margin-bottom: 5px;">📜 召喚規律：</div>
-            <div style="color: #333; line-height: 1.4;">${currentS.t}</div>
-            <div style="font-size: 0.9rem; color: #666; margin-top: 8px; font-style: italic;">
-                神之解說：${currentS.why || "此為本次海洋環境的特殊規律"}
-            </div>
+        <div style="background: #f1f8e9; padding: 10px; border-radius: 10px; margin-bottom: 15px; text-align: left;">
+            <div style="font-weight: bold; color: #388e3c; font-size: 0.9rem;">📜 本回召喚要求：</div>
+            <div style="font-size: 1rem; color: #333; margin-top: 4px;">${currentS.t}</div>
         </div>
 
-        <div style="margin-bottom: 25px;">
-            <div style="font-weight: bold; color: #00796b; margin-bottom: 10px; text-align: left;">🐟 勇者出牌紀錄：</div>
+        <div style="margin-bottom: 20px;">
             ${reportHtml}
         </div>
 
         <button id="close-summary-btn" style="
-            width: 100%; padding: 12px; background: #FFDFBA; border: none; 
-            border-radius: 50px; font-weight: bold; color: #d35400;
-            cursor: pointer; box-shadow: 0 4px 0 #FFB347; transition: all 0.1s;
+            width: 100%; padding: 10px; background: #FFDFBA; border: none; 
+            border-radius: 50px; font-weight: bold; color: #d35400; cursor: pointer;
         ">整理魚獲，繼續冒險</button>
     `;
 
@@ -842,3 +902,44 @@ window.addEventListener('load', () => {
         welcome.style.opacity = "1";
     }, 100);
 });
+
+function showMazuGiftEffect(fromName, toName, card) {
+    const effect = document.createElement("div");
+    effect.style = `
+        position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+        background: white; border: 4px solid #FFD700; padding: 20px; border-radius: 15px; 
+        z-index: 5000; text-align: center; box-shadow: 0 0 30px rgba(0,0,0,0.3);
+        min-width: 200px;
+    `;
+    
+    // 獲取魚的特性標籤 (調用原本 main.js 裡的函式)
+    const tags = getFishTags(card);
+
+    effect.innerHTML = `
+        <div style="color:#D4AF37; font-weight:bold; font-size:1.2rem; margin-bottom:10px;">✨ 神明指示：分享資源 ✨</div>
+        <div style="margin-bottom:15px; font-size:1.3rem;"><strong>${fromName}</strong> 分享給 <strong>${toName}</strong></div>
+        <div class="card light-${card.l}" style="margin: 0 auto; pointer-events: none; transform: scale(1.1); float: none;">
+            <div class="card-n" style="font-size: 1.2rem;">${card.n}</div>
+            <div class="card-i" style="font-size: 0.9rem; margin-top: 5px; color: #555;">${tags}</div>
+        </div>
+    `;
+    
+    document.body.appendChild(effect);
+    
+    // 保持顯示 3 秒，讓玩家看清楚特性
+    setTimeout(() => {
+        effect.style.opacity = "0";
+        effect.style.transition = "opacity 0.5s";
+        setTimeout(() => effect.remove(), 1500);
+    }, 3000);
+}
+
+function toggleReportMode() {
+    showSummaryMode = !showSummaryMode;
+    const btn = document.getElementById("report-control");
+    if (showSummaryMode) {
+        btn.classList.remove("off");
+    } else {
+        btn.classList.add("off");
+    }
+}
