@@ -53,7 +53,9 @@ function openStory() {
     storyIdx = 1;
     updateStory();
     const overlay = document.getElementById("story-overlay");
-    overlay.style.display = "block";
+    overlay.style.display = "flex"; // 顯示
+    overlay.style.visibility = "visible"; // 確保可見
+    overlay.style.opacity = "1"; // 確保不透明
     startStoryTimer();
 
     // 綁定觸控事件
@@ -108,7 +110,9 @@ function closeStory() {
 // 說明功能
 function openInfo() {
     const infoEl = document.getElementById("info-overlay");
-    infoEl.style.display = "flex";
+	infoEl.style.display = "flex";
+    infoEl.style.visibility = "visible";
+    infoEl.style.opacity = "1";
     
     fetch('info.txt')
         .then(response => {

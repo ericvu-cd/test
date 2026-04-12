@@ -15,14 +15,30 @@ function startTutorial() {
     tutorialStep = 0;
     tutorialIntroStep = 1;
 
-	const welcome = document.getElementById("welcome-screen");
-    welcome.classList.add("fade-out");
+    // 1. 隱藏歡迎頁面
+    const welcome = document.getElementById("welcome-screen");
+    if (welcome) {
+        welcome.classList.add("fade-out");
+        // 建議在動畫結束後徹底移除或設為 display:none
+        setTimeout(() => welcome.style.display = 'none', 1000);
+    }
 
-    document.getElementById("music-control").style.display = "flex";
+    // 2. 重要：啟動遊戲背景與元素顯現 (這會對應 style.css 的 visibility: visible)
+    document.body.classList.add('game-started');
+
+    // 3. 顯示控制項
+    const musicCtrl = document.getElementById("music-control");
+    if (musicCtrl) musicCtrl.style.display = "flex";
+
+    // 4. 初始化教學資料
     setupTutorialPlayers();
-    runTutorialIntro();
-}
 
+    // 5. 延遲執行導覽，確保元素寬高已正確計算
+    setTimeout(() => {
+        renderUI(); // 渲染教學手牌
+        runTutorialIntro();
+    }, 100); 
+}
 
 // ======================
 // 👆 點擊切換導覽
@@ -48,11 +64,11 @@ function runTutorialIntro() {
     }
 
     else if (tutorialIntroStep === 2) {
-        highlightArea("#ocean", "🃏 這裡是【你的手牌】\n 從這裡選擇要出的魚\n 點一下繼續");
+        highlightArea("#ocean", "🃏 這裡是【你的手牌】\n 從這裡選擇要出的魚\n 【點一下繼續】");
     }
 
     else if (tutorialIntroStep === 3) {
-        highlightArea("#player-zone", "🌊 這裡是【出牌區】\n 所有人會把魚放在這裡\n 點一下繼續");
+        highlightArea("#player-zone", "🌊 這裡是【出牌區】\n 所有人會把魚放在這裡\n 【點一下繼續】");
     }
 
     else {
