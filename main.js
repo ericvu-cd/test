@@ -2,6 +2,13 @@ let gameDifficulty = 0.7;
 let speakingAI = null;
 let showSummaryMode = true; // 預設開啟結算頁面
 
+const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+// 當視窗大小改變時，觸發 updateHandArrows 函式重新計算
+window.addEventListener('resize', () => {
+    updateHandArrows();
+});
+
 function setDifficulty(d, btn) {
     gameDifficulty = d;
 	document.querySelectorAll('.sub-btnd').forEach(b => b.classList.remove('active'));
@@ -228,7 +235,15 @@ function closePreview() {
 function renderUI() {
     players.forEach((p, i) => { 
         if(i > 0) {
-            const cardsIcon = `<span style="letter-spacing: -5px; display: inline-block; white-space: nowrap;">${"🎴".repeat(p.hand.length)}</span>`;
+			const isLastCard = p.hand.length === 1;
+            const dangerClass = isLastCard ? "ai-last-card-danger" : "";
+            
+            // 將閃爍類別套用在包覆 🎴 的容器上
+            const cardsIcon = `
+                <span class="${dangerClass}" style="letter-spacing: -5px; display: inline-block; white-space: nowrap;">
+                    ${"🎴".repeat(p.hand.length)}
+                </span>`;
+            
             document.getElementById(p.id).innerHTML = `
                 <div class="avatar-img">${p.avatar}</div>
                 <div class="ai-name">${p.n}</div>
@@ -237,9 +252,16 @@ function renderUI() {
         }
     });
 
-    document.getElementById("deck-info").innerText = `剩餘${deckS.length}次召喚`;
+// --- 優化 3: 牌組告急閃爍 ---
+    const deckInfo = document.getElementById("deck-info");
+    deckInfo.innerText = `剩餘${deckS.length}次召喚`;
+    if (deckS.length <= 5) {
+        deckInfo.classList.add("deck-danger");
+    } else {
+        deckInfo.classList.remove("deck-danger");
+    }
     
-const handEl = document.getElementById("player-hand");
+	const handEl = document.getElementById("player-hand");
     handEl.innerHTML = "";
     
     const isNormalTask = currentS && !currentS.isMazu && phase === "PLAYER_TURN" && callerIdx === 0;
@@ -261,6 +283,8 @@ const handEl = document.getElementById("player-hand");
     });
 	// 只要階段包含 PLAYER，就幫玩家區加上 my-turn 類別
     document.getElementById("player-zone").classList.toggle("my-turn", phase.includes("PLAYER"));
+	
+	setTimeout(updateHandArrows, 50);
 }
 
 // 確保點擊遮罩背景也能關閉預覽
@@ -400,6 +424,8 @@ function initGame() {
         music.volume = bgmVolume;
     }).catch(err => console.log("播放受阻"));
 
+	document.getElementById('player-hand').addEventListener('scroll', updateHandArrows);
+
     // 直接切換畫面並開始遊戲
     setTimeout(() => {
         startGame();
@@ -537,7 +563,7 @@ function handleMazuAI(caller) {
     }, 1000);
 }
 
-function playerAction(idx) {
+async function playerAction(idx) {
     if (navigator.vibrate) navigator.vibrate(30);
 
     if (phase === "PLAYER_MAZU") {
@@ -565,27 +591,40 @@ function playerAction(idx) {
         renderUI();
 		renderTable();
         phase = "AI_FOLLOWING";
-        
-        setTimeout(() => {
-            players.forEach((p, pi) => { 
-                if (p.isAI && pi !== callerIdx) {
-                    let lastCard = table[table.length - 1].card;
-					let matchIdx = aiChooseCard(p, 0.7);
-                    aiMove(pi, matchIdx); 
-                }
-            });
-		showResult();
-        }, 800);
+		
+		await new Promise(resolve => setTimeout(resolve, 800));
+        // 【關鍵修改】改用 for...of 才能支援 await
+        for (let pi = 0; pi < players.length; pi++) {
+            const p = players[pi];
+            
+            // 排除玩家本人 (pi === 0) 且如果是 AI 且不是目前的召喚者 (如果是 AI 跟牌)
+            if (p.isAI && pi !== callerIdx) {
+                let matchIdx = aiChooseCard(p, 0.7);
+                
+                // 每位 AI 出牌前先等 0.6 秒
+                await new Promise(resolve => setTimeout(resolve, 600));
+                
+                aiMove(pi, matchIdx); 
+            }
+        }
+
+        // 所有 AI 出完後再等 0.2 秒進結果
+        await new Promise(resolve => setTimeout(resolve, 200));
+        showResult();
+		
     }
 }
 
 function aiMove(pI, cI) {
     const p = players[pI];
+	if (!p.hand[cI]) return; // 安全機制：確保這位置有牌
+	
     const f = p.hand.splice(cI, 1)[0];
 
     playPopSfx();
     table.push({ pIdx: pI, card: f });
     renderTable();
+	renderUI();    // 更新 AI 手上的卡片數量 (確保閃爍的 🎴 會消失一張)
 
     let isCorrect = currentS && currentS.c ? currentS.c(f) : null;
 
@@ -721,7 +760,7 @@ function proceedToNextRound() {
 
 // 新增：彈出視窗函式
 function showRoundSummary() {
-	
+		
 	if (!showSummaryMode) {
         proceedToNextRound(); // 或 finishRound()，視您的架構而定
         return;
@@ -763,6 +802,16 @@ function showRoundSummary() {
         background: white; padding: 25px; border-radius: 20px; 
         width: 90%; max-width: 450px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
     `;
+	modal.classList.add("summary-pop-anim"); 
+    
+    // 設定彈窗樣式 (原有的樣式)
+    modal.style.background = "white";
+    modal.style.padding = "25px";
+    modal.style.borderRadius = "20px";
+    modal.style.width = "90%";
+    modal.style.maxWidth = "450px";
+    modal.style.boxShadow = "0 10px 30px rgba(0,0,0,0.3)";
+	
 
     modal.innerHTML = `
         <h2 style="color: #00796b; margin-top: 0; font-size: 1.1rem;">回合成果結算</h2>
@@ -941,5 +990,30 @@ function toggleReportMode() {
         btn.classList.remove("off");
     } else {
         btn.classList.add("off");
+    }
+}
+
+function updateHandArrows() {
+    const hand = document.getElementById('player-hand');
+    const leftArrow = document.getElementById('arrow-left');
+    const rightArrow = document.getElementById('arrow-right');
+
+    if (!hand || !leftArrow || !rightArrow) return;
+
+    // 1. 判斷是否「溢出」：內容寬度 > 容器寬度
+    const isOverflowing = hand.scrollWidth > hand.clientWidth;
+
+    if (isOverflowing) {
+        // 2. 如果溢出，根據滾動位置判斷顯示哪邊
+        // 往右滑了超過 5px 才顯示左箭頭
+        leftArrow.style.display = hand.scrollLeft > 5 ? 'flex' : 'none';
+        
+        // 還有超過 5px 的空間可以往右滑，才顯示右箭頭
+        const maxScroll = hand.scrollWidth - hand.clientWidth;
+        rightArrow.style.display = (hand.scrollLeft < maxScroll - 5) ? 'flex' : 'none';
+    } else {
+        // 3. 沒溢出就全部隱藏
+        leftArrow.style.display = 'none';
+        rightArrow.style.display = 'none';
     }
 }

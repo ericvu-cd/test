@@ -19,9 +19,9 @@
 			<div class="difficulty-select">
 				<div class="diff-title">🎯 選擇難度</div>
 				<div class="diff-options">
-					<button class="sub-btnd" onclick="setDifficulty(0.4, this)">簡單</button>
+					<button class="sub-btnd" onclick="setDifficulty(0.4, this)">隨興</button>
 					<button class="sub-btnd active" onclick="setDifficulty(0.7, this)">普通</button>
-					<button class="sub-btnd" onclick="setDifficulty(0.9, this)">困難</button>
+					<button class="sub-btnd" onclick="setDifficulty(0.9, this)">專注</button>
 				</div>
 			</div>
 
@@ -102,8 +102,10 @@
         <div id="table"></div>
     </div>
 
-    <div id="player-zone">
+    <div id="player-zone" style="position: relative; overflow: hidden;">
+		<div id="arrow-left" class="hand-arrow">〈</div>
         <div id="player-hand" class="hand"></div>
+		<div id="arrow-right" class="hand-arrow">〉</div>	
     </div>
 
     <script src="db.js"></script>
