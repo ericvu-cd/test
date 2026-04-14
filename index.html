@@ -1,6 +1,11 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
+	<script>
+	if (navigator.userAgent.indexOf('Line') > -1 && navigator.userAgent.indexOf('Android') > -1) {
+		window.location.href = window.location.href + (window.location.href.indexOf('?') > -1 ? '&' : '?') + 'openExternalBrowser=1';
+	}
+	</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>友魚勇者之路-單人版</title>
