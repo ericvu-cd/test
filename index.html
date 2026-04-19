@@ -2,6 +2,18 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
+	<script>
+        (function() {
+            var ua = navigator.userAgent;
+            if (ua.indexOf("Line") > -1) {
+                var url = window.location.href;
+                if (url.indexOf('openExternalBrowser=1') === -1) {
+                    var separator = url.indexOf('?') === -1 ? '?' : '&';
+                    window.location.replace(url + separator + 'openExternalBrowser=1');
+                }
+            }
+        })();
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>友魚勇者之路-單人版</title>
     <link rel="stylesheet" href="style.css">
