@@ -677,3 +677,204 @@ body.game-started > *:not(#welcome-screen) {
 #player-hand::-webkit-scrollbar {
     display: none;
 }
+
+
+/* --- 最終解決方案：強制視窗縮放 --- */
+
+@media screen and (min-width: 800px) {
+    /* 1. 外層背景：讓螢幕呈現置中畫布 */
+    html {
+        background-color: #2c3e50 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        overflow: hidden !important;
+    }
+
+    /* 2. 手機本體：縮小基準尺寸，並限制最大縮放比例 */
+    body {
+        /* 改用 iPhone X 的精緻比例，避免畫面過大 */
+        width: 400px !important;
+        height: 720px !important;
+        
+        position: relative !important;
+        margin: 0 !important;
+        flex: none !important;
+
+        /* 縮放邏輯：適應視窗高度，但「最大不超過原始大小 (1倍)」 */
+        transform: scale(min(calc(100vh / 720 * 0.9), 1)) !important;
+        transform-origin: center center !important;
+
+        /* 手機外觀美化 */
+        border: 12px solid #222 !important;
+        border-radius: 35px !important;
+        box-shadow: 0 0 60px rgba(0,0,0,0.8) !important;
+		overflow: hidden !important;
+        background: #4f6a6e !important;
+		
+		/* 解決手牌偏下：確保 body 本身不要有奇怪的 padding */
+        padding: 0 !important;
+    }
+
+    /* 3. 將所有彈窗與覆蓋層「關」進縮放後的手機框內 */
+    #welcome-screen, 
+    #story-overlay, 
+    #game-summary-overlay, 
+    #info-overlay, 
+    #card-preview-overlay,
+    #log-overlay {
+        position: absolute !important;
+        width: 100% !important;
+        height: 100% !important;
+        top: 0 !important;
+        left: 0 !important;
+        
+        /* ⚠️ 絕對不加 visibility / opacity 的 !important，把控制權還給 JavaScript ⚠️ */
+        transform: none !important;
+        margin: 0 !important;
+    }
+	
+	/* =========================================
+       以下新增：修正卡牌太大、字體太大與按鈕跑位
+       ========================================= */
+
+    /* 1. 修正左右上方的控制按鈕跑出版面 */
+    /* 將 fixed 強制改為 absolute，這樣它們就會乖乖貼在手機框的角落，而不是電腦螢幕邊緣 */
+    #music-control, 
+    #report-control {
+        position: absolute !important;
+        z-index: 9999 !important;
+    }
+
+    /* 2. 縮小 summon-display 顯示文字 */
+    #summon-display {
+        /* 使用 zoom 強制整體縮小到 0.5 倍 (大約縮小到原本的 50%) */
+        zoom: 0.5 !important; 
+        
+        /* 確保如果原本用 vw 設定字體，這裡強制蓋掉給一個合理的預設值 */
+        font-size: 20px !important; 
+        line-height: 1.5 !important;
+        padding: 10px !important;
+    }
+	
+	body {
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: space-between !important; /* 讓頭、中、尾自動撐開 */
+    }
+/* 2. 修正：手牌區（player-hand）垂直居中與溢出問題 */
+	#ocean {
+        flex: 1 !important;
+        margin-bottom: 0 !important;
+    }
+	#player-hand {
+        /* 撤銷所有可能導致高度撐開的設定 */
+        height: auto !important;
+        min-height: 0 !important;
+        max-height: none !important;
+        
+        /* 核心：直接把整個區域縮小到 0.65 倍 */
+        transform: scale(0.65) !important;
+        transform-origin: center bottom !important; /* 以底部為基準縮小，這樣就不會浮空 */
+        
+        display: flex !important;
+        align-items: center !important;     /* 垂直置中 */
+        justify-content: center !important;
+        
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 2px 0 !important;
+        position: relative !important;
+        z-index: 10 !important;
+        
+        /* 防止縮放後左右出現空白，補償寬度 */
+        width: 125% !important; /* 因為 1 / 0.8 = 1.25 */
+        margin-left: -12.5% !important; 
+    }
+
+    /* 3. 修正：結算頁面視窗大小 (0.9X) */
+    .summary-container, #game-summary-overlay > div {
+        transform: scale(0.9) !important;
+        transform-origin: center center !important;
+    }
+
+    /* 4. 修正：頂端標題字體大小 (0.7X) */
+    #header {
+        font-size: 1.2rem !important; /* 調整原始大小 */
+        transform: scale(0.7) !important;
+        transform-origin: center top !important;
+        margin-top: 5px !important;
+    }
+
+    /* 5. 修正：魚卡縮放與內部字體 (字體 1.1X) */
+	[class*="card"] {
+        /* 卡片內部的 zoom 稍微調高，因為外層被 scale(0.8) 縮小了 */
+        zoom: 0.65 !important; 
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: center !important;
+    }
+ /* --- 終極覆蓋：強制抓取魚卡內所有深層文字元素 --- */
+ /* 1. 魚名：維持原本清晰的大小 */
+/* 1. 魚名：調整回適中大小 */
+    .card-n {
+        font-size: 3.6rem !important; 
+        font-weight: 900 !important;
+        margin-bottom: 4px !important;
+        display: block !important;
+        text-align: center !important;
+    }
+
+/* 2. 特性標籤：找回顏色並維持寬度自適應 */
+    [class*="card"] div:not(.card-n), 
+    [class*="card"] span, 
+    [class*="card"] p, 
+    [class*="card"] .tag {
+        /* 保持文字大小與粗細 */
+        font-size: 2rem !important; 
+        font-weight: 800 !important;
+        line-height: 1.0 !important;
+        
+        display: inline-flex !important; 
+        width: auto !important;          
+        max-width: 95% !important;       
+        justify-content: center !important;
+        align-self: center !important;   
+        
+        padding: 5px 10px !important;    
+        margin: 2px 0 !important; 
+        white-space: nowrap !important;
+
+        /* --- 修正重點：移除強制的 background 與 color --- */
+        /* 不要在此處設定背景色，讓原本 .card-d, .card-l 等類別的顏色生效 */
+        /* 如果原本沒有底色，可以補上這行確保透明度而非強制白色： */
+        /* background-color: transparent; */
+    }
+
+    /* 3. 確保原本的特性標籤類別權重夠高，能把顏色穿透進去 */
+    .card-d, .card-l, .card-s, .card-h, .card-i {
+        /* 如果發現還是沒顏色，請在你的顏色設定後面補上 !important */
+        /* 例如：background-color: #ff9900 !important; */
+        display: inline-flex !important; 
+    }
+	
+    /* 3. 稍微增加卡片內邊距，防止字體貼邊 */
+    [class*="card"] {
+        padding: 0 !important;
+        justify-content: center !important;
+    }
+	
+    /* --- 針對 Firefox 瀏覽器 (因為 Firefox 不支援 zoom 的備用方案) --- */
+    @-moz-document url-prefix() {
+        [class*="card"] {
+            transform: scale(0.7) !important;
+            transform-origin: center center !important;
+        }
+        #summon-display {
+            transform: scale(0.5) !important;
+            transform-origin: center top !important;
+        }
+    }
+}
