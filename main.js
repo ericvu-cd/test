@@ -4,6 +4,20 @@ let showSummaryMode = true; // 預設開啟結算頁面
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
+// 預載圖片功能
+function preloadImages(prefix, count) {
+    for (let i = 1; i <= count; i++) {
+        const img = new Image();
+        img.src = `${prefix}${i}.jpg`;
+    }
+}
+
+// 頁面載入後立即執行預載
+window.addEventListener('load', () => {
+    preloadImages('P', 6);  // 預載故事 P1-P6
+    preloadImages('F', 12); // 預載說明 F1-F12
+});
+
 // 當視窗大小改變時，觸發 updateHandArrows 函式重新計算
 window.addEventListener('resize', () => {
     updateHandArrows();
