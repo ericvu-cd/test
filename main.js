@@ -19,6 +19,9 @@ function setDifficulty(d, btn) {
 let storyIdx = 1;
 let storyTimer = null;
 const totalStories = 6;
+// 新增說明專用的背景音樂
+const infoBGM = new Audio('MZ.mp3'); 
+infoBGM.loop = false; // 設定循環播放
 
 // --- 故事滑動控制變數 ---
 let touchStartX = 0;
@@ -56,6 +59,10 @@ function openStory() {
     overlay.style.display = "flex"; // 顯示
     overlay.style.visibility = "visible"; // 確保可見
     overlay.style.opacity = "1"; // 確保不透明
+	
+	infoBGM.currentTime = 0; // 從頭播放
+    infoBGM.play().catch(e => console.log("音樂播放受阻，需使用者互動過才能播放:", e));
+	
     startStoryTimer();
 
     // 綁定觸控事件
@@ -105,30 +112,100 @@ function stopStoryTimer() {
 function closeStory() {
     stopStoryTimer();
     document.getElementById("story-overlay").style.display = "none";
+	infoBGM.pause();
 }
 
 // 說明功能
+// --- 說明功能變數 ---
+let infoIdx = 1;
+let infoTimer = null;
+const totalInfo = 12;
+let infoTouchStartX = 0;
+let infoTouchEndX = 0;
+
+function prevInfo() {
+    stopInfoTimer();
+    if (infoIdx > 1) {
+        infoIdx--;
+        updateInfo();
+        startInfoTimer();
+    }
+}
+
+function handleSwipeInfo() {
+    const swipeThreshold = 50; // 滑動超過 50px 才觸發
+    const diff = infoTouchEndX - infoTouchStartX;
+
+    if (diff < -swipeThreshold) {
+        // 向左滑 -> 下一頁
+        nextInfo();
+    } else if (diff > swipeThreshold) {
+        // 向右滑 -> 前一頁
+        prevInfo();
+    }
+}
+
 function openInfo() {
-    const infoEl = document.getElementById("info-overlay");
-	infoEl.style.display = "flex";
-    infoEl.style.visibility = "visible";
-    infoEl.style.opacity = "1";
-    
-    fetch('info.txt')
-        .then(response => {
-            if (!response.ok) throw new Error();
-            return response.text();
-        })
-        .then(data => {
-            document.getElementById("info-content").innerText = data;
-        })
-        .catch(() => {
-            document.getElementById("info-content").innerText = "無法載入說明文件，請檢查資料夾內是否有 info.txt。";
-        });
+    infoIdx = 1;
+    updateInfo();
+    const overlay = document.getElementById("info-overlay");
+    overlay.style.display = "flex";
+    overlay.style.visibility = "visible";
+    overlay.style.opacity = "1";
+	
+	infoBGM.currentTime = 0; // 從頭播放
+    infoBGM.play().catch(e => console.log("音樂播放受阻，需使用者互動過才能播放:", e));
+	
+    startInfoTimer();
+
+    // 綁定觸控事件 (使用 on 避免重複綁定)
+    overlay.ontouchstart = (e) => {
+        infoTouchStartX = e.changedTouches[0].screenX;
+    };
+
+    overlay.ontouchend = (e) => {
+        infoTouchEndX = e.changedTouches[0].screenX;
+        handleSwipeInfo();
+    };
+}
+
+function updateInfo() {
+    document.getElementById("info-img").src = `F${infoIdx}.jpg`;
+    document.getElementById("info-page-num").innerText = `${infoIdx} / ${totalInfo}`;
+}
+
+function nextInfo() {
+    stopInfoTimer();
+    if (infoIdx < totalInfo) {
+        infoIdx++;
+        updateInfo();
+        startInfoTimer();
+    } else {
+        closeInfo();
+    }
+}
+
+function startInfoTimer() {
+    stopInfoTimer();
+    infoTimer = setTimeout(() => {
+        if (infoIdx < totalInfo) {
+            infoIdx++;
+            updateInfo();
+            startInfoTimer();
+        } else {
+            closeInfo();
+        }
+    }, 10000); // 10秒自動換頁
+}
+
+function stopInfoTimer() {
+    if (infoTimer) clearTimeout(infoTimer);
 }
 
 function closeInfo() {
+    stopInfoTimer();
     document.getElementById("info-overlay").style.display = "none";
+	infoBGM.pause();
 }
 
 // 日誌視窗功能
@@ -385,12 +462,12 @@ function createBubble() {
     const b = document.createElement("div");
     b.className = "bubble";
     b.style.left = Math.random() * 100 + "%";
-    b.style.animationDuration = (4 + Math.random() * 4) + "s";
-    b.style.width = b.style.height = (5 + Math.random() * 10) + "px";
+    b.style.animationDuration = (4 + Math.random() * 8) + "s";
+    b.style.width = b.style.height = (5 + Math.random() * 15) + "px";
     document.getElementById("bubbles").appendChild(b);
-    setTimeout(() => b.remove(), 8000);
+    setTimeout(() => b.remove(), 12000);
 }
-setInterval(createBubble, 500);
+setInterval(createBubble, 200);
 
 const fishColors = [ ["#ff9aa2", "#ffb7b2"], ["#a0e7e5", "#b4f8c8"], ["#a0c4ff", "#bdb2ff"], ["#ffd6a5", "#fdffb6"] ];
 function createFish() {

@@ -85,12 +85,12 @@
         <div id="story-page-num" style="position:absolute; top:20px; left:20px; color:white; background:rgba(0,0,0,0.2); padding:5px 10px; border-radius:20px;">1 / 6</div>
     </div>
 
-    <div id="info-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:3000; justify-content:center; align-items:center;">
-        <div style="background:white; width:85%; max-width:600px; max-height:80vh; padding:30px; border-radius:20px; position:relative; overflow-y:auto;">
-            <h2 style="color:#00796b; margin-top:0;">遊戲說明</h2>
-            <pre id="info-content" style="white-space:pre-wrap; font-size:1.1rem; line-height:1.6; color:#333; font-family:inherit;">載入中...</pre>
-            <button onclick="closeInfo()" style="display:block; width:100%; margin-top:20px; padding:10px; background:#ffdfba; border:none; border-radius:10px; font-weight:bold; cursor:pointer;">關閉</button>
+	<div id="info-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:black; z-index:3000;">
+        <img id="info-img" src="" style="width:100%; height:100%; object-fit: cover;">
+        <div style="position:absolute; top:20px; right:20px; width:100%; display:flex; justify-content:right; gap:20px;">
+            <button class="ctrl-btn" onclick="closeInfo()">X</button>
         </div>
+        <div id="info-page-num" style="position:absolute; top:20px; left:20px; color:white; background:rgba(0,0,0,0.2); padding:5px 10px; border-radius:20px;">1 / 12</div>
     </div>
 
     <div id="card-preview-overlay">
