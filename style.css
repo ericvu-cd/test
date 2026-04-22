@@ -679,7 +679,7 @@ body.game-started > *:not(#welcome-screen) {
 }
 
 
-/* --- 最終解決方案：強制視窗縮放 --- */
+/* --- 強制視窗縮放 --- */
 
 @media screen and (min-width: 800px) {
     /* 1. 外層背景：讓螢幕呈現置中畫布 */
@@ -754,9 +754,23 @@ body.game-started > *:not(#welcome-screen) {
         zoom: 0.5 !important; 
         
         /* 確保如果原本用 vw 設定字體，這裡強制蓋掉給一個合理的預設值 */
-        font-size: 20px !important; 
-        line-height: 1.5 !important;
+        font-size: 22px !important; 
+        line-height: 1.1 !important;
         padding: 10px !important;
+		height: auto !important;
+		transform: translateY(30px) !important;
+    }
+	
+	#ocean .card {
+        /* 核心：將縮放比例從 0.8 或 1.0 調降至 0.55 */
+        transform: scale(0.75) !important; 
+        transform-origin: center center !important;
+        
+        /* 移除可能產生的位移 */
+        margin: 0 !important;
+		margin-left: -25px !important; 
+        margin-right: -25px !important;		
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3) !important;
     }
 	
 	body {
@@ -771,28 +785,25 @@ body.game-started > *:not(#welcome-screen) {
     }
 	#player-hand {
         /* 撤銷所有可能導致高度撐開的設定 */
-        height: auto !important;
-        min-height: 0 !important;
+        height: 140px !important; 
+        min-height: 140px !important;
         max-height: none !important;
         
-        /* 核心：直接把整個區域縮小到 0.65 倍 */
-        transform: scale(0.65) !important;
+        /* 核心：直接把整個區域縮小到 0.6 倍 */
+        transform: scale(0.6) !important;
         transform-origin: center bottom !important; /* 以底部為基準縮小，這樣就不會浮空 */
         
         display: flex !important;
-        align-items: center !important;     /* 垂直置中 */
+        align-items: flex-end !important;    /* 重要：讓卡片底部齊平，避免浮空感 */
         justify-content: center !important;
         
-        width: 100% !important;
-        margin: 0 !important;
-        padding: 2px 0 !important;
+        /* 消除多餘間距 */
+        margin-bottom: 5px !important; 
+        padding: 0 !important;
         position: relative !important;
         z-index: 10 !important;
-        
-        /* 防止縮放後左右出現空白，補償寬度 */
-        width: 125% !important; /* 因為 1 / 0.8 = 1.25 */
-        margin-left: -12.5% !important; 
-    }
+        overflow: visible !important; /* 確保縮放後的文字不會被切掉 */
+		}
 
     /* 3. 修正：結算頁面視窗大小 (0.9X) */
     .summary-container, #game-summary-overlay > div {
@@ -807,6 +818,21 @@ body.game-started > *:not(#welcome-screen) {
         transform-origin: center top !important;
         margin-top: 5px !important;
     }
+	
+	.box {
+        /* 1. 核心：縮小內部元素之間的間距 */
+        gap: 0px !important; 
+        padding: 0px !important;
+    }
+	.box span {
+        font-size: 0.3rem !important; /* 數字也隨之調小，維持比例 */
+        font-weight: 900 !important;
+        line-height: 1 !important;
+        margin-top: -2px !important;  /* 讓數字往上靠攏圖示 */
+		padding: 0px !important;
+		gap: 0px !important; 
+    }
+	.ai-cards { font-size: 0.2rem; gap: 0px !important; letter-spacing: -15px;}
 
     /* 5. 修正：魚卡縮放與內部字體 (字體 1.1X) */
 	[class*="card"] {
@@ -815,6 +841,10 @@ body.game-started > *:not(#welcome-screen) {
         display: flex !important;
         flex-direction: column !important;
         justify-content: center !important;
+    }
+	[class*="card"] {
+        padding: 4px 2px !important; /* 減少上下內邊距 */
+        margin: 0 2px !important;    /* 減少卡片之間的間隔 */
     }
  /* --- 終極覆蓋：強制抓取魚卡內所有深層文字元素 --- */
  /* 1. 魚名：維持原本清晰的大小 */
