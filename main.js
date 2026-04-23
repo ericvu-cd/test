@@ -35,7 +35,7 @@ let storyTimer = null;
 const totalStories = 6;
 // 新增說明專用的背景音樂
 const infoBGM = new Audio('MZ.mp3'); 
-infoBGM.loop = false; // 設定循環播放
+infoBGM.loop = true; // 設定循環播放
 
 // --- 故事滑動控制變數 ---
 let touchStartX = 0;
@@ -133,7 +133,7 @@ function closeStory() {
 // --- 說明功能變數 ---
 let infoIdx = 1;
 let infoTimer = null;
-const totalInfo = 12;
+const totalInfo = 18;
 let infoTouchStartX = 0;
 let infoTouchEndX = 0;
 
