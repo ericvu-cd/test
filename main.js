@@ -327,6 +327,7 @@ function closePreview() {
 
 // --- 遊戲運行邏輯與 UI 渲染 ---
 function renderUI() {
+
     players.forEach((p, i) => { 
         if(i > 0) {
 			const isLastCard = p.hand.length === 1;
@@ -377,7 +378,6 @@ function renderUI() {
     });
 	// 只要階段包含 PLAYER，就幫玩家區加上 my-turn 類別
     document.getElementById("player-zone").classList.toggle("my-turn", phase.includes("PLAYER"));
-	
 	setTimeout(updateHandArrows, 50);
 }
 

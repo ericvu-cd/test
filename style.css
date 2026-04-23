@@ -907,3 +907,14 @@ body.game-started > *:not(#welcome-screen) {
         }
     }
 }
+
+#tutorial-tooltip {
+    position: fixed;
+    background: white;
+    color: black;
+    padding: 12px;
+    border-radius: 8px;
+    z-index: 99999;
+    max-width: 260px;
+    display: none;
+}

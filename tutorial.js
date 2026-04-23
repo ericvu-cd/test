@@ -1,10 +1,9 @@
 // ======================
-// 🎮 教學模式（Tutorial）
+// 🎮 教學模式（穩定修正版）
 // ======================
 
-let tutorialStep = 0;
+let tutorialStep = -1; // ⭐ 關鍵修正
 let tutorialMode = false;
-let tutorialIntroStep = 0;
 let tutorialClickLock = false;
 
 // ======================
@@ -12,77 +11,200 @@ let tutorialClickLock = false;
 // ======================
 function startTutorial() {
     tutorialMode = true;
-    tutorialStep = 0;
-    tutorialIntroStep = 1;
+    tutorialStep = -1; // ⭐ 讓第一步正常顯示
 
-    // 1. 隱藏歡迎頁面
     const welcome = document.getElementById("welcome-screen");
     if (welcome) {
-        welcome.classList.add("fade-out");
-        // 建議在動畫結束後徹底移除或設為 display:none
-        setTimeout(() => welcome.style.display = 'none', 1000);
+        welcome.style.display = "none";
     }
 
-    // 2. 重要：啟動遊戲背景與元素顯現 (這會對應 style.css 的 visibility: visible)
-    document.body.classList.add('game-started');
-
-    // 3. 顯示控制項
-    const musicCtrl = document.getElementById("music-control");
-    if (musicCtrl) musicCtrl.style.display = "flex";
-
-    // 4. 初始化教學資料
+    document.body.classList.add("game-started");
+	
+	document.getElementById("summon-display").style.display = "none";
+    document.getElementById("deck-info").style.display = "none";
+    document.getElementById("log-btn").style.display = "none";
+	
     setupTutorialPlayers();
 
-    // 5. 延遲執行導覽，確保元素寬高已正確計算
-    setTimeout(() => {
-        renderUI(); // 渲染教學手牌
-        runTutorialIntro();
-    }, 100); 
+	currentPlayer = players[0];
+	setTimeout(() => {
+		setupTutorialCards(); // ⭐ 新增
+
+		// ⭐ 確保 DOM 存在
+		if (!document.getElementById("player-zone")) {
+			console.warn("UI 還沒準備好");
+			return;
+		}
+		currentPlayer = players[0];
+
+		renderUI();
+		renderTable();
+		runTutorialStep();
+
+	}, 300); // ⭐ 從 100 改 300
 }
 
 // ======================
-// 👆 點擊切換導覽
+// 👆 點擊切換
 // ======================
 document.body.addEventListener("click", () => {
-    if (tutorialMode && tutorialStep === 0 && !tutorialClickLock) {
-        tutorialClickLock = true;
+    if (!tutorialMode || tutorialClickLock) return;
 
-        tutorialIntroStep++;
-        runTutorialIntro();
+    tutorialClickLock = true;
+    tutorialStep++;
+    runTutorialStep();
 
-        setTimeout(() => tutorialClickLock = false, 400);
-    }
+    setTimeout(() => tutorialClickLock = false, 300);
 });
 
 // ======================
-// 🧭 畫面導覽
+// 🎯 教學流程
 // ======================
-function runTutorialIntro() {
+function runTutorialStep() {
 
-    if (tutorialIntroStep === 1) {
-        highlightArea(".char-area", "👆 這裡是【對手區】，觀察他們的出牌！");
-    }
+    clearHighlight();
 
-    else if (tutorialIntroStep === 2) {
-        highlightArea("#ocean", "🃏 這裡是【你的手牌】\n 從這裡選擇要出的魚\n 【點一下繼續】");
-    }
+    switch (tutorialStep) {
 
-    else if (tutorialIntroStep === 3) {
-        highlightArea("#player-zone", "🌊 這裡是【出牌區】\n 所有人會把魚放在這裡\n 【點一下繼續】");
-    }
+        case 0:
+            highlightArea("#ocean",
+`海洋失衡，魚群正在消失
+👉 點擊繼續`);
+            break;
 
-    else {
-        clearHighlight();
-        tutorialStep = 1;
-        runTutorialStep();
-    }
+        case 1:
+            highlightArea("#player-zone",
+`下面是你持有的牌`);
+            break;
+
+        case 2:
+            highlightArea(".char-area",
+`上方是你的對手`);
+            break;
+
+        case 3:
+            highlightArea("#ocean",
+`所有人出的牌會出現在上方`);
+            break;
+
+        case 4:
+            highlightArea("#player-zone",
+`你的目標是清空下方的牌`);
+            break;
+
+        case 5:
+            highlightArea("#player-zone",
+`高亮的卡是可以點擊出的牌`);
+            break;
+
+        case 6:
+            highlightArea("#table",
+`觀察上方知道如何跟牌`);
+            break;
+
+        case 7:
+            highlightArea("#player-zone",
+`條件符合魚卡是能成功出的牌`);
+            break;
+
+        case 8:
+            highlightArea("#player-zone",
+`包含(顏色與標籤)：
+
+燈號 / 捕撈 / 來源`);
+            break;
+
+        case 9:
+            highlightArea("#player-zone",
+`只要符合規定條件即可出`);
+            break;
+
+        case 10:
+            highlightArea("#player-zone",
+`每一回合：抽規則 → 出牌`);
+            break;
+
+        case 11:
+            highlightArea("#table",
+`觀察上方提示找規則`);
+            break;
+
+        case 12:
+            highlightArea("#player-zone",
+`媽祖籤是要贈牌給剩牌最少的人`);
+            break;
+
+        case 13:
+            highlightArea("#player-zone",
+`贈牌時可以選最難出的牌`);
+            break;
+
+        case 14:
+            highlightArea("#player-zone",
+`準備開始你的第一場遊戲`);
+            break;
+
+	default:
+		tutorialMode = false;
+		clearHighlight();
+
+		// ⭐ 恢復主畫面
+		const welcome = document.getElementById("welcome-screen");
+		if (welcome) {
+			welcome.style.display = "flex";
+			welcome.classList.remove("fade-out");
+		}
+
+		document.body.classList.remove("game-started");
+		
+		document.getElementById("summon-display").style.display = "flex";
+        document.getElementById("deck-info").style.display = "block";
+        document.getElementById("log-btn").style.display = "flex";
+
+		// ⭐ 清空教學資料（避免殘留），保留一個玩家空殼避免 renderUI 報錯
+		table = [];
+		players = [{ n: "你", hand: [], isAI: false }]; 
+
+		// ⭐ 重畫UI
+		if (typeof renderUI === "function") renderUI();
+		if (typeof renderTable === "function") renderTable();
+
+		break;
+	}
 }
 
 // ======================
-// ✨ 高亮 + Tooltip（完整版）
+// 🐟 教學卡片（關鍵補強）
+// ======================
+function setupTutorialCards() {
+
+    // 玩家手牌
+    players[0].hand = [
+        { n: "虱目魚", d: "養殖", l:1, m:["養殖"], h:"洄游性", s:"全年" },
+        { n: "鮭魚", d: "遠洋", l:2, m:["延繩釣"], h:"洄游性", s:"秋冬" },
+        { n: "竹筴魚", d: "近海", l:1, m:["定置網"], h:"洄游性", s:"全年" }
+    ];
+
+    // AI（避免 render crash）
+    players[1].hand = [];
+
+    // 桌面（重點）
+    table = [
+        {
+            pIdx: 1,
+            card: { n:"虱目魚", d:"養殖", l:1, m:["養殖"], h:"洄游性", s:"全年" }
+        },
+        {
+            pIdx: 1,
+            card: { n:"吳郭魚", d:"養殖", l:1, m:["養殖"], h:"定棲性", s:"全年" }
+        }
+    ];
+}
+
+// ======================
+// ✨ 高亮修正版（不會跑版）
 // ======================
 function highlightArea(selector, text) {
-    clearHighlight();
 
     const el = document.querySelector(selector);
     const tooltip = document.getElementById("tutorial-tooltip");
@@ -93,42 +215,24 @@ function highlightArea(selector, text) {
 
     const rect = el.getBoundingClientRect();
 
-    // 👉 顯示 tooltip（先顯示才能算尺寸）
     tooltip.style.display = "block";
-    tooltip.style.opacity = "1";
-    tooltip.style.zIndex = "99999";
-
     tooltip.innerText = text;
 
-    const tooltipHeight = tooltip.offsetHeight || 60;
-    const tooltipWidth = tooltip.offsetWidth || 260;
+    let top = rect.bottom + 10;
+    let left = rect.left + rect.width / 3;
 
-    const offset = Math.max(12, rect.height * 0.08);
-
-    let top, left;
-
-    // 上下判斷
-    if (rect.bottom + tooltipHeight + 20 > window.innerHeight) {
-        top = rect.top - tooltipHeight - offset;
-    } else {
-        top = rect.bottom + offset;
+    // ⭐ 修正邊界
+    if (top > window.innerHeight - 120) {
+        top = rect.top - 80;
     }
 
-    // 水平置中
-    left = rect.left + rect.width / 2 - tooltipWidth / 2;
-
-    // 防超出
-    if (left < 10) left = 10;
-    if (left + tooltipWidth > window.innerWidth - 10) {
-        left = window.innerWidth - tooltipWidth - 10;
-    }
+    if (left < 20) left = 20;
+    if (left > window.innerWidth - 200) left = window.innerWidth - 200;
 
     tooltip.style.top = top + "px";
     tooltip.style.left = left + "px";
 }
 
-// ======================
-// 🧹 清除高亮
 // ======================
 function clearHighlight() {
     document.querySelectorAll(".tutorial-highlight")
@@ -139,158 +243,20 @@ function clearHighlight() {
 }
 
 // ======================
-// 👥 初始化玩家
-// ======================
 function setupTutorialPlayers() {
     players = [
-        { n: "你", hand: [], isAI: false },
         {
-            n: "教學老師",
+            n: "你",
+            hand: [],
+            isAI: false,
+            id: "player"   // ⭐ 這個目前不會用到，但先加
+        },
+        {
+            n: "教學AI",
             hand: [],
             isAI: true,
-            id: "ai-1",
-            avatar: "🤖"
+            id: "ai-1",    // ⭐ 必須對應 HTML
+            avatar: '<div style="font-size: 2rem;">🤖</div>'
         }
     ];
-}
-
-// ======================
-// 🎯 教學主流程
-// ======================
-function runTutorialStep() {
-    table = [];
-    renderTable();
-
-    if (tutorialStep === 1) tutorialStep1();
-    if (tutorialStep === 2) tutorialStep2();
-    if (tutorialStep === 3) tutorialStep3();
-}
-
-// ======================
-// 🧩 STEP 1
-// ======================
-function tutorialStep1() {
-    addLog("【教學】選擇「養殖」的魚", "cmd");
-
-    currentS = {
-        t: "請選擇【養殖】的魚",
-        c: f => f.d === "養殖"
-    };
-
-    players[0].hand = [
-        { n: "虱目魚", d: "養殖", l:1, m:["養殖"], h:"洄游性", s:"全年" },
-        { n: "鯊魚", d: "遠洋", l:3, m:["延繩釣"], h:"洄游性", s:"全年" },
-        { n: "飛魚", d: "近海", l:1, m:["流刺網"], h:"洄游性", s:"春夏" }
-    ];
-
-    document.getElementById("summon-display").innerText =
-        "【教學 1】\n選擇「養殖」的魚";
-
-    phase = "PLAYER_TURN";
-    renderUI();
-}
-
-// ======================
-// 🧠 STEP 2
-// ======================
-function tutorialStep2() {
-    addLog("【教學】觀察AI出的牌，找出規律", "cmd");
-
-    currentS = {
-        t: "觀察規則",
-        c: f => f.d === "養殖"
-    };
-
-    table = [
-        { pIdx: 1, card: { n:"虱目魚", d:"養殖", l:1, m:["養殖"], h:"洄游性", s:"全年" }},
-        { pIdx: 1, card: { n:"吳郭魚", d:"養殖", l:1, m:["養殖"], h:"定棲性", s:"全年" }}
-    ];
-
-    players[0].hand = [
-        { n: "鯊魚", d: "遠洋", l:3, m:["延繩釣"], h:"洄游性", s:"全年" },
-        { n: "虱目魚", d: "養殖", l:1, m:["養殖"], h:"洄游性", s:"全年" },
-        { n: "竹筴魚", d: "近海", l:1, m:["定置網"], h:"洄游性", s:"全年" }
-    ];
-
-    document.getElementById("summon-display").innerText =
-        "【教學 2】\n觀察AI出的魚，找出規律";
-
-    renderTable();
-    phase = "PLAYER_TURN";
-    renderUI();
-}
-
-// ======================
-// 🔮 STEP 3
-// ======================
-function tutorialStep3() {
-    addLog("【教學】媽祖指示：分享一張卡", "cmd");
-
-    currentS = {
-        t: "請送出一張卡",
-        isMazu: true
-    };
-
-    players[0].hand = [
-        { n: "虱目魚", d: "養殖", l:1, m:["養殖"], h:"洄游性", s:"全年" },
-        { n: "竹筴魚", d: "近海", l:1, m:["定置網"], h:"洄游性", s:"全年" }
-    ];
-
-    document.getElementById("summon-display").innerText =
-        "【教學 3】\n特別行動, 請送一張卡給對手";
-
-    phase = "PLAYER_MAZU";
-    renderUI();
-}
-
-// ======================
-// 🎯 攔截玩家操作
-// ======================
-const originalPlayerAction = playerAction;
-
-playerAction = function(idx) {
-
-    if (!tutorialMode) {
-        originalPlayerAction(idx);
-        return;
-    }
-
-    const fish = players[0].hand[idx];
-
-    if (tutorialStep === 1 || tutorialStep === 2) {
-
-        if (currentS.c(fish)) {
-            playSuccessSfx();
-            addLog("✔ 正確選擇！", "success");
-
-            tutorialStep++;
-            setTimeout(runTutorialStep, 1000);
-
-        } else {
-            alert("❌ 再想想看！（提示：看來源）");
-        }
-    }
-
-    else if (tutorialStep === 3) {
-        playPopSfx();
-        addLog("✨ 你分享了一張卡！", "success");
-
-        tutorialStep++;
-        setTimeout(showTutorialEnd, 1000);
-    }
-};
-
-// ======================
-// 🏁 教學結束
-// ======================
-function showTutorialEnd() {
-    document.getElementById("summon-display").innerText =
-        "🎉 教學完成！\n你已經學會守護海洋的方法";
-
-    addLog("教學完成！準備進入正式遊戲", "success");
-
-    setTimeout(() => {
-        tutorialMode = false;
-        location.reload();
-    }, 2000);
 }
