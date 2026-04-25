@@ -268,7 +268,7 @@ body.game-started > *:not(#welcome-screen) {
 
 /* 詳情卡片本體 */
 .preview-detail-card {
-    width: 370px;
+    width: 300px;
     background: white;
     border-radius: 20px;
     border: 4px solid #ccc;
@@ -332,10 +332,10 @@ body.game-started > *:not(#welcome-screen) {
 /* 手機版詳情卡片 */
 @media (max-width: 768px) {
     .preview-detail-card {
-        width: 310px;
+        width: 260px;
     }
     .preview-fish-img-wrap {
-        height: 160px;
+        height: 173px;
     }
     .preview-fish-name {
         font-size: 1.6rem;
@@ -345,7 +345,7 @@ body.game-started > *:not(#welcome-screen) {
         padding: 4px 10px;
     }
     .preview-fish-desc {
-        font-size: 0.95rem;
+        font-size: 1.1rem;
     }
 }
 
