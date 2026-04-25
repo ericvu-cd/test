@@ -23,6 +23,13 @@ function startTutorial() {
 	document.getElementById("summon-display").style.display = "none";
     document.getElementById("deck-info").style.display = "none";
     document.getElementById("log-btn").style.display = "none";
+
+    // 先移除再加，確保不重複疊加
+    document.body.removeEventListener("click", tutorialClickHandler);
+    document.body.addEventListener("click", tutorialClickHandler);
+
+    // 關閉可能殘留的卡牌預覽
+    if (typeof closePreview === "function") closePreview();
 	
     setupTutorialPlayers();
 
@@ -45,9 +52,9 @@ function startTutorial() {
 }
 
 // ======================
-// 👆 點擊切換
+// 👆 點擊切換（具名函式，避免重複疊加）
 // ======================
-document.body.addEventListener("click", () => {
+function tutorialClickHandler() {
     if (!tutorialMode || tutorialClickLock) return;
 
     tutorialClickLock = true;
@@ -55,7 +62,7 @@ document.body.addEventListener("click", () => {
     runTutorialStep();
 
     setTimeout(() => tutorialClickLock = false, 300);
-});
+}
 
 // ======================
 // 🎯 教學流程
@@ -147,6 +154,9 @@ function runTutorialStep() {
 	default:
 		tutorialMode = false;
 		clearHighlight();
+
+		// 移除教學點擊監聽器
+		document.body.removeEventListener("click", tutorialClickHandler);
 
 		// ⭐ 恢復主畫面
 		const welcome = document.getElementById("welcome-screen");

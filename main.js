@@ -16,7 +16,17 @@ function preloadImages(prefix, count) {
 window.addEventListener('load', () => {
     preloadImages('P', 6);  // 預載故事 P1-P6
     preloadImages('F', 12); // 預載說明 F1-F12
+    preloadFishImages();     // 預載所有魚圖片
 });
+
+// 預載魚圖片
+function preloadFishImages() {
+    if (typeof fishDB === "undefined") return;
+    fishDB.forEach(f => {
+        const img = new Image();
+        img.src = `fishdb/${f.n}.png`;
+    });
+}
 
 // 當視窗大小改變時，觸發 updateHandArrows 函式重新計算
 window.addEventListener('resize', () => {
@@ -801,14 +811,49 @@ function showResult() {
             return;
         }
 
-        // 給玩家足夠時間查看桌面出牌結果，再進入結算
-        if (showSummaryMode) {
-            setTimeout(showRoundSummary, 4000);
-        } else {
-            setTimeout(finishRound, 4000);
-        }
+        // 顯示倒數氣泡，4秒後進入結算
+        showCountdownBubble(4, () => {
+            if (showSummaryMode) {
+                showRoundSummary();
+            } else {
+                finishRound();
+            }
+        });
 
     }, 1000);
+}
+
+function showCountdownBubble(seconds, callback) {
+    const layer = document.getElementById("chat-layer");
+    const ocean = document.getElementById("ocean");
+    if (!layer || !ocean) { callback(); return; }
+
+    const bubble = document.createElement("div");
+    bubble.className = "chat-bubble countdown-bubble";
+    bubble.style.cssText = `
+        position: fixed;
+        left: 50%;
+        transform: translateX(-50%);
+        bottom: 130px;
+        z-index: 1500;
+        font-size: 1.2rem;
+        text-align: center;
+        pointer-events: none;
+    `;
+    layer.appendChild(bubble);
+
+    let remaining = seconds;
+    function tick() {
+        bubble.innerText = `📋 ${remaining} 秒後進入結算，可先點牌放大查看`;
+        if (remaining <= 0) {
+            bubble.remove();
+            callback();
+            return;
+        }
+        remaining--;
+        setTimeout(tick, 1000);
+    }
+    tick();
 }
 
 function showWinScreen(winner) {

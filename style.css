@@ -474,6 +474,20 @@ body.game-started > *:not(#welcome-screen) {
     word-break: break-word;
 }
 
+/* 倒數結算氣泡 */
+.countdown-bubble {
+    background: rgba(255, 255, 255, 0.95) !important;
+    border: 2px solid #77D9A8;
+    border-radius: 20px !important;
+    padding: 10px 18px !important;
+    font-size: 1.1rem !important;
+    white-space: nowrap !important;
+    max-width: none !important;
+    box-shadow: 0 4px 16px rgba(119,217,168,0.5) !important;
+    animation: none !important;
+    opacity: 1 !important;
+}
+
 /* 簡單的呼吸發光效果 */
 @keyframes breathe {
     from { box-shadow: 0 0 3px #81d4fa; }
