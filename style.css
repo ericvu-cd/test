@@ -156,16 +156,16 @@ body.game-started > *:not(#welcome-screen) {
 /* 預覽視窗中的按鈕樣式 */
 .preview-controls {
     display: flex;
-    gap: 12px;
-    margin-top: 5px;
+    gap: 50px;
+    margin-top: 10px;
     justify-content: center;
     width: 100%;
 }
 
 .preview-btn {
-    font-size: 12px;
-    width: 20px;
-    height: 20px;
+    font-size: 22px;
+    width: 54px;
+    height: 54px;
     border-radius: 50%;
     border: none;
     display: flex;

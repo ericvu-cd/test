@@ -796,21 +796,19 @@ function showResult() {
         renderUI();
         
         let win = players.find(p => p.hand.length === 0);
-		if (win) {
+        if (win) {
             setTimeout(() => showWinScreen(win), 1000);
             return;
         }
 
-        // --- 關鍵修改：控制下一步去向 ---
+        // 給玩家足夠時間查看桌面出牌結果，再進入結算
         if (showSummaryMode) {
-            // 模式 A：顯示詳細報告彈窗
-            setTimeout(showRoundSummary, 1000); 
+            setTimeout(showRoundSummary, 4000);
         } else {
-            // 模式 B：快速模式
-            // 停頓 1.5 秒讓玩家看清場上的 ✔️/❌，然後自動清理進入下一輪
-            setTimeout(finishRound, 1500); 
+            setTimeout(finishRound, 4000);
         }
-	}, 1000);
+
+    }, 1000);
 }
 
 function showWinScreen(winner) {
