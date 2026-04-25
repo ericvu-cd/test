@@ -595,8 +595,8 @@ function autoStep() {
             }
         }
         // 延遲一秒後顯示勝利畫面
-        setTimeout(() => showWinScreen(winner), 1000);
-        return; 
+        showCountdownBubble(4, () => showWinScreen(winner));
+        return;
     }
 	
     table = [];
@@ -807,7 +807,7 @@ function showResult() {
         
         let win = players.find(p => p.hand.length === 0);
         if (win) {
-            setTimeout(() => showWinScreen(win), 1000);
+            showCountdownBubble(4, () => showWinScreen(win));
             return;
         }
 
