@@ -79,15 +79,15 @@ function openStory() {
 	
     startStoryTimer();
 
-    // 綁定觸控事件
-    overlay.addEventListener('touchstart', e => {
+    // 綁定觸控事件（用 on= 避免重複疊加）
+    overlay.ontouchstart = (e) => {
         touchStartX = e.changedTouches[0].screenX;
-    }, { passive: true });
+    };
 
-    overlay.addEventListener('touchend', e => {
+    overlay.ontouchend = (e) => {
         touchEndX = e.changedTouches[0].screenX;
         handleSwipe();
-    }, { passive: true });
+    };
 }
 
 function updateStory() {
@@ -270,43 +270,49 @@ let previewTimeout = null;
  * @param {HTMLElement} originalCardEl - 原始卡片 DOM
  * @param {boolean} isHand - 是否為手牌 (決定是否顯示操作按鈕)
  */
-function showCardPreview(idx, originalCardEl, isHand = true) {
+function showCardPreview(idx, fish, isHand = true) {
     const overlay = document.getElementById("card-preview-overlay");
     const container = document.getElementById("card-preview-container");
 
     container.innerHTML = "";
     if (previewTimeout) clearTimeout(previewTimeout);
 
-    // 複製卡片
-    const clone = originalCardEl.cloneNode(true);
-    clone.classList.remove("card-played", "is-valid", "is-not-valid"); // 移除動態類名避免縮放問題
-    clone.onclick = null; // 移除複製品的點擊事件
-    container.appendChild(clone);
+    // 燈號對應淡色背景
+    const lightBg = fish.l === 1 ? "#d4f5e2" : fish.l === 2 ? "#fef3cd" : "#ffd6da";
+    const lightBorder = fish.l === 1 ? "#77D9A8" : fish.l === 2 ? "#f9e1a9" : "#ffb3ba";
 
-    // 如果是手牌，增加「打勾」與「打叉」按鈕
+    // 詳情卡片
+    const card = document.createElement("div");
+    card.className = "preview-detail-card";
+    card.style.borderColor = lightBorder;
+
+    card.innerHTML = `
+        <div class="preview-fish-img-wrap">
+            <img src="fishdb/${fish.n}.png"
+                 onerror="this.style.display='none'; this.parentNode.classList.add('no-img')"
+                 alt="${fish.n}" class="preview-fish-img">
+        </div>
+        <div class="preview-fish-name" style="background:${lightBg};">${fish.n}</div>
+        <div class="preview-fish-tags">${getFishTags(fish)}</div>
+        <div class="preview-fish-desc">${fish.i || ""}</div>
+    `;
+
+    container.appendChild(card);
+
+    // 出牌按鈕（手牌且輪到玩家）
     if (isHand && phase.includes("PLAYER")) {
         const controls = document.createElement("div");
         controls.className = "preview-controls";
- 
-        // 打叉按鈕 (取消)
+
         const btnCancel = document.createElement("button");
         btnCancel.className = "preview-btn btn-cancel";
         btnCancel.innerHTML = "❌";
-        btnCancel.onclick = (e) => {
-            e.stopPropagation();
-            closePreview();
-        };
-		
-        // 打勾按鈕 (出牌)
+        btnCancel.onclick = (e) => { e.stopPropagation(); closePreview(); };
+
         const btnConfirm = document.createElement("button");
         btnConfirm.className = "preview-btn btn-confirm";
         btnConfirm.innerHTML = "✔️";
-        btnConfirm.onclick = (e) => {
-            e.stopPropagation();
-            closePreview();
-            playerAction(idx);
-        };
-
+        btnConfirm.onclick = (e) => { e.stopPropagation(); closePreview(); playerAction(idx); };
 
         controls.appendChild(btnConfirm);
         controls.appendChild(btnCancel);
@@ -315,8 +321,8 @@ function showCardPreview(idx, originalCardEl, isHand = true) {
 
     overlay.style.display = "flex";
 
-    // 3秒自動關閉
-    previewTimeout = setTimeout(closePreview, 3000);
+    // 手牌時自動關閉延長到 6 秒，桌面牌 4 秒
+    previewTimeout = setTimeout(closePreview, isHand ? 6000 : 4000);
 }
 
 function closePreview() {
@@ -372,7 +378,7 @@ function renderUI() {
         c.innerHTML = `<div class="card-n">${f.n}</div><div class="card-i">${getFishTags(f)}</div>`;
         
         // 手牌點擊：放大預覽，並帶有出牌功能
-        c.onclick = () => showCardPreview(idx, c, true);
+        c.onclick = () => showCardPreview(idx, f, true);
         
         handEl.appendChild(c);
     });
@@ -397,7 +403,7 @@ function renderTable() {
         c.innerHTML = `<div class="card-n">${t.card.n}</div><div class="card-i">${getFishTags(t.card)}</div>`;
         
         // 海洋區卡片點擊：放大預覽，但不帶功能
-        c.onclick = () => showCardPreview(null, c, false);
+        c.onclick = () => showCardPreview(null, t.card, false);
         
         zone.appendChild(c);
         if (index === table.length - 1) { 
@@ -833,19 +839,12 @@ function finishRound() {
         showWinScreen(win); 
         return; 
     }
-
-    // 檢查是否「不」是媽祖卡
-    if (currentS && !currentS.isMazu) {
-        showRoundSummary(); // 呼叫彈出視窗
-    } else {
-        // 如果是媽祖卡，直接進入下一回合
-        proceedToNextRound();
-    }
+    proceedToNextRound();
 }
 
 // 新增：處理下一回合的邏輯轉換
 function proceedToNextRound() {
-    callerIdx = (callerIdx + 1) % 4;
+    callerIdx = (callerIdx + 1) % players.length;
     phase = "WAIT";
     autoStep();
 }
@@ -1018,7 +1017,6 @@ function aiTalkMazuGive(p, target, card) {
     const lines = dialogueDB[p.personality].mazuGive;
     const msg = lines[Math.floor(Math.random() * lines.length)];
     showChat(p, msg);
-	setTimeout(2000);
 }
 
 function aiTalkMazuReceive(p, from, card) {

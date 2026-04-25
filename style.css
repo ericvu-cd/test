@@ -255,15 +255,98 @@ body.game-started > *:not(#welcome-screen) {
     backdrop-filter: blur(5px);
 }
 #card-preview-container {
-    transform: scale(2);
+    transform: scale(1);
     transition: transform 0.2s;
     justify-content: center;
     align-items: center;
     cursor: pointer;
-    filter: drop-shadow(0 15px 25px rgba(0,0,0,0.5));
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
 }
-#card-preview-container .card {
-    margin: 0; /* 移除額外邊距確保置中完美 */
+
+/* 詳情卡片本體 */
+.preview-detail-card {
+    width: 370px;
+    background: white;
+    border-radius: 20px;
+    border: 4px solid #ccc;
+    overflow: hidden;
+    box-shadow: 0 15px 40px rgba(0,0,0,0.5);
+    display: flex;
+    flex-direction: column;
+}
+
+/* 圖片區 */
+.preview-fish-img-wrap {
+    width: 100%;
+    height: 200px;
+    background: #e8f4f8;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+}
+.preview-fish-img-wrap.no-img {
+    background: linear-gradient(135deg, #e8f4f8, #d0e8f0);
+}
+.preview-fish-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* 魚名 */
+.preview-fish-name {
+    font-size: 2rem;
+    font-weight: 900;
+    text-align: center;
+    padding: 10px 8px 8px;
+    color: #333;
+    border-bottom: 2px solid #eee;
+}
+
+/* 標籤區 */
+.preview-fish-tags {
+    padding: 8px 12px 6px;
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+.preview-fish-tags .tag {
+    font-size: 1rem;
+    padding: 5px 12px;
+    margin: 3px;
+}
+
+/* 介紹文字 */
+.preview-fish-desc {
+    font-size: 1.1rem;
+    color: #555;
+    line-height: 1.6;
+    padding: 8px 16px 16px;
+    text-align: justify;
+}
+
+/* 手機版詳情卡片 */
+@media (max-width: 768px) {
+    .preview-detail-card {
+        width: 310px;
+    }
+    .preview-fish-img-wrap {
+        height: 160px;
+    }
+    .preview-fish-name {
+        font-size: 1.6rem;
+    }
+    .preview-fish-tags .tag {
+        font-size: 0.85rem;
+        padding: 4px 10px;
+    }
+    .preview-fish-desc {
+        font-size: 0.95rem;
+    }
 }
 
 .sub-btn { padding: 10px 35px; font-size: 1.6rem; background: rgba(255, 223, 186, 0.7); color: #00796b; border: 4px solid rgba(178, 223, 219, 0.5); border-radius: 30px; font-weight: bold; cursor: pointer; transition: 0.2s; opacity: 0.8; }
@@ -298,10 +381,10 @@ body.game-started > *:not(#welcome-screen) {
 #info-overlay { display: none; }
 
 .card { width: 165px; height: 245px; border-radius: 15px; border: 2px solid #bbb; background: white; flex-shrink: 0; display: flex; flex-direction: column; cursor: pointer; box-shadow: 4px 4px 10px rgba(0,0,0,0.15); transition: transform 0.2s, filter 0.2s; overflow: hidden; touch-action: manipulation; }
-.card-n { font-weight: 900; text-align: center; padding: 12px 5px; border-bottom: 2px solid #eee; font-size: 1.9rem; color: #444; background-color: #fff0f5; background-image: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M10 20c2-5 8-5 10 0s-8 5-10 0zM18 18c2 0 3 2 0 4' fill='none' stroke='%23ffb3d9' stroke-width='1'/%3E%3C/svg%3E"); background-repeat: repeat; background-blend-mode: multiply; opacity: 0.9; }
-.light-1 { border-top: 20px solid #77D9A8 !important; } 
-.light-2 { border-top: 20px solid #f9e1a9 !important; } 
-.light-3 { border-top: 20px solid #ffb3ba !important; }        
+.card-n { font-weight: 900; text-align: center; padding: 12px 5px; border-bottom: 2px solid #eee; font-size: 1.9rem; color: #444; }
+.light-1 .card-n { background-color: #d4f5e2 !important; }
+.light-2 .card-n { background-color: #fef3cd !important; }
+.light-3 .card-n { background-color: #ffd6da !important; }
 .card-i { padding: 8px; flex-grow: 1; color: #222; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; background-image: radial-gradient(#f1f1f1 1px, transparent 1px); background-size: 15px 15px; }
 .card:active { transform: scale(0.92); filter: brightness(0.9); }
 
@@ -348,9 +431,7 @@ body.game-started > *:not(#welcome-screen) {
     .card-n { font-size: 0.8rem; padding: 4px 1px; border-bottom-width: 1px; }
     .card-i { padding: 2px; }
     .tag { font-size: 0.6rem; padding: 2px 4px; border-radius: 4px; margin: 1px; line-height: 1.1; } 
-    .light-1, .light-2, .light-3 { border-top-width: 8px; }
     #real-start-btn { padding: 15px 40px; font-size: 1.8rem; }
-    #card-preview-container { transform: scale(2.2); } /* 手機上原卡牌較小，縮放可以稍大 */
 }
 
 @keyframes playCardAnim {
@@ -834,16 +915,15 @@ body.game-started > *:not(#welcome-screen) {
 	.ai-cards { font-size: 0.2rem; gap: 0px !important; letter-spacing: -15px;}
 
     /* 5. 修正：魚卡縮放與內部字體 (字體 1.1X) */
-	[class*="card"] {
-        /* 卡片內部的 zoom 稍微調高，因為外層被 scale(0.8) 縮小了 */
+	[class*="card"]:not(.preview-detail-card) {
         zoom: 0.65 !important; 
         display: flex !important;
         flex-direction: column !important;
         justify-content: center !important;
     }
-	[class*="card"] {
-        padding: 4px 2px !important; /* 減少上下內邊距 */
-        margin: 0 2px !important;    /* 減少卡片之間的間隔 */
+	[class*="card"]:not(.preview-detail-card) {
+        padding: 4px 2px !important;
+        margin: 0 2px !important;
     }
  /* --- 終極覆蓋：強制抓取魚卡內所有深層文字元素 --- */
  /* 1. 魚名：維持原本清晰的大小 */
@@ -857,10 +937,10 @@ body.game-started > *:not(#welcome-screen) {
     }
 
 /* 2. 特性標籤：找回顏色並維持寬度自適應 */
-    [class*="card"] div:not(.card-n), 
-    [class*="card"] span, 
-    [class*="card"] p, 
-    [class*="card"] .tag {
+    [class*="card"]:not(.preview-detail-card) div:not(.card-n), 
+    [class*="card"]:not(.preview-detail-card) span, 
+    [class*="card"]:not(.preview-detail-card) p, 
+    [class*="card"]:not(.preview-detail-card) .tag {
         /* 保持文字大小與粗細 */
         font-size: 2rem !important; 
         font-weight: 800 !important;
@@ -890,14 +970,14 @@ body.game-started > *:not(#welcome-screen) {
     }
 	
     /* 3. 稍微增加卡片內邊距，防止字體貼邊 */
-    [class*="card"] {
+    [class*="card"]:not(.preview-detail-card) {
         padding: 0 !important;
         justify-content: center !important;
     }
 	
     /* --- 針對 Firefox 瀏覽器 (因為 Firefox 不支援 zoom 的備用方案) --- */
     @-moz-document url-prefix() {
-        [class*="card"] {
+        [class*="card"]:not(.preview-detail-card) {
             transform: scale(0.7) !important;
             transform-origin: center center !important;
         }
