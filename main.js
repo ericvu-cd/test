@@ -617,6 +617,7 @@ function startGame() {
     deckS = [...summonDB, ...mazuCards].sort(()=>Math.random()-0.5);
     
     addLog("勇者集結！注意觀察大家的出牌...");
+    document.getElementById("summon-display").innerText = "";
     renderUI();
     autoStep();
 }
@@ -631,9 +632,17 @@ function updateCallerHighlight() {
     });
 }
 
+let summonFocusTimer = null;
+
 function showSummonFocus(duration, callback) {
     const overlay = document.getElementById("summon-focus-overlay");
     const box     = document.getElementById("summon-focus-box");
+
+    // 清除上一輪殘留的 timer
+    if (summonFocusTimer) {
+        clearTimeout(summonFocusTimer);
+        summonFocusTimer = null;
+    }
 
     // 把召喚文字複製進遮罩框
     box.innerText = document.getElementById("summon-display").innerText;
@@ -648,7 +657,7 @@ function showSummonFocus(duration, callback) {
     // 重新觸發彈入動畫
     box.style.animation = "none";
     void box.offsetWidth;
-    box.style.animation = "";
+    box.style.animation = "summonPop 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) forwards";
 
     // 顯示遮罩
     overlay.style.transition = "opacity 0.4s ease";
@@ -656,11 +665,12 @@ function showSummonFocus(duration, callback) {
     overlay.style.pointerEvents = "all";
 
     // duration 後自動淡出，再執行 callback
-    setTimeout(() => {
+    summonFocusTimer = setTimeout(() => {
         overlay.style.transition = "opacity 0.8s ease";
         overlay.style.opacity = "0";
         overlay.style.pointerEvents = "none";
-        setTimeout(() => {
+        summonFocusTimer = setTimeout(() => {
+            summonFocusTimer = null;
             if (callback) callback();
         }, 800);
     }, duration);
@@ -703,6 +713,22 @@ function autoStep() {
         addLog(`【${caller.n}】抽到了一張神祕召喚。`, "secret");
         document.getElementById("summon-display").innerText = `【${caller.n}】抽到了神祕召喚！\n觀察對手出的魚，推敲召喚是什麼...`;
         phase = "WAIT";
+    }
+
+    // 教學模式不顯示遮罩，直接執行後續動作
+    if (typeof tutorialMode !== "undefined" && tutorialMode) {
+        if (currentS && currentS.isMazu) {
+            document.getElementById("summon-display").classList.add("mazu-glow");
+            if (callerIdx !== 0) { handleMazuAI(caller); }
+        } else {
+            if (callerIdx !== 0) {
+                let idx = aiChooseCard(players[callerIdx]);
+                aiMove(callerIdx, idx);
+                phase = "PLAYER_TURN";
+                renderUI();
+            }
+        }
+        return;
     }
 
     // 聚焦遮罩：1.5秒後自動關閉才開放行動

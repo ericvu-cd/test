@@ -30,6 +30,18 @@ function startTutorial() {
 
     // 關閉可能殘留的卡牌預覽
     if (typeof closePreview === "function") closePreview();
+
+    // 確保遮罩不殘留
+    const focusOverlay = document.getElementById("summon-focus-overlay");
+    if (focusOverlay) {
+        focusOverlay.style.transition = "none";
+        focusOverlay.style.opacity = "0";
+        focusOverlay.style.pointerEvents = "none";
+    }
+    if (typeof summonFocusTimer !== "undefined" && summonFocusTimer) {
+        clearTimeout(summonFocusTimer);
+        summonFocusTimer = null;
+    }
 	
     setupTutorialPlayers();
 
