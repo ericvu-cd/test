@@ -679,7 +679,7 @@ function handleMazuAI(caller) {
             
         }, 2000); // 這裡是兩次說話之間的 2 秒停頓
 
-    }, 1000);
+    }, 3000);
 }
 
 // 媽祖贈牌：選擇對象
@@ -1161,10 +1161,17 @@ function showMazuGiftEffect(fromName, toName, card, targetEl) {
         --fly-x2: ${endX - startX + 20}px;
         --fly-y2: ${endY - startY - 20}px;
     `;
-    flyCard.innerHTML = `<div class="card-n" style="font-size:1rem;">${card.n}</div>`;
+    flyCard.innerHTML = `
+        <div style="width:100%; height:60px; overflow:hidden;">
+            <img src="fishdb/${card.n}.png"
+                 onerror="this.style.display='none'"
+                 style="width:100%; height:100%; object-fit:cover;">
+        </div>
+        <div class="card-n" style="font-size:0.85rem; padding:4px 2px;">${card.n}</div>
+    `;
     flyLayer.appendChild(flyCard);
 
-    // 橫幅說明（1秒後彈出）
+    // 橫幅說明（飛行結束後才彈出，2秒後）
     setTimeout(() => {
         const banner = document.createElement("div");
         banner.className = "mazu-gift-banner";
@@ -1176,15 +1183,15 @@ function showMazuGiftEffect(fromName, toName, card, targetEl) {
         `;
         document.body.appendChild(banner);
 
-        // 4 秒後淡出移除
+        // 6 秒後淡出移除
         setTimeout(() => {
             banner.style.transition = "opacity 0.6s";
             banner.style.opacity = "0";
             flyLayer.style.transition = "opacity 0.6s";
             flyLayer.style.opacity = "0";
             setTimeout(() => { banner.remove(); flyLayer.remove(); }, 600);
-        }, 4000);
-    }, 1000);
+        }, 6000);
+    }, 2000);
 }
 
 function toggleReportMode() {
