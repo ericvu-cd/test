@@ -478,7 +478,8 @@ function addLog(m, type="") {
     if(type === "cmd") className += " log-cmd";
     if(type === "secret") className += " log-secret";
     if(type === "success") className += " log-success";
-    l.innerHTML = `<div class="${className}">> ${m}</div>` + l.innerHTML;
+    const prefix = roundCount > 0 ? `<span style="color:#aaa; font-size:0.85em;">[R${roundCount}]</span> ` : "";
+    l.innerHTML = `<div class="${className}">> ${prefix}${m}</div>` + l.innerHTML;
 }
 
 function toggleMusic() {
@@ -532,7 +533,12 @@ function initGame() {
     const music = document.getElementById("bgm");
     music.play().then(() => {
         music.volume = bgmVolume;
-    }).catch(err => console.log("播放受阻"));
+    }).catch(err => {
+        console.log("播放受阻");
+        const btn = document.getElementById("music-control");
+        btn.innerText = "🔇";
+        btn.style.opacity = "0.4";
+    });
 
 	document.getElementById('player-hand').addEventListener('scroll', updateHandArrows);
 
@@ -600,6 +606,7 @@ function autoStep() {
     }
 	
     table = [];
+    roundCount++;
     const aiPlayers = players.filter(p => p.isAI);
     speakingAI = aiPlayers[Math.floor(Math.random() * aiPlayers.length)];
 	document.getElementById("table").innerHTML = "";
@@ -628,7 +635,7 @@ function autoStep() {
             if (callerIdx !== 0) { handleMazuAI(caller); }
         } else {
             if (callerIdx !== 0) {
- 				let idx = aiChooseCard(players[callerIdx], 0.7);
+ 	            let idx = aiChooseCard(players[callerIdx]);
                 aiMove(callerIdx, idx);
                 phase = "PLAYER_TURN";
                 renderUI();
@@ -646,8 +653,10 @@ function handleMazuAI(caller) {
 
         let card = caller.hand.pop();
         let target = players.filter(p => p !== caller).sort((a,b) => a.hand.length - b.hand.length)[0];
-		
-		showMazuGiftEffect(caller.n, target.n, card); // 顯示特寫		
+        const targetEl = target.isAI
+            ? document.getElementById(target.id)
+            : document.getElementById("player-zone");
+        showMazuGiftEffect(caller.n, target.n, card, targetEl);
 
         // 1. 送牌者先說話
         aiTalkMazuGive(caller, target, card);
@@ -665,30 +674,76 @@ function handleMazuAI(caller) {
             
             renderUI();
 
-            // 4. 全部說完後，再停頓 3 秒才結束回合
-            setTimeout(finishRound, 3000);
+            // 4. 全部說完後，倒數讓玩家看清楚再結束回合
+            showCountdownBubble(6, finishRound);
             
         }, 2000); // 這裡是兩次說話之間的 2 秒停頓
 
     }, 1000);
 }
 
+// 媽祖贈牌：選擇對象
+function showMazuTargetSelect(cardIdx) {
+    const existing = document.getElementById("mazu-target-overlay");
+    if (existing) existing.remove();
+
+    const overlay = document.createElement("div");
+    overlay.id = "mazu-target-overlay";
+
+    const card = players[0].hand[cardIdx];
+    const targets = players.slice(1); // 排除玩家自己
+
+    overlay.innerHTML = `
+        <div class="mazu-overlay-title">🙏 神明指示：分享資源</div>
+        <div class="mazu-overlay-sub">
+            送出【${card.n}】給誰？
+        </div>
+    `;
+
+    targets.forEach((p, i) => {
+        const btn = document.createElement("button");
+        btn.className = "mazu-target-btn";
+        btn.innerHTML = `
+            <span>${p.n}</span>
+            <span class="btn-cards">🎴×${p.hand.length}</span>
+        `;
+        btn.onclick = () => {
+            overlay.remove();
+            confirmMazuGift(cardIdx, p);
+        };
+        overlay.appendChild(btn);
+    });
+
+    document.body.appendChild(overlay);
+}
+
+// 媽祖贈牌：確認送出
+function confirmMazuGift(cardIdx, target) {
+    const card = players[0].hand.splice(cardIdx, 1)[0];
+
+    const targetEl = document.getElementById(target.id);
+    showMazuGiftEffect("你", target.n, card, targetEl);
+
+    target.hand.push(card);
+    playPopSfx();
+    addLog(`✨ 你分享了【${card.n}】給 ${target.n}！`, "success");
+
+    if (target.isAI) {
+        aiTalkMazuReceive(target, players[0], card);
+    }
+
+    phase = "RESULT";
+    renderUI();
+    showCountdownBubble(6, finishRound);
+}
+
 async function playerAction(idx) {
     if (navigator.vibrate) navigator.vibrate(30);
 
     if (phase === "PLAYER_MAZU") {
-        let card = players[0].hand.splice(idx, 1)[0];
-        let target = players.filter((p, i) => i !== 0).sort((a,b) => a.hand.length - b.hand.length)[0];
-		showMazuGiftEffect("你", target.n, card);
-        target.hand.push(card);
-        playPopSfx();
-        addLog(`✨ 你分享了【${card.n}】給 ${target.n}！`, "success");
-		if (target.isAI) {
-            aiTalkMazuReceive(target, players[0], card);
-        }
-        phase = "RESULT"; 
-        renderUI();
-        setTimeout(finishRound, 1500); 
+        // 先選目標，再確認送牌
+        showMazuTargetSelect(idx);
+        return;
     } else if (phase === "PLAYER_TURN") {
         const fish = players[0].hand[idx];
         if (callerIdx === 0 && currentS.c) {
@@ -709,7 +764,7 @@ async function playerAction(idx) {
             
             // 排除玩家本人 (pi === 0) 且如果是 AI 且不是目前的召喚者 (如果是 AI 跟牌)
             if (p.isAI && pi !== callerIdx) {
-                let matchIdx = aiChooseCard(p, 0.7);
+                let matchIdx = aiChooseCard(p);
                 
                 // 每位 AI 出牌前先等 0.6 秒
                 await new Promise(resolve => setTimeout(resolve, 600));
@@ -743,12 +798,21 @@ function aiMove(pI, cI) {
 
 // 建立一個全域或區域變數來儲存當前回合的結算資料
 let roundReport = [];
+let roundCount = 0;
 
 function showResult() {
     phase = "RESULT";
-    roundReport = []; 
+    roundReport = [];
+
+    // 空白期提示，避免玩家以為當機
+    const hint = document.createElement("div");
+    hint.className = "countdown-bubble";
+    hint.style.cssText = `position:fixed; left:50%; transform:translateX(-50%); bottom:130px; z-index:3000; pointer-events:none;`;
+    hint.innerText = "🔍 計算結果中…";
+    document.body.appendChild(hint);
 
     setTimeout(() => {
+        hint.remove();
         table.forEach(t => {
             const isSuccess = currentS.c(t.card);
             const player = players[t.pIdx];
@@ -785,7 +849,7 @@ function showResult() {
             // 最終呈現字串：如果以上都沒對應到，預設顯示燈號；若有多項則用 " | " 隔開
             let finalFeatureStr = featuresFound.length > 0 
                 ? featuresFound.join(" | ") 
-                : (t.card.l === 1 ? "綠燈" : (t.card.l === 2 ? "燈" : "紅燈"));
+                : (t.card.l === 1 ? "綠燈" : (t.card.l === 2 ? "黃燈" : "紅燈"));
 
             roundReport.push({
                 name: player.n,
@@ -932,19 +996,11 @@ function showRoundSummary() {
     `).join('');
 
     const modal = document.createElement("div");
-    modal.style = `
+    modal.style.cssText = `
         background: white; padding: 25px; border-radius: 20px; 
         width: 90%; max-width: 450px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
     `;
-	modal.classList.add("summary-pop-anim"); 
-    
-    // 設定彈窗樣式 (原有的樣式)
-    modal.style.background = "white";
-    modal.style.padding = "25px";
-    modal.style.borderRadius = "20px";
-    modal.style.width = "90%";
-    modal.style.maxWidth = "450px";
-    modal.style.boxShadow = "0 10px 30px rgba(0,0,0,0.3)";
+    modal.classList.add("summary-pop-anim");
 	
 
     modal.innerHTML = `
@@ -1068,50 +1124,67 @@ function aiTalkMazuReceive(p, from, card) {
     showChat(p, msg);
 }
 
-document.getElementById("welcome-screen").style.opacity = 0;
 
-setTimeout(()=>{
-    document.getElementById("welcome-screen").style.opacity = 1;
-}, 100);
 
-// ✅ 修改後的穩定版本
-window.onload = () => {
-    const welcome = document.getElementById("welcome-screen");
-    if (welcome) {
-        // 直接讓它淡入，不要再用 setTimeout 延遲 100ms
-        welcome.style.opacity = "1";
-    }
-};
 
-function showMazuGiftEffect(fromName, toName, card) {
-    const effect = document.createElement("div");
-    effect.style = `
-        position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); 
-        background: white; border: 4px solid #FFD700; padding: 20px; border-radius: 15px; 
-        z-index: 5000; text-align: center; box-shadow: 0 0 30px rgba(0,0,0,0.3);
-        min-width: 200px;
+function showMazuGiftEffect(fromName, toName, card, targetEl) {
+    // 建立飛行層
+    const flyLayer = document.createElement("div");
+    flyLayer.id = "mazu-gift-effect";
+    document.body.appendChild(flyLayer);
+
+    // 計算起點（送牌者位置）與終點（接收者位置）
+    const fromEl = fromName === "你"
+        ? document.getElementById("player-zone")
+        : document.querySelector(".char-area");
+    const toEl = targetEl || document.querySelector(".char-area");
+
+    const fromRect = (fromEl || document.body).getBoundingClientRect();
+    const toRect   = (toEl   || document.body).getBoundingClientRect();
+
+    const startX = fromRect.left + fromRect.width  / 2 - 40;
+    const startY = fromRect.top  + fromRect.height / 2 - 55;
+    const endX   = toRect.left   + toRect.width    / 2 - 40;
+    const endY   = toRect.top    + toRect.height   / 2 - 55;
+
+    // 飛行卡片（position: fixed，直接定位在視窗上）
+    const flyCard = document.createElement("div");
+    flyCard.className = `card light-${card.l} mazu-gift-card-fly`;
+    flyCard.style.cssText = `
+        position: fixed;
+        left: ${startX}px;
+        top:  ${startY}px;
+        width: 80px;
+        pointer-events: none;
+        --fly-x: ${endX - startX}px;
+        --fly-y: ${endY - startY}px;
+        --fly-x2: ${endX - startX + 20}px;
+        --fly-y2: ${endY - startY - 20}px;
     `;
-    
-    // 獲取魚的特性標籤 (調用原本 main.js 裡的函式)
-    const tags = getFishTags(card);
+    flyCard.innerHTML = `<div class="card-n" style="font-size:1rem;">${card.n}</div>`;
+    flyLayer.appendChild(flyCard);
 
-    effect.innerHTML = `
-        <div style="color:#D4AF37; font-weight:bold; font-size:1.2rem; margin-bottom:10px;">✨ 神明指示：分享資源 ✨</div>
-        <div style="margin-bottom:15px; font-size:1.3rem;"><strong>${fromName}</strong> 分享給 <strong>${toName}</strong></div>
-        <div class="card light-${card.l}" style="margin: 0 auto; pointer-events: none; transform: scale(1.1); float: none;">
-            <div class="card-n" style="font-size: 1.2rem;">${card.n}</div>
-            <div class="card-i" style="font-size: 0.9rem; margin-top: 5px; color: #555;">${tags}</div>
-        </div>
-    `;
-    
-    document.body.appendChild(effect);
-    
-    // 保持顯示 3 秒，讓玩家看清楚特性
+    // 橫幅說明（1秒後彈出）
     setTimeout(() => {
-        effect.style.opacity = "0";
-        effect.style.transition = "opacity 0.5s";
-        setTimeout(() => effect.remove(), 1500);
-    }, 3000);
+        const banner = document.createElement("div");
+        banner.className = "mazu-gift-banner";
+        banner.innerHTML = `
+            <div class="banner-icon">🙏</div>
+            <div class="banner-from">${fromName} 分享</div>
+            <div class="banner-fish">【${card.n}】</div>
+            <div class="banner-to">➜ ${toName}</div>
+        `;
+        document.body.appendChild(banner);
+
+        // 4 秒後淡出移除
+        setTimeout(() => {
+            banner.style.transition = "opacity 0.6s";
+            banner.style.opacity = "0";
+            flyLayer.style.transition = "opacity 0.6s";
+            flyLayer.style.opacity = "0";
+            setTimeout(() => { banner.remove(); flyLayer.remove(); }, 600);
+        }, 4000);
+    }, 1000);
 }
 
 function toggleReportMode() {
