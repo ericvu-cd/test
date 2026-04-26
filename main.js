@@ -631,6 +631,41 @@ function updateCallerHighlight() {
     });
 }
 
+function showSummonFocus(duration, callback) {
+    const overlay = document.getElementById("summon-focus-overlay");
+    const box     = document.getElementById("summon-focus-box");
+
+    // 把召喚文字複製進遮罩框
+    box.innerText = document.getElementById("summon-display").innerText;
+
+    // 媽祖特殊樣式
+    if (currentS && currentS.isMazu) {
+        box.classList.add("mazu-style");
+    } else {
+        box.classList.remove("mazu-style");
+    }
+
+    // 重新觸發彈入動畫
+    box.style.animation = "none";
+    void box.offsetWidth;
+    box.style.animation = "";
+
+    // 顯示遮罩
+    overlay.style.transition = "opacity 0.4s ease";
+    overlay.style.opacity = "1";
+    overlay.style.pointerEvents = "all";
+
+    // duration 後自動淡出，再執行 callback
+    setTimeout(() => {
+        overlay.style.transition = "opacity 0.8s ease";
+        overlay.style.opacity = "0";
+        overlay.style.pointerEvents = "none";
+        setTimeout(() => {
+            if (callback) callback();
+        }, 800);
+    }, duration);
+}
+
 function autoStep() {
     if (deckS.length === 0) { 
         addLog("召喚卡已用盡！開始結算剩餘手牌...", "cmd");
@@ -670,20 +705,21 @@ function autoStep() {
         phase = "WAIT";
     }
 
-    setTimeout(() => {
+    // 聚焦遮罩：1.5秒後自動關閉才開放行動
+    showSummonFocus(1500, () => {
         if (currentS.isMazu) {
             document.getElementById("summon-display").classList.add("mazu-glow"); 
             playMazuSfx(); 
             if (callerIdx !== 0) { handleMazuAI(caller); }
         } else {
             if (callerIdx !== 0) {
- 	            let idx = aiChooseCard(players[callerIdx]);
+                let idx = aiChooseCard(players[callerIdx]);
                 aiMove(callerIdx, idx);
                 phase = "PLAYER_TURN";
                 renderUI();
             }
         }
-    }, 1000);
+    });
 }
 
 function handleMazuAI(caller) {
@@ -717,7 +753,7 @@ function handleMazuAI(caller) {
             renderUI();
 
             // 不顯示倒數氣泡，等 banner 自然消失後才進入下一回合
-            setTimeout(finishRound, 9000);
+            setTimeout(finishRound, 5500);
             
         }, 2000); // 這裡是兩次說話之間的 2 秒停頓
 
@@ -776,8 +812,8 @@ function confirmMazuGift(cardIdx, target) {
 
     phase = "RESULT";
     renderUI();
-    // 不顯示倒數氣泡，等 banner 自然消失後（2s飛行 + 6s顯示 + 0.6s淡出）才進入下一回合
-    setTimeout(finishRound, 9000);
+    // banner 顯示 5.5 秒後進入下一回合
+    setTimeout(finishRound, 5500);
 }
 
 async function playerAction(idx) {
@@ -1238,7 +1274,7 @@ function showMazuGiftEffect(fromName, toName, card, targetEl) {
             flyLayer.style.transition = "opacity 0.6s";
             flyLayer.style.opacity = "0";
             setTimeout(() => { banner.remove(); flyLayer.remove(); }, 600);
-        }, 6000);
+        }, 3000);
     }, 2000);
 }
 
