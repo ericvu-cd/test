@@ -76,79 +76,92 @@ function runTutorialStep() {
         case 0:
             highlightArea("#ocean",
 `海洋失衡，魚群正在消失
-👉 點擊繼續`);
+點擊空白處繼續`);
             break;
 
         case 1:
             highlightArea("#player-zone",
-`下面是你持有的牌`);
+`👇 下面是你持有的牌
+點擊空白處繼續`);
             break;
 
         case 2:
             highlightArea(".char-area",
-`上方是你的對手`);
+`👆 上方是你的對手
+點擊空白處繼續`);
             break;
 
         case 3:
             highlightArea("#ocean",
-`所有人出的牌會出現在上方`);
+`👆 所有人出的牌會出現在上方
+點擊空白處繼續`);
             break;
 
         case 4:
             highlightArea("#player-zone",
-`你的目標是清空下方的牌`);
+`👇 你的目標是清空下方的牌
+點擊空白處繼續`);
             break;
 
         case 5:
             highlightArea("#player-zone",
-`高亮的卡是可以點擊出的牌`);
+`高亮的卡是可以點擊出的牌
+點擊空白處繼續`);
             break;
 
         case 6:
             highlightArea("#table",
-`觀察上方知道如何跟牌`);
+`👆 觀察上方知道如何跟牌
+點擊空白處繼續`);
             break;
 
         case 7:
             highlightArea("#player-zone",
-`條件符合魚卡是能成功出的牌`);
+`條件符合魚卡是能成功出的牌
+點擊空白處繼續`);
             break;
 
         case 8:
             highlightArea("#player-zone",
 `包含(顏色與標籤)：
+燈號 / 捕撈 / 來源
 
-燈號 / 捕撈 / 來源`);
+點擊空白處繼續`);
             break;
 
         case 9:
             highlightArea("#player-zone",
-`只要符合規定條件即可出`);
+`只要符合規定條件即可出
+點擊空白處繼續`);
             break;
 
         case 10:
             highlightArea("#player-zone",
-`每一回合：抽規則 → 出牌`);
+`每一回合：抽規則 → 出牌
+點擊空白處繼續`);
             break;
 
         case 11:
             highlightArea("#table",
-`觀察上方提示找規則`);
+`👆 觀察上方提示找規則
+點擊空白處繼續`);
             break;
 
         case 12:
             highlightArea("#player-zone",
-`媽祖籤是要贈牌給剩牌最少的人`);
+`媽祖籤是要贈牌給剩牌最少的人
+點擊空白處繼續`);
             break;
 
         case 13:
             highlightArea("#player-zone",
-`贈牌時可以選最難出的牌`);
+`贈牌時可以選最難出的牌
+點擊空白處繼續`);
             break;
 
         case 14:
             highlightArea("#player-zone",
-`準備開始你的第一場遊戲`);
+`👌準備開始你的第一場遊戲`);
             break;
 
 	default:
