@@ -674,8 +674,8 @@ function handleMazuAI(caller) {
             
             renderUI();
 
-            // 4. 全部說完後，倒數讓玩家看清楚再結束回合
-            showCountdownBubble(6, finishRound);
+            // 不顯示倒數氣泡，等 banner 自然消失後才進入下一回合
+            setTimeout(finishRound, 9000);
             
         }, 2000); // 這裡是兩次說話之間的 2 秒停頓
 
@@ -734,7 +734,8 @@ function confirmMazuGift(cardIdx, target) {
 
     phase = "RESULT";
     renderUI();
-    showCountdownBubble(6, finishRound);
+    // 不顯示倒數氣泡，等 banner 自然消失後（2s飛行 + 6s顯示 + 0.6s淡出）才進入下一回合
+    setTimeout(finishRound, 9000);
 }
 
 async function playerAction(idx) {
@@ -1177,6 +1178,11 @@ function showMazuGiftEffect(fromName, toName, card, targetEl) {
         banner.className = "mazu-gift-banner";
         banner.innerHTML = `
             <div class="banner-icon">🙏</div>
+            <div class="banner-img-wrap">
+                <img src="fishdb/${card.n}.png"
+                     onerror="this.parentNode.style.display='none'"
+                     alt="${card.n}">
+            </div>
             <div class="banner-from">${fromName} 分享</div>
             <div class="banner-fish">【${card.n}】</div>
             <div class="banner-to">➜ ${toName}</div>
