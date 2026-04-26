@@ -151,7 +151,7 @@ body.game-started > *:not(#welcome-screen) {
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
     display: flex; justify-content: space-around; align-items: center;
-    padding: 10px 5px; 
+    padding: 48px 5px 10px;
     transition: all 0.3s;
     border-bottom: 1px solid rgba(255,255,255,0.08);
     z-index: 10;
@@ -347,14 +347,74 @@ body.game-started > *:not(#welcome-screen) {
 
 
 #bubbles { position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow: hidden; pointer-events: none; z-index: 2; }
-.bubble { position: absolute; bottom: 0; width: 10px; height: 10px; background: rgba(200, 220, 255, 0.8); border-radius: 50%; box-shadow: 0 0 8px rgba(200, 220, 255, 0.6), inset 0 0 5px rgba(255,255,255,0.5); animation: rise 6s linear forwards; }
-@keyframes rise { 0% { transform: translateY(0); opacity: 0.6; } 100% { transform: translateY(-300px); opacity: 0; } }
+.bubble {
+    position: absolute;
+    bottom: 0;
+    border-radius: 50%;
+    border: 1.5px solid rgba(255, 255, 255, 0.5);
+    background: rgba(255, 255, 255, 0.06);
+    box-shadow: inset 0 -2px 4px rgba(255,255,255,0.15), 0 0 6px rgba(200,230,255,0.2);
+    animation: rise linear forwards;
+}
+@keyframes rise {
+    0%   { transform: translateY(0) translateX(0);       opacity: 0.7; }
+    50%  { transform: translateY(-50vh) translateX(4px);  opacity: 0.5; }
+    100% { transform: translateY(-105vh) translateX(-2px); opacity: 0; }
+}
 
 #fish-layer { position: absolute; width: 100%; height: 100%; pointer-events: none; overflow: hidden; z-index: 1; }
-.fish { position: absolute; right: -80px; width: 20px; height: 10px; border-radius: 60% 40% 40% 60%; animation: swim linear forwards; }
-.fish::after { content: ""; position: absolute; right: -5px; top: 50%; transform: translateY(-50%); width: 0; height: 0; border-top: 4px solid transparent; border-bottom: 4px solid transparent; border-right: 6px solid currentColor; }
 
-@keyframes swim { 0% { transform: translateX(0); } 100% { transform: translateX(-120vw); } }
+.fish {
+    position: absolute;
+    animation: swim linear forwards;
+}
+
+/* 魚身 */
+.fish-body {
+    position: relative;
+    border-radius: 50% 40% 40% 50%;
+    transform-origin: center;
+}
+
+/* 魚尾 — 擺動，左側尖端固定連接身體，右側寬端擺動 */
+.fish-tail {
+    position: absolute;
+    right: -25%;
+    top: 50%;
+    transform-origin: left center;
+    animation: tailWag ease-in-out infinite;
+    width: 0; height: 0;
+}
+
+/* 魚眼 */
+.fish-eye {
+    position: absolute;
+    background: rgba(0,0,0,0.6);
+    border-radius: 50%;
+    top: 28%;
+    left: 18%;
+}
+.fish-eye::after {
+    content: "";
+    position: absolute;
+    background: white;
+    border-radius: 50%;
+    width: 35%;
+    height: 35%;
+    top: 10%;
+    left: 10%;
+}
+
+@keyframes tailWag {
+    0%   { transform: translateY(-50%) rotate(-25deg); }
+    50%  { transform: translateY(-50%) rotate(25deg);  }
+    100% { transform: translateY(-50%) rotate(-25deg); }
+}
+
+@keyframes swim {
+    0%   { transform: translateX(0); }
+    100% { transform: translateX(-130vw); }
+}
 
 #summon-display { z-index: 5; position: relative; background: rgba(0,20,60,0.55); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); padding: 16px 20px; border-radius: 16px; width: 90%; text-align: center; box-shadow: 0 8px 24px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.15); margin-bottom: 20px; font-weight: bold; min-height: 80px; border: 1px solid rgba(100,180,255,0.3); font-size: 1.7rem; color: #e0f4ff; display: flex; align-items: center; justify-content: center; line-height: 1.4; white-space: pre-wrap; box-sizing: border-box; transition: all 0.3s; text-shadow: 0 1px 8px rgba(0,0,0,0.8); }
 #table { z-index: 5; position: relative; display: flex; gap: 15px; flex-grow: 1; min-height: 250px; align-items: center; width: 95%; justify-content: center; overflow-x: auto; }

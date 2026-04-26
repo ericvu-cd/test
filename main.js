@@ -492,28 +492,70 @@ function toggleMusic() {
 function createBubble() {
     const b = document.createElement("div");
     b.className = "bubble";
+    const size = 5 + Math.random() * 16;
     b.style.left = Math.random() * 100 + "%";
-    b.style.animationDuration = (4 + Math.random() * 8) + "s";
-    b.style.width = b.style.height = (5 + Math.random() * 15) + "px";
+    b.style.width = size + "px";
+    b.style.height = size + "px";
+    const duration = 5 + Math.random() * 8;
+    b.style.animationDuration = duration + "s";
+    // rise 動畫用 100% translateY，需要知道上移距離
+    b.style.setProperty("--rise-h", (window.innerHeight * 0.7) + "px");
     document.getElementById("bubbles").appendChild(b);
-    setTimeout(() => b.remove(), 12000);
+    setTimeout(() => b.remove(), duration * 1000);
 }
-setInterval(createBubble, 200);
+setInterval(createBubble, 300);
 
-const fishColors = [ ["#ff9aa2", "#ffb7b2"], ["#a0e7e5", "#b4f8c8"], ["#a0c4ff", "#bdb2ff"], ["#ffd6a5", "#fdffb6"] ];
+const fishPalettes = [
+    { body: "rgba(120,200,255,0.7)", tail: "rgba(80,160,220,0.8)",  fin: "rgba(160,220,255,0.5)" },
+    { body: "rgba(255,180,100,0.7)", tail: "rgba(220,130,60,0.8)",  fin: "rgba(255,210,150,0.5)" },
+    { body: "rgba(150,230,180,0.7)", tail: "rgba(80,180,120,0.8)",  fin: "rgba(180,240,200,0.5)" },
+    { body: "rgba(220,160,255,0.7)", tail: "rgba(170,100,220,0.8)", fin: "rgba(240,190,255,0.5)" },
+    { body: "rgba(255,220,100,0.7)", tail: "rgba(210,170,40,0.8)",  fin: "rgba(255,240,160,0.5)" },
+];
+
 function createFish() {
-    const fish = document.createElement("div");
-    const color = fishColors[Math.floor(Math.random() * fishColors.length)];
-    fish.className = "fish";
-    fish.style.top = Math.random() * 80 + "%";
-    const size = 20 + Math.random() * 20;
-    fish.style.width = size + "px"; fish.style.height = size / 2 + "px";
-    const duration = 6 + Math.random() * 8;
-    fish.style.animationDuration = duration + "s";
-    fish.style.background = `linear-gradient(90deg, ${color[0]}, ${color[1]})`;
-    fish.style.color = color[0];
-    document.getElementById("fish-layer").appendChild(fish);
-    setTimeout(() => fish.remove(), duration * 1000);
+    const palette = fishPalettes[Math.floor(Math.random() * fishPalettes.length)];
+    const size = 28 + Math.random() * 36; // 魚身寬度 28~64px
+    const h = size * 0.48;               // 魚身高度
+
+    // 外層容器（負責游動）
+    const wrapper = document.createElement("div");
+    wrapper.className = "fish";
+    wrapper.style.top  = (8 + Math.random() * 72) + "%";
+    wrapper.style.right = "-120px";
+    const swimDur = 12 + Math.random() * 14;
+    wrapper.style.animationDuration = swimDur + "s";
+
+    // 魚身
+    const body = document.createElement("div");
+    body.className = "fish-body";
+    body.style.width  = size + "px";
+    body.style.height = h + "px";
+    body.style.background = palette.body;
+    body.style.boxShadow = `inset -4px -2px 8px rgba(0,0,0,0.15), 0 2px 8px rgba(0,0,0,0.2)`;
+
+    // 魚尾（三角形）
+    const tail = document.createElement("div");
+    tail.className = "fish-tail";
+    const tailSize = h * 0.8;
+    tail.style.borderTop    = `${tailSize * 0.45}px solid transparent`;
+    tail.style.borderBottom = `${tailSize * 0.45}px solid transparent`;
+    tail.style.borderRight  = `${tailSize * 0.85}px solid ${palette.tail}`;
+    const wagDur = 0.35 + Math.random() * 0.2;
+    tail.style.animationDuration = wagDur + "s";
+
+    // 魚眼
+    const eye = document.createElement("div");
+    eye.className = "fish-eye";
+    const eyeSize = Math.max(4, h * 0.18);
+    eye.style.width  = eyeSize + "px";
+    eye.style.height = eyeSize + "px";
+
+    body.appendChild(tail);
+    body.appendChild(eye);
+    wrapper.appendChild(body);
+    document.getElementById("fish-layer").appendChild(wrapper);
+    setTimeout(() => wrapper.remove(), swimDur * 1000);
 }
 setInterval(createFish, 4000);
 
