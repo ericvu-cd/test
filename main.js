@@ -506,58 +506,81 @@ function createBubble() {
 setInterval(createBubble, 300);
 
 const fishPalettes = [
-    { body: "rgba(120,200,255,0.7)", tail: "rgba(80,160,220,0.8)",  fin: "rgba(160,220,255,0.5)" },
-    { body: "rgba(255,180,100,0.7)", tail: "rgba(220,130,60,0.8)",  fin: "rgba(255,210,150,0.5)" },
-    { body: "rgba(150,230,180,0.7)", tail: "rgba(80,180,120,0.8)",  fin: "rgba(180,240,200,0.5)" },
-    { body: "rgba(220,160,255,0.7)", tail: "rgba(170,100,220,0.8)", fin: "rgba(240,190,255,0.5)" },
-    { body: "rgba(255,220,100,0.7)", tail: "rgba(210,170,40,0.8)",  fin: "rgba(255,240,160,0.5)" },
+    { body: "rgba(120,200,255,0.9)", tail: "rgba(80,160,220,0.95)",  glow: "rgba(120,200,255,0.4)" },
+    { body: "rgba(255,180,100,0.9)", tail: "rgba(220,130,60,0.95)",  glow: "rgba(255,180,100,0.35)" },
+    { body: "rgba(150,230,180,0.9)", tail: "rgba(80,180,120,0.95)",  glow: "rgba(150,230,180,0.4)" },
+    { body: "rgba(180,140,255,0.9)", tail: "rgba(130,90,220,0.95)",  glow: "rgba(180,140,255,0.4)" },
+    { body: "rgba(255,220,100,0.9)", tail: "rgba(210,170,40,0.95)",  glow: "rgba(255,220,100,0.3)" },
+    { body: "rgba(100,220,240,0.9)", tail: "rgba(60,180,200,0.95)",  glow: "rgba(100,220,240,0.4)" },
 ];
 
 function createFish() {
     const palette = fishPalettes[Math.floor(Math.random() * fishPalettes.length)];
-    const size = 28 + Math.random() * 36; // 魚身寬度 28~64px
-    const h = size * 0.48;               // 魚身高度
 
-    // 外層容器（負責游動）
+    // 深度分層：0=遠景小慢淡, 1=中景, 2=近景大快亮
+    const depth = Math.floor(Math.random() * 3);
+    const cfg = [
+        { scale: 0.3,  opacity: 0.3,  speed: 20 + Math.random() * 8,  waveAmp: 3,  wagSpeed: 0.5  },
+        { scale: 0.6,  opacity: 0.55, speed: 13 + Math.random() * 6,  waveAmp: 7,  wagSpeed: 0.38 },
+        { scale: 1.0,  opacity: 0.88, speed: 7  + Math.random() * 4,  waveAmp: 12, wagSpeed: 0.28 },
+    ][depth];
+
+    const size = 40 * cfg.scale;
+    const h    = size * 0.48;
+
+    const waveDur = 2 + Math.random() * 2;
+    const waveDelay = Math.random() * 2;
+
+    // 外層：只負責Y軸波動
     const wrapper = document.createElement("div");
     wrapper.className = "fish";
-    wrapper.style.top  = (8 + Math.random() * 72) + "%";
-    wrapper.style.right = "-120px";
-    const swimDur = 12 + Math.random() * 14;
-    wrapper.style.animationDuration = swimDur + "s";
+    wrapper.style.cssText = `
+        position: absolute;
+        top: ${10 + Math.random() * 70}%;
+        right: -120px;
+        opacity: ${cfg.opacity};
+        --wave-amp: ${cfg.waveAmp}px;
+        animation: fishWave ${waveDur}s ${waveDelay}s ease-in-out infinite;
+    `;
 
-    // 魚身
+    // 內層：只負責X軸游動
+    const inner = document.createElement("div");
+    inner.style.cssText = `
+        animation: swim ${cfg.speed}s linear forwards;
+    `;
+
     const body = document.createElement("div");
     body.className = "fish-body";
-    body.style.width  = size + "px";
-    body.style.height = h + "px";
-    body.style.background = palette.body;
-    body.style.boxShadow = `inset -4px -2px 8px rgba(0,0,0,0.15), 0 2px 8px rgba(0,0,0,0.2)`;
+    body.style.cssText = `
+        width: ${size}px; height: ${h}px;
+        background: ${palette.body};
+        box-shadow: inset -3px -2px 6px rgba(0,0,0,0.2), 0 0 ${size * 0.7}px ${palette.glow};
+        animation: fishBodySway ${waveDur}s ${waveDelay}s ease-in-out infinite;
+    `;
 
-    // 魚尾（三角形）
     const tail = document.createElement("div");
     tail.className = "fish-tail";
-    const tailSize = h * 0.8;
-    tail.style.borderTop    = `${tailSize * 0.45}px solid transparent`;
-    tail.style.borderBottom = `${tailSize * 0.45}px solid transparent`;
-    tail.style.borderRight  = `${tailSize * 0.85}px solid ${palette.tail}`;
-    const wagDur = 0.35 + Math.random() * 0.2;
-    tail.style.animationDuration = wagDur + "s";
+    const ts = h * 0.8;
+    tail.style.cssText = `
+        border-top: ${ts * 0.45}px solid transparent;
+        border-bottom: ${ts * 0.45}px solid transparent;
+        border-right: ${ts * 0.85}px solid ${palette.tail};
+        animation: tailWag ${cfg.wagSpeed}s ease-in-out infinite;
+    `;
 
-    // 魚眼
     const eye = document.createElement("div");
     eye.className = "fish-eye";
-    const eyeSize = Math.max(4, h * 0.18);
-    eye.style.width  = eyeSize + "px";
-    eye.style.height = eyeSize + "px";
+    const es = Math.max(3, h * 0.18);
+    eye.style.cssText = `width:${es}px; height:${es}px;`;
 
     body.appendChild(tail);
     body.appendChild(eye);
-    wrapper.appendChild(body);
+    inner.appendChild(body);
+    wrapper.appendChild(inner);
     document.getElementById("fish-layer").appendChild(wrapper);
-    setTimeout(() => wrapper.remove(), swimDur * 1000);
+    setTimeout(() => wrapper.remove(), cfg.speed * 1000 + 500);
 }
-setInterval(createFish, 4000);
+setInterval(createFish, 3000);
 
 function initGame() {
 	document.body.classList.add('game-started');
@@ -617,9 +640,15 @@ function startGame() {
     deckS = [...summonDB, ...mazuCards].sort(()=>Math.random()-0.5);
     
     addLog("勇者集結！注意觀察大家的出牌...");
-    document.getElementById("summon-display").innerText = "";
+
+    // 顯示等待藍框（HTML 已預先填好文字）
+    const overlay = document.getElementById("summon-focus-overlay");
+    overlay.style.transition = "opacity 0.4s ease";
+    overlay.style.opacity = "1";
+    overlay.style.pointerEvents = "none";
+
     renderUI();
-    autoStep();
+    setTimeout(autoStep, 2000);
 }
 
 function updateCallerHighlight() {

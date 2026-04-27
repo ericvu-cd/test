@@ -406,14 +406,30 @@ body.game-started > *:not(#welcome-screen) {
 }
 
 @keyframes tailWag {
-    0%   { transform: translateY(-50%) rotate(-25deg); }
-    50%  { transform: translateY(-50%) rotate(25deg);  }
-    100% { transform: translateY(-50%) rotate(-25deg); }
+    0%   { transform: translateY(-50%) rotate(-30deg); }
+    50%  { transform: translateY(-50%) rotate(30deg);  }
+    100% { transform: translateY(-50%) rotate(-30deg); }
 }
 
 @keyframes swim {
     0%   { transform: translateX(0); }
     100% { transform: translateX(-130vw); }
+}
+
+/* 上下波動，模擬在水中游動的韻律感 */
+@keyframes fishWave {
+    0%   { transform: translateY(0px);   }
+    25%  { transform: translateY(calc(var(--wave-amp, 8px) * -1)); }
+    75%  { transform: translateY(var(--wave-amp, 8px)); }
+    100% { transform: translateY(0px);   }
+}
+
+/* 魚身輕微左右搖擺，配合波動感 */
+@keyframes fishBodySway {
+    0%   { transform: rotate(0deg);   }
+    25%  { transform: rotate(-3deg);  }
+    75%  { transform: rotate(3deg);   }
+    100% { transform: rotate(0deg);   }
 }
 
 #summon-display { z-index: 205; position: relative; background: rgba(0,20,60,0.55); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); padding: 16px 20px; border-radius: 16px; width: 90%; text-align: center; box-shadow: 0 8px 24px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.15); margin-bottom: 20px; font-weight: bold; min-height: 80px; border: 1px solid rgba(100,180,255,0.3); font-size: 1.7rem; color: #e0f4ff; display: flex; align-items: center; justify-content: center; line-height: 1.4; white-space: pre-wrap; box-sizing: border-box; transition: all 0.3s; text-shadow: 0 1px 8px rgba(0,0,0,0.8); }
