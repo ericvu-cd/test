@@ -351,49 +351,210 @@ body.game-started > *:not(#welcome-screen) {
     position: absolute;
     bottom: 0;
     border-radius: 50%;
-    border: 1.5px solid rgba(255, 255, 255, 0.5);
-    background: rgba(255, 255, 255, 0.06);
-    box-shadow: inset 0 -2px 4px rgba(255,255,255,0.15), 0 0 6px rgba(200,230,255,0.2);
+    /* 外框：細邊 + 左上亮、右下暗，模擬玻璃球輪廓 */
+    border: 1.5px solid rgba(255,255,255,0.35);
+    background: radial-gradient(
+        circle at 32% 28%,
+        rgba(255,255,255,0.55)  0%,
+        rgba(200,235,255,0.18) 35%,
+        rgba(140,200,255,0.06) 65%,
+        rgba(80,160,220,0.10)  100%
+    );
+    /* 多層 box-shadow：內高光 + 外透光 + 底部陰影 */
+    box-shadow:
+        inset  2px  2px  5px rgba(255,255,255,0.55),
+        inset -2px -2px  5px rgba(80,160,220,0.20),
+        0 2px 8px rgba(0,30,80,0.18),
+        0 0 6px rgba(150,210,255,0.15);
     animation: rise linear forwards;
+    will-change: transform, opacity;
+}
+
+/* 氣泡內部小高光點（用 ::before） */
+.bubble::before {
+    content: "";
+    position: absolute;
+    top: 12%;
+    left: 16%;
+    width: 28%;
+    height: 22%;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.75);
+    filter: blur(1px);
+}
+
+/* 氣泡底部反光弧（用 ::after） */
+.bubble::after {
+    content: "";
+    position: absolute;
+    bottom: 14%;
+    right: 14%;
+    width: 22%;
+    height: 12%;
+    border-radius: 50%;
+    background: rgba(180,225,255,0.45);
+    filter: blur(1px);
 }
 @keyframes rise {
-    0%   { transform: translateY(0) translateX(0);       opacity: 0.7; }
-    50%  { transform: translateY(-50vh) translateX(4px);  opacity: 0.5; }
-    100% { transform: translateY(-105vh) translateX(-2px); opacity: 0; }
+    0%   { transform: translateY(0)       translateX(0);   opacity: 0; }
+    8%   { opacity: 0.75; }
+    40%  { transform: translateY(-38vh)   translateX(var(--drift-x, 4px));  opacity: 0.65; }
+    70%  { transform: translateY(-68vh)   translateX(calc(var(--drift-x, 4px) * -0.5)); opacity: 0.45; }
+    100% { transform: translateY(-105vh)  translateX(var(--drift-x, 4px));  opacity: 0; }
 }
 
 #fish-layer { position: absolute; width: 100%; height: 100%; pointer-events: none; overflow: hidden; z-index: 1; }
 
-.fish {
+/* =============================================
+   水面光束層（Caustics 海洋光影）
+   ============================================= */
+#ocean-caustics {
     position: absolute;
-    animation: swim linear forwards;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+}
+.caustic-beam {
+    position: absolute;
+    top: -20%;
+    width: 60px;
+    height: 160%;
+    background: linear-gradient(to bottom,
+        rgba(255,255,255,0.0) 0%,
+        rgba(180,230,255,0.06) 30%,
+        rgba(150,210,255,0.10) 50%,
+        rgba(180,230,255,0.06) 70%,
+        rgba(255,255,255,0.0) 100%
+    );
+    border-radius: 50%;
+    transform-origin: top center;
+    filter: blur(8px);
+}
+.caustic-beam:nth-child(1) { left: 8%;  animation: beamSway 7s  2.0s ease-in-out infinite; }
+.caustic-beam:nth-child(2) { left: 22%; animation: beamSway 9s  0.5s ease-in-out infinite; width: 40px; opacity: 0.7; }
+.caustic-beam:nth-child(3) { left: 42%; animation: beamSway 11s 1.2s ease-in-out infinite; }
+.caustic-beam:nth-child(4) { left: 63%; animation: beamSway 8s  3.5s ease-in-out infinite; width: 35px; opacity: 0.6; }
+.caustic-beam:nth-child(5) { left: 80%; animation: beamSway 10s 0.0s ease-in-out infinite; }
+
+@keyframes beamSway {
+    0%   { transform: rotate(-8deg) scaleX(1.0); opacity: 0.5; }
+    25%  { transform: rotate(-2deg) scaleX(1.3); opacity: 0.9; }
+    50%  { transform: rotate( 6deg) scaleX(0.9); opacity: 0.6; }
+    75%  { transform: rotate( 2deg) scaleX(1.2); opacity: 0.8; }
+    100% { transform: rotate(-8deg) scaleX(1.0); opacity: 0.5; }
 }
 
-/* 魚身 */
+/* 深海底霧：底部暗化，增加深度感 */
+#ocean::after {
+    content: "";
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 40%;
+    background: linear-gradient(to top,
+        rgba(0,10,40,0.55) 0%,
+        rgba(0,15,50,0.25) 60%,
+        transparent 100%
+    );
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* =============================================
+   魚體系統
+   ============================================= */
+.fish {
+    position: absolute;
+    will-change: transform;
+}
+
+/* 魚身：改用立體漸層取代平面純色 */
 .fish-body {
     position: relative;
     border-radius: 50% 40% 40% 50%;
     transform-origin: center;
+    /* 漸層在 JS 中動態設定，此處為 fallback */
+    overflow: visible;
 }
 
-/* 魚尾 — 擺動，左側尖端固定連接身體，右側寬端擺動 */
+/* 魚腹高光條：疊在魚身上製造立體圓潤感 */
+.fish-body::before {
+    content: "";
+    position: absolute;
+    top: 12%;
+    left: 15%;
+    width: 55%;
+    height: 38%;
+    border-radius: 50%;
+    background: linear-gradient(
+        135deg,
+        rgba(255,255,255,0.45) 0%,
+        rgba(255,255,255,0.10) 60%,
+        transparent 100%
+    );
+    pointer-events: none;
+}
+
+/* 魚身暗部（腹部下方陰影，增加立體感） */
+.fish-body::after {
+    content: "";
+    position: absolute;
+    bottom: 5%;
+    left: 10%;
+    width: 75%;
+    height: 40%;
+    border-radius: 50%;
+    background: radial-gradient(ellipse at center,
+        rgba(0,0,0,0.18) 0%,
+        transparent 80%
+    );
+    pointer-events: none;
+}
+
+/* 魚鰭（背鰭） */
+.fish-fin {
+    position: absolute;
+    top: -28%;
+    left: 28%;
+    width: 0;
+    height: 0;
+    border-left: 0px solid transparent;
+    border-right: 0px solid transparent;
+    /* border-bottom 在 JS 中動態設定 */
+    opacity: 0.75;
+    transform-origin: bottom center;
+    animation: finSway ease-in-out infinite;
+}
+
+@keyframes finSway {
+    0%   { transform: rotate(-6deg); }
+    50%  { transform: rotate( 6deg); }
+    100% { transform: rotate(-6deg); }
+}
+
+/* 魚尾：右邊寬（尾端展開）、左邊尖（接魚身根部）
+   魚往左游，尾巴從魚身右邊伸出，旋轉軸在左邊尖端 */
 .fish-tail {
     position: absolute;
-    right: -25%;
-    top: 50%;
+    left: 100%;
     transform-origin: left center;
-    animation: tailWag ease-in-out infinite;
-    width: 0; height: 0;
+    clip-path: polygon(100% 0%, 100% 100%, 0% 50%);
 }
 
-/* 魚眼 */
+/* 魚眼：加雙層高光讓眼睛有神 */
 .fish-eye {
     position: absolute;
-    background: rgba(0,0,0,0.6);
+    background: radial-gradient(circle at 35% 30%,
+        rgba(60,60,80,0.5) 0%,
+        rgba(0,0,0,0.85) 55%,
+        rgba(0,0,0,0.9) 100%
+    );
     border-radius: 50%;
     top: 28%;
     left: 18%;
+    box-shadow: 0 0 3px rgba(0,0,0,0.5);
 }
+/* 主高光 */
 .fish-eye::after {
     content: "";
     position: absolute;
@@ -404,31 +565,51 @@ body.game-started > *:not(#welcome-screen) {
     top: 10%;
     left: 10%;
 }
-
-@keyframes tailWag {
-    0%   { transform: translateY(-50%) rotate(-30deg); }
-    50%  { transform: translateY(-50%) rotate(30deg);  }
-    100% { transform: translateY(-50%) rotate(-30deg); }
+/* 副高光（小光點，更有神） */
+.fish-eye::before {
+    content: "";
+    position: absolute;
+    background: rgba(255,255,255,0.6);
+    border-radius: 50%;
+    width: 18%;
+    height: 18%;
+    bottom: 18%;
+    right: 12%;
 }
 
+/* =============================================
+   動畫：尾擺、游動、波動
+   ============================================= */
+
+/* 尾擺：振幅和波動同步節奏 */
+@keyframes tailWag {
+    0%   { transform: rotate(-35deg); }
+    50%  { transform: rotate( 35deg); }
+    100% { transform: rotate(-35deg); }
+}
+
+/* 游動：X方向純線性移動（Y軸波動由外層 wrapper 負責） */
 @keyframes swim {
     0%   { transform: translateX(0); }
     100% { transform: translateX(-130vw); }
 }
 
-/* 上下波動，模擬在水中游動的韻律感 */
+/* 上下波動：振幅更大、用三角函數韻律，讓魚真正「飄」起來 */
 @keyframes fishWave {
-    0%   { transform: translateY(0px);   }
-    25%  { transform: translateY(calc(var(--wave-amp, 8px) * -1)); }
-    75%  { transform: translateY(var(--wave-amp, 8px)); }
-    100% { transform: translateY(0px);   }
+    0%   { transform: translateY(0px) rotate(0deg); }
+    15%  { transform: translateY(calc(var(--wave-amp, 12px) * -0.7)) rotate(calc(var(--tilt-amp, 3deg) * -0.5)); }
+    30%  { transform: translateY(calc(var(--wave-amp, 12px) * -1)) rotate(calc(var(--tilt-amp, 3deg) * -1)); }
+    50%  { transform: translateY(0px) rotate(0deg); }
+    65%  { transform: translateY(calc(var(--wave-amp, 12px) *  0.7)) rotate(calc(var(--tilt-amp, 3deg) *  0.5)); }
+    80%  { transform: translateY(calc(var(--wave-amp, 12px) *  1)) rotate(calc(var(--tilt-amp, 3deg) *  1)); }
+    100% { transform: translateY(0px) rotate(0deg); }
 }
 
-/* 魚身輕微左右搖擺，配合波動感 */
+/* 魚身搖擺：與波動同相位，讓頭部方向跟著游動方向偏轉 */
 @keyframes fishBodySway {
     0%   { transform: rotate(0deg);   }
-    25%  { transform: rotate(-3deg);  }
-    75%  { transform: rotate(3deg);   }
+    25%  { transform: rotate(-4deg);  }
+    75%  { transform: rotate( 4deg);  }
     100% { transform: rotate(0deg);   }
 }
 

@@ -17,6 +17,7 @@ window.addEventListener('load', () => {
     preloadImages('P', 6);  // 預載故事 P1-P6
     preloadImages('F', 12); // 預載說明 F1-F12
     preloadFishImages();     // 預載所有魚圖片
+    initOceanCaustics();     // 初始化海洋光束
 });
 
 // 預載魚圖片
@@ -492,97 +493,252 @@ function toggleMusic() {
 function createBubble() {
     const b = document.createElement("div");
     b.className = "bubble";
-    const size = 5 + Math.random() * 16;
+    const size = 4 + Math.random() * 18;
     b.style.left = Math.random() * 100 + "%";
-    b.style.width = size + "px";
+    b.style.width  = size + "px";
     b.style.height = size + "px";
-    const duration = 5 + Math.random() * 8;
+    const duration = 6 + Math.random() * 9;
     b.style.animationDuration = duration + "s";
-    // rise 動畫用 100% translateY，需要知道上移距離
-    b.style.setProperty("--rise-h", (window.innerHeight * 0.7) + "px");
+    // 每顆泡泡獨立的左右飄移方向與距離（-8px ~ +8px）
+    const drift = (Math.random() * 16 - 8).toFixed(1);
+    b.style.setProperty("--drift-x", drift + "px");
     document.getElementById("bubbles").appendChild(b);
     setTimeout(() => b.remove(), duration * 1000);
 }
 setInterval(createBubble, 300);
 
+// =============================================
+// 🐟 魚體調色盤（每種魚有亮色/中色/暗色三層）
+// =============================================
 const fishPalettes = [
-    { body: "rgba(120,200,255,0.9)", tail: "rgba(80,160,220,0.95)",  glow: "rgba(120,200,255,0.4)" },
-    { body: "rgba(255,180,100,0.9)", tail: "rgba(220,130,60,0.95)",  glow: "rgba(255,180,100,0.35)" },
-    { body: "rgba(150,230,180,0.9)", tail: "rgba(80,180,120,0.95)",  glow: "rgba(150,230,180,0.4)" },
-    { body: "rgba(180,140,255,0.9)", tail: "rgba(130,90,220,0.95)",  glow: "rgba(180,140,255,0.4)" },
-    { body: "rgba(255,220,100,0.9)", tail: "rgba(210,170,40,0.95)",  glow: "rgba(255,220,100,0.3)" },
-    { body: "rgba(100,220,240,0.9)", tail: "rgba(60,180,200,0.95)",  glow: "rgba(100,220,240,0.4)" },
+    // 海藍色
+    { hi: "rgba(190,235,255,1)", mid: "rgba(100,185,255,0.95)", lo: "rgba(40,110,200,0.9)",  tail: "rgba(60,140,220,0.95)", fin: "rgba(80,160,235,0.8)",  glow: "rgba(100,190,255,0.45)" },
+    // 珊瑚橘
+    { hi: "rgba(255,220,170,1)", mid: "rgba(255,165,80,0.95)",  lo: "rgba(200,100,30,0.9)",  tail: "rgba(215,120,50,0.95)", fin: "rgba(240,150,70,0.8)",  glow: "rgba(255,175,90,0.40)" },
+    // 翠綠色
+    { hi: "rgba(195,250,210,1)", mid: "rgba(110,215,150,0.95)", lo: "rgba(40,150,90,0.9)",   tail: "rgba(60,175,110,0.95)", fin: "rgba(90,200,130,0.8)",  glow: "rgba(130,225,165,0.45)" },
+    // 薰衣草紫
+    { hi: "rgba(235,210,255,1)", mid: "rgba(180,130,255,0.95)", lo: "rgba(110,70,210,0.9)",  tail: "rgba(140,90,225,0.95)", fin: "rgba(165,115,245,0.8)", glow: "rgba(185,145,255,0.45)" },
+    // 金黃色
+    { hi: "rgba(255,245,180,1)", mid: "rgba(255,210,60,0.95)",  lo: "rgba(190,145,10,0.9)",  tail: "rgba(210,165,30,0.95)", fin: "rgba(245,200,50,0.8)",  glow: "rgba(255,215,80,0.40)" },
+    // 青藍色
+    { hi: "rgba(185,250,255,1)", mid: "rgba(70,215,235,0.95)",  lo: "rgba(20,155,175,0.9)",  tail: "rgba(40,180,200,0.95)", fin: "rgba(70,210,230,0.8)",  glow: "rgba(90,220,240,0.45)" },
+    // 玫瑰粉（新增）
+    { hi: "rgba(255,215,225,1)", mid: "rgba(255,150,175,0.95)", lo: "rgba(210,80,115,0.9)",  tail: "rgba(230,110,145,0.95)",fin: "rgba(255,140,165,0.8)", glow: "rgba(255,165,190,0.40)" },
+    // 銀白色（遠景常見）
+    { hi: "rgba(240,248,255,1)", mid: "rgba(200,225,245,0.90)", lo: "rgba(140,175,210,0.85)", tail: "rgba(160,195,225,0.90)",fin: "rgba(185,215,240,0.75)",glow: "rgba(210,235,250,0.35)" },
 ];
 
+// =============================================
+// 🌊 海洋光束初始化（只執行一次）
+// =============================================
+function initOceanCaustics() {
+    const ocean = document.getElementById("ocean");
+    if (!ocean || document.getElementById("ocean-caustics")) return;
+    const layer = document.createElement("div");
+    layer.id = "ocean-caustics";
+    for (let i = 0; i < 5; i++) {
+        const beam = document.createElement("div");
+        beam.className = "caustic-beam";
+        layer.appendChild(beam);
+    }
+    // 插在 ocean 的最前面（最底層）
+    ocean.insertBefore(layer, ocean.firstChild);
+}
+
+// =============================================
+// 🐟 魚體建立（完整強化版）
+// =============================================
 function createFish() {
     const palette = fishPalettes[Math.floor(Math.random() * fishPalettes.length)];
 
-    // 深度分層：0=遠景小慢淡, 1=中景, 2=近景大快亮
-    const depth = Math.floor(Math.random() * 3);
+    // ── 深度分層 ──────────────────────────────────
+    // 新增「衝刺」機率：5% 機率出現快速近景魚
+    const isSprint = Math.random() < 0.05;
+    const depth = isSprint ? 2 : Math.floor(Math.random() * 3);
+
+    // 速度範圍大幅拉大，讓節奏更有變化
     const cfg = [
-        { scale: 0.3,  opacity: 0.3,  speed: 20 + Math.random() * 8,  waveAmp: 3,  wagSpeed: 0.5  },
-        { scale: 0.6,  opacity: 0.55, speed: 13 + Math.random() * 6,  waveAmp: 7,  wagSpeed: 0.38 },
-        { scale: 1.0,  opacity: 0.88, speed: 7  + Math.random() * 4,  waveAmp: 12, wagSpeed: 0.28 },
+        // 遠景：小、慢、淡
+        { scale: 0.28, opacity: 0.28, speedBase: 22, speedVar: 10, waveAmp: 5,  tiltAmp: 1.5, wagSpeed: 0.55, finH: 0.30 },
+        // 中景
+        { scale: 0.58, opacity: 0.52, speedBase: 12, speedVar: 7,  waveAmp: 14, tiltAmp: 3.0, wagSpeed: 0.40, finH: 0.35 },
+        // 近景：大、快、亮
+        { scale: 1.00, opacity: 0.90, speedBase: 5,  speedVar: 5,  waveAmp: 24, tiltAmp: 5.0, wagSpeed: 0.28, finH: 0.40 },
     ][depth];
+
+    // 衝刺魚：比普通近景快一倍左右，但不要快到像閃過
+    const speed = isSprint
+        ? 7 + Math.random() * 3
+        : cfg.speedBase + Math.random() * cfg.speedVar;
 
     const size = 40 * cfg.scale;
     const h    = size * 0.48;
 
-    const waveDur = 2 + Math.random() * 2;
+    const waveDur   = 1.8 + Math.random() * 2.5;   // 波動週期
     const waveDelay = Math.random() * 2;
 
-    // 外層：只負責Y軸波動
+    // ── 立體漸層魚身 ──────────────────────────────
+    // 使用三點 radial-gradient 模擬光照：左上亮、中間色、右下暗
+    const bodyGrad = `
+        radial-gradient(ellipse at 38% 32%,
+            ${palette.hi}   0%,
+            ${palette.mid}  45%,
+            ${palette.lo}   100%
+        )
+    `;
+    // 外發光（用多層 box-shadow：近發光 + 遠發光）
+    const bodyShadow = `
+        inset -2px -2px 5px rgba(0,0,0,0.25),
+        inset  1px  1px 4px rgba(255,255,255,0.15),
+        0 0 ${size * 0.5}px ${palette.glow},
+        0 0 ${size * 1.2}px ${palette.glow.replace("0.4", "0.15").replace("0.45","0.15").replace("0.35","0.12").replace("0.40","0.12").replace("0.30","0.10")}
+    `;
+
+    // ── wrapper：Y 軸波動 + 整體傾斜（模擬游動姿態） ──
     const wrapper = document.createElement("div");
     wrapper.className = "fish";
     wrapper.style.cssText = `
         position: absolute;
-        top: ${10 + Math.random() * 70}%;
+        top: ${8 + Math.random() * 72}%;
         right: -120px;
         opacity: ${cfg.opacity};
         --wave-amp: ${cfg.waveAmp}px;
+        --tilt-amp: ${cfg.tiltAmp}deg;
         animation: fishWave ${waveDur}s ${waveDelay}s ease-in-out infinite;
+        ${isSprint ? "filter: brightness(1.25);" : ""}
     `;
 
-    // 內層：只負責X軸游動
+    // ── inner：X 軸游動 ──
     const inner = document.createElement("div");
     inner.style.cssText = `
-        animation: swim ${cfg.speed}s linear forwards;
+        animation: swim ${speed}s linear forwards;
     `;
 
+    // ── 魚身 ──
     const body = document.createElement("div");
     body.className = "fish-body";
     body.style.cssText = `
-        width: ${size}px; height: ${h}px;
-        background: ${palette.body};
-        box-shadow: inset -3px -2px 6px rgba(0,0,0,0.2), 0 0 ${size * 0.7}px ${palette.glow};
+        width: ${size}px;
+        height: ${h}px;
+        background: ${bodyGrad};
+        box-shadow: ${bodyShadow};
         animation: fishBodySway ${waveDur}s ${waveDelay}s ease-in-out infinite;
     `;
 
-    const tail = document.createElement("div");
-    tail.className = "fish-tail";
-    const ts = h * 0.8;
-    tail.style.cssText = `
-        border-top: ${ts * 0.45}px solid transparent;
-        border-bottom: ${ts * 0.45}px solid transparent;
-        border-right: ${ts * 0.85}px solid ${palette.tail};
-        animation: tailWag ${cfg.wagSpeed}s ease-in-out infinite;
+    // ── 背鰭 ──
+    const fin = document.createElement("div");
+    fin.className = "fish-fin";
+    const finH = h * cfg.finH;
+    const finW = size * 0.28;
+    fin.style.cssText = `
+        border-left:   ${finW * 0.35}px solid transparent;
+        border-right:  ${finW * 0.65}px solid transparent;
+        border-bottom: ${finH}px solid ${palette.fin};
+        animation-duration: ${waveDur * 0.9}s;
+        animation-delay:    ${waveDelay}s;
     `;
 
+    // ── 魚尾（clip-path，寬端接魚身左側，尖端朝右） ──
+    const tail = document.createElement("div");
+    tail.className = "fish-tail";
+    const tailW = size * 0.25;
+    const tailH = h * 0.70;
+    const tailTop = (h - tailH) / 2;
+    tail.style.cssText = `
+        width:      ${tailW}px;
+        height:     ${tailH}px;
+        top:        ${tailTop}px;
+        background: ${palette.tail};
+        animation:  tailWag ${cfg.wagSpeed}s ${waveDelay}s ease-in-out infinite;
+    `;
+
+    // ── 魚眼 ──
     const eye = document.createElement("div");
     eye.className = "fish-eye";
-    const es = Math.max(3, h * 0.18);
+    const es = Math.max(3, h * 0.20);
     eye.style.cssText = `width:${es}px; height:${es}px;`;
 
+    // 組裝
+    body.appendChild(fin);
     body.appendChild(tail);
     body.appendChild(eye);
     inner.appendChild(body);
     wrapper.appendChild(inner);
     document.getElementById("fish-layer").appendChild(wrapper);
-    setTimeout(() => wrapper.remove(), cfg.speed * 1000 + 500);
+
+    setTimeout(() => wrapper.remove(), speed * 1000 + 500);
 }
-setInterval(createFish, 3000);
+
+// 普通魚：每 2.5 秒一條（比原本的 3 秒略密）
+setInterval(createFish, 2500);
+
+// 衝刺魚獨立計時：每 12-20 秒隨機觸發一次（額外補充，確保衝刺感）
+function scheduleSprintFish() {
+    const delay = 12000 + Math.random() * 8000;
+    setTimeout(() => {
+        // 直接呼叫 createFish，5% 機率已涵蓋衝刺；
+        // 這裡強制建立一條近景快魚
+        spawnSprintFish();
+        scheduleSprintFish();
+    }, delay);
+}
+
+function spawnSprintFish() {
+    const palette = fishPalettes[Math.floor(Math.random() * fishPalettes.length)];
+    const size = 40; const h = size * 0.48;
+    const speed = 7 + Math.random() * 3;
+    const waveDur = 1.4; const waveDelay = 0;
+
+    const bodyGrad = `radial-gradient(ellipse at 38% 32%, ${palette.hi} 0%, ${palette.mid} 45%, ${palette.lo} 100%)`;
+    const bodyShadow = `inset -2px -2px 5px rgba(0,0,0,0.25), inset 1px 1px 4px rgba(255,255,255,0.15), 0 0 ${size * 0.6}px ${palette.glow}, 0 0 ${size * 1.5}px ${palette.glow}`;
+
+    const wrapper = document.createElement("div");
+    wrapper.className = "fish";
+    wrapper.style.cssText = `
+        position: absolute;
+        top: ${15 + Math.random() * 60}%;
+        right: -120px;
+        opacity: 0.92;
+        --wave-amp: 18px;
+        --tilt-amp: 4deg;
+        animation: fishWave ${waveDur}s ease-in-out infinite;
+        filter: brightness(1.3) saturate(1.2);
+    `;
+    const inner = document.createElement("div");
+    inner.style.cssText = `animation: swim ${speed}s linear forwards;`;
+
+    const body = document.createElement("div");
+    body.className = "fish-body";
+    body.style.cssText = `width:${size}px; height:${h}px; background:${bodyGrad}; box-shadow:${bodyShadow}; animation: fishBodySway ${waveDur}s ease-in-out infinite;`;
+
+    const fin = document.createElement("div");
+    fin.className = "fish-fin";
+    const finH = h * 0.42; const finW = size * 0.28;
+    fin.style.cssText = `border-left:${finW*0.35}px solid transparent; border-right:${finW*0.65}px solid transparent; border-bottom:${finH}px solid ${palette.fin}; animation-duration:${waveDur*0.9}s;`;
+
+    const tail = document.createElement("div");
+    tail.className = "fish-tail";
+    const tailW = size * 0.25;
+    const tailH = h * 0.70;
+    const tailTop = (h - tailH) / 2;
+    tail.style.cssText = `width:${tailW}px; height:${tailH}px; top:${tailTop}px; background:${palette.tail}; animation: tailWag 0.22s ease-in-out infinite;`;
+
+    const eye = document.createElement("div");
+    eye.className = "fish-eye";
+    const es = Math.max(3, h * 0.20);
+    eye.style.cssText = `width:${es}px; height:${es}px;`;
+
+    body.appendChild(fin); body.appendChild(tail); body.appendChild(eye);
+    inner.appendChild(body); wrapper.appendChild(inner);
+    document.getElementById("fish-layer").appendChild(wrapper);
+    setTimeout(() => wrapper.remove(), speed * 1000 + 500);
+}
+
+scheduleSprintFish();
 
 function initGame() {
+	initOceanCaustics();
 	document.body.classList.add('game-started');
     // ✅ 改用加入 class 的方式觸發淡出
     const welcomeScreen = document.getElementById("welcome-screen");
