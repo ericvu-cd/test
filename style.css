@@ -1,6 +1,11 @@
 html {
     height: 100%;
-    background: url('game-bg.png') no-repeat center center;
+    width: 100%;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #000 url('game-bg.png') no-repeat center center;
     background-size: cover;
     background-attachment: scroll;
 }
@@ -8,12 +13,15 @@ html {
 body {
     font-family: "Microsoft JhengHei", sans-serif;
     margin: 0;
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-    height: 100dvh;
+    width: 960px;
+    height: 540px;
+    flex: none;
     overflow: hidden;
     background: transparent;
+    display: flex;
+    flex-direction: column;
+    transform-origin: center center;
+    /* transform 由 JS 動態寫入 */
 }
 /* 讓 body 底下的所有東西預設先消失 */
 body > *:not(#welcome-screen) {
@@ -835,35 +843,6 @@ body.game-started > *:not(#welcome-screen) {
 .is-not-valid { filter: brightness(0.6) grayscale(0.2); }
 .card.is-valid { transform: translateY(-5px); box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
 
-/* 手機版調整 */
-@media (max-width: 768px) {
-    #header { font-size: 1.3rem; padding: 10px; }
-	#log-btn {
-        font-size: 0.8rem;
-        padding: 4px 10px;
-        top: 5px;      /* 與手機版 #deck-info 高度一致 */
-        right: 5px;     /* 與右側的 5px 對稱 */
-        height: auto;  /* 讓高度隨文字調整 */
-    }
-	.sub-menu {
-        flex-direction: column;
-        align-items: center;
-    }
-    .char-area { padding: 30px 2px; }
-    .avatar-img { width: 40px; height: 40px; font-size: 1.3rem; border-width: 2px; }
-    .ai-name { font-size: 0.85rem; }
-    #ocean { margin: 5px; border-radius: 12px; padding-top: 35px; }
-    #deck-info { font-size: 0.8rem; padding: 4px 10px; top: 5px; left: 5px; background: rgba(252, 230, 127, 0.6); }
-    #summon-display { font-size: 1.05rem; padding: 10px; width: 92%; min-height: 50px; margin-bottom: 5px; border-width: 3px; border-radius: 12px; }
-    #table { min-height: 122px; gap: 6px; } 
-    #player-zone { padding: 8px; border-radius: 15px 15px 0 0; }
-    .hand { min-height: 126px; gap: 6px; padding-bottom: 5px; } 
-    .card { width: 74px; height: 115px; border-radius: 8px; border-width: 1px; }
-    .card-n { font-size: 0.8rem; padding: 4px 1px; border-bottom-width: 1px; }
-    .card-i { padding: 2px; }
-    .tag { font-size: 0.6rem; padding: 2px 4px; border-radius: 4px; margin: 1px; line-height: 1.1; } 
-    #real-start-btn { padding: 15px 40px; font-size: 1.8rem; }
-}
 
 @keyframes playCardAnim {
     0% { transform: translateY(100px) scale(0.5); opacity: 0; }
@@ -1210,9 +1189,8 @@ body.game-started > *:not(#welcome-screen) {
 /* --- 強制視窗縮放 --- */
 
 /* =============================================
-   桌面橫屏版面（≥ 800px）
+   橫屏固定比例版面（電腦 + 手機橫屏通用）
    ============================================= */
-@media screen and (min-width: 800px) {
 
     /* html = 黑色信箱外框，佔滿視窗 */
     html {
@@ -1636,7 +1614,8 @@ body.game-started > *:not(#welcome-screen) {
     #round-summary-overlay > div {
         max-width: 500px !important;
     }
-}
+
+/* ─── end 橫屏版面 ─── */
 
 #tutorial-tooltip {
     position: fixed;
