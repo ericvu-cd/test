@@ -1209,229 +1209,432 @@ body.game-started > *:not(#welcome-screen) {
 
 /* --- 強制視窗縮放 --- */
 
+/* =============================================
+   桌面橫屏版面（≥ 800px）
+   ============================================= */
 @media screen and (min-width: 800px) {
-    /* 1. 外層背景：讓螢幕呈現置中畫布 */
+
+    /* html = 黑色信箱外框，佔滿視窗 */
     html {
-        background-color: #2c3e50 !important;
-        width: 100vw !important;
-        height: 100vh !important;
-        display: flex !important;
-        justify-content: center !important;
-        align-items: center !important;
-        overflow: hidden !important;
+        width: 100vw;
+        height: 100vh;
+        overflow: hidden;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: #000 url('game-bg.png') no-repeat center center;
+        background-size: cover;
     }
 
-    /* 2. 手機本體：縮小基準尺寸，並限制最大縮放比例 */
+    /*
+      body = 固定 16:9 畫布，由 JS 計算縮放比例後寫入
+      transform-origin 固定 center，讓縮放永遠置中
+    */
     body {
-        /* 改用 iPhone X 的精緻比例，避免畫面過大 */
-        width: 400px !important;
-        height: 720px !important;
-        
-        position: relative !important;
-        margin: 0 !important;
+        /* 基準尺寸：960×540（16:9），JS 會 scale 到適合的大小 */
+        width: 960px !important;
+        height: 540px !important;
+        min-width: 0 !important;
+        max-width: none !important;
         flex: none !important;
-
-        /* 縮放邏輯：適應視窗高度，但「最大不超過原始大小 (1倍)」 */
-        transform: scale(min(calc(100vh / 720 * 0.9), 1)) !important;
-        transform-origin: center center !important;
-
-        /* 手機外觀美化 */
-        border: 12px solid #222 !important;
-        border-radius: 35px !important;
-        box-shadow: 0 0 60px rgba(0,0,0,0.8) !important;
-		overflow: hidden !important;
-        background: #4f6a6e !important;
-		
-		/* 解決手牌偏下：確保 body 本身不要有奇怪的 padding */
+        margin: 0 !important;
         padding: 0 !important;
+        border: none !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        background: transparent !important;
+        display: flex !important;
+        flex-direction: column !important;
+        overflow: hidden !important;
+        transform-origin: center center !important;
+        /* transform 由 JS 動態寫入 */
     }
 
-    /* 3. 將所有彈窗與覆蓋層「關」進縮放後的手機框內 */
-    #welcome-screen, 
-    #story-overlay, 
-    #game-summary-overlay, 
-    #info-overlay, 
+    /*
+      body 被 scale 後，position:fixed 會逃出縮放框。
+      全部改為 absolute，讓遮罩乖乖待在 960×540 畫布內。
+    */
+    #welcome-screen,
+    #story-overlay,
+    #info-overlay,
     #card-preview-overlay,
-    #log-overlay {
+    #log-modal,
+    #mazu-target-overlay,
+    #summon-focus-overlay,
+    #chat-layer,
+    #mazu-gift-effect,
+    .mazu-gift-banner,
+    #win-overlay,
+    #round-summary-overlay {
         position: absolute !important;
         width: 100% !important;
         height: 100% !important;
         top: 0 !important;
         left: 0 !important;
-        
-        /* ⚠️ 絕對不加 visibility / opacity 的 !important，把控制權還給 JavaScript ⚠️ */
-        transform: none !important;
-        margin: 0 !important;
     }
-	
-	/* =========================================
-       以下新增：修正卡牌太大、字體太大與按鈕跑位
-       ========================================= */
 
-    /* 1. 修正左右上方的控制按鈕跑出版面 */
-    /* 將 fixed 強制改為 absolute，這樣它們就會乖乖貼在手機框的角落，而不是電腦螢幕邊緣 */
-    #music-control, 
-    #report-control {
+    /* countdown bubble 也要跟著縮放框 */
+    .countdown-bubble {
         position: absolute !important;
-        z-index: 9999 !important;
+        bottom: 140px !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
     }
 
-    /* 2. 縮小 summon-display 顯示文字 */
-    #summon-display {
-        font-size: 1rem !important;
-        line-height: 1.3 !important;
-        padding: 8px 10px !important;
-        height: auto !important;
-        min-height: 44px !important;
+    /* header 隱藏 */
+    #header { display: none !important; }
+
+    /* ── 主體佈局：橫式兩欄 ── */
+    #game-layout {
+        display: flex !important;
+        flex-direction: row !important;
+        width: 100% !important;
+        height: 100% !important;
+        flex: 1 !important;
         overflow: hidden !important;
-        width: 90% !important;
+    }
+
+    /* ── 左側遊戲主區 (80%) ── */
+    #game-main {
+        flex: 0 0 80% !important;
+        display: flex !important;
+        flex-direction: column !important;
+        height: 100% !important;
+        overflow: hidden !important;
+        position: relative !important;
+    }
+
+    /* AI 角色區：高度 14% */
+    #game-main .char-area {
+        flex: 0 0 14% !important;
+        min-height: 0 !important;
+        padding: 8px 12px !important;
+        border-bottom: 1px solid rgba(255,255,255,0.08) !important;
+        background: rgba(0,12,38,0.72) !important;
+    }
+    #game-main .char-area .avatar-img {
+        width: 44px !important;
+        height: 44px !important;
+        font-size: 1.4rem !important;
+    }
+    #game-main .char-area .ai-name { font-size: 0.85rem !important; }
+    #game-main .char-area .ai-cards { font-size: 0.85rem !important; letter-spacing: -4px !important; }
+
+    /* 海洋 / 出牌區：flex-grow 佔剩餘 */
+    #game-main #ocean {
+        flex: 1 !important;
+        min-height: 0 !important;
+        padding-top: 12px !important;
+        margin: 0 !important;
+        border-radius: 0 !important;
+        overflow: hidden !important;
+    }
+
+    /* 召喚顯示移至側欄，海洋區不顯示 */
+    #game-main #summon-display {
+        display: none !important;
+    }
+
+    /* 桌面出牌區 */
+    #game-main #table {
+        min-height: 0 !important;
+        flex-grow: 1 !important;
+        gap: 12px !important;
+    }
+
+    /* 桌面牌縮放 */
+    #game-main #ocean .card {
+        width: 100px !important;
+        height: 148px !important;
+        border-radius: 8px !important;
+    }
+    #game-main #ocean .card .card-n {
+        font-size: 1rem !important;
+        padding: 6px 4px !important;
+    }
+    #game-main #ocean .card .tag {
+        font-size: 0.6rem !important;
+        padding: 2px 5px !important;
+        margin: 1px !important;
+    }
+
+    /* 玩家手牌區：高度 21% */
+    #game-main #player-zone {
+        flex: 0 0 21% !important;
+        min-height: 0 !important;
+        padding: 6px 10px !important;
+        border-top: 1px solid rgba(100,180,255,0.2) !important;
+        border-radius: 0 !important;
+        display: flex !important;
+        align-items: center !important;
+        overflow: hidden !important;
+    }
+    #game-main #player-hand {
+        height: 100% !important;
+        min-height: 0 !important;
+        max-height: none !important;
+        transform: none !important;
+        padding: 4px 36px !important;
+        gap: 8px !important;
+        align-items: center !important;
+        overflow-x: auto !important;
+    }
+    #game-main #player-hand .card {
+        width: 80px !important;
+        height: 118px !important;
+        border-radius: 8px !important;
+        flex-shrink: 0 !important;
+    }
+    #game-main #player-hand .card .card-n {
+        font-size: 0.85rem !important;
+        padding: 5px 3px !important;
+    }
+    #game-main #player-hand .card .tag {
+        font-size: 0.55rem !important;
+        padding: 2px 4px !important;
+        margin: 1px !important;
+    }
+    #game-main #player-hand .card.sidebar-selected {
+        transform: translateY(-8px) !important;
+        box-shadow: 0 0 18px rgba(255,215,60,0.9), 0 6px 20px rgba(0,0,0,0.4) !important;
+        border-color: #ffd700 !important;
+    }
+
+    /* 手牌箭頭 */
+    .hand-arrow {
+        position: absolute !important;
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+        z-index: 20 !important;
+        font-size: 1.2rem !important;
+        padding: 6px 4px !important;
+    }
+    #arrow-left  { left:  4px !important; }
+    #arrow-right { right: 4px !important; }
+
+    /* ── 右側控制台 (20%) ── */
+    #sidebar {
+        flex: 0 0 20% !important;
+        display: flex !important;
+        flex-direction: column !important;
+        height: 100% !important;
+        background: linear-gradient(to bottom, #050f28, #080018) !important;
+        border-left: 1.5px solid rgba(80,130,255,0.28) !important;
+        padding: 12px 10px !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        gap: 0 !important;
         box-sizing: border-box !important;
     }
-	
-	#ocean .card {
-        /* 核心：將縮放比例從 0.8 或 1.0 調降至 0.55 */
-        transform: scale(0.75) !important; 
-        transform-origin: center center !important;
-        
-        /* 移除可能產生的位移 */
-        margin: 0 !important;
-		margin-left: -25px !important; 
-        margin-right: -25px !important;		
-        box-shadow: 0 4px 15px rgba(0,0,0,0.3) !important;
+    #sidebar::-webkit-scrollbar { width: 4px; }
+    #sidebar::-webkit-scrollbar-thumb { background: rgba(80,130,255,0.3); border-radius: 2px; }
+
+    .sidebar-label {
+        font-size: 0.7rem !important;
+        color: rgba(120,180,255,0.6) !important;
+        text-align: center !important;
+        margin-bottom: 4px !important;
+        letter-spacing: 1px !important;
     }
-	
-	body {
+    .sidebar-label-sm {
+        font-size: 0.65rem !important;
+        color: rgba(100,160,255,0.4) !important;
+        text-align: center !important;
+        margin: 6px 0 4px !important;
+    }
+    .sidebar-divider {
+        height: 1px !important;
+        background: rgba(80,120,255,0.18) !important;
+        margin: 8px 0 !important;
+    }
+
+    /* 召喚規律區塊 */
+    #sidebar-summon {
+        background: rgba(0,30,90,0.65) !important;
+        border: 1px solid rgba(80,160,255,0.28) !important;
+        border-radius: 8px !important;
+        padding: 8px !important;
+        min-height: 60px !important;
+    }
+    #sidebar-summon-text {
+        font-size: 0.82rem !important;
+        color: rgba(200,230,255,0.92) !important;
+        text-align: center !important;
+        line-height: 1.4 !important;
+        white-space: pre-wrap !important;
+        word-break: break-all !important;
+        font-weight: bold !important;
+    }
+    #sidebar-summon.mazu-glow {
+        background: rgba(60,30,0,0.75) !important;
+        border-color: #f5b942 !important;
+    }
+    #sidebar-summon.mazu-glow #sidebar-summon-text {
+        color: #fde9a2 !important;
+    }
+
+    /* 數字統計區 */
+    .sidebar-stats {
         display: flex !important;
-        flex-direction: column !important;
-        justify-content: space-between !important; /* 讓頭、中、尾自動撐開 */
+        gap: 6px !important;
     }
-/* 2. 修正：手牌區（player-hand）垂直居中與溢出問題 */
-	#ocean {
+    .stat-box {
         flex: 1 !important;
+        background: rgba(0,20,60,0.6) !important;
+        border: 1px solid rgba(80,130,255,0.2) !important;
+        border-radius: 7px !important;
+        padding: 6px 4px !important;
+        text-align: center !important;
+    }
+    .stat-label {
+        font-size: 0.65rem !important;
+        color: rgba(120,180,255,0.6) !important;
+        margin-bottom: 2px !important;
+    }
+    .stat-value {
+        font-size: 1.4rem !important;
+        font-weight: bold !important;
+        color: white !important;
+        line-height: 1 !important;
+    }
+    #sidebar-caller { color: #ffd700 !important; }
+
+    /* 操作按鈕 */
+    #sidebar-confirm-btn {
+        width: 100% !important;
+        padding: 10px !important;
+        margin-bottom: 6px !important;
+        background: rgba(0,140,65,0.80) !important;
+        border: 2px solid rgba(0,230,120,0.65) !important;
+        border-radius: 9px !important;
+        color: rgba(160,255,190,0.98) !important;
+        font-size: 0.95rem !important;
+        font-weight: bold !important;
+        cursor: pointer !important;
+        transition: opacity 0.2s !important;
+        font-family: "Microsoft JhengHei", sans-serif !important;
+    }
+    #sidebar-confirm-btn:disabled {
+        opacity: 0.35 !important;
+        cursor: default !important;
+    }
+    #sidebar-confirm-btn:not(:disabled):hover {
+        background: rgba(0,170,80,0.9) !important;
+    }
+    #sidebar-skip-btn {
+        width: 100% !important;
+        padding: 7px !important;
+        background: rgba(60,35,0,0.55) !important;
+        border: 1px solid rgba(210,150,0,0.32) !important;
+        border-radius: 7px !important;
+        color: rgba(255,200,70,0.80) !important;
+        font-size: 0.8rem !important;
+        cursor: pointer !important;
+        font-family: "Microsoft JhengHei", sans-serif !important;
+        transition: opacity 0.2s !important;
+    }
+    #sidebar-skip-btn:hover { opacity: 0.8 !important; }
+
+    /* 功能按鈕 */
+    .sidebar-func-btn {
+        width: 100% !important;
+        padding: 7px !important;
+        margin-bottom: 5px !important;
+        background: rgba(0,35,90,0.55) !important;
+        border: 1px solid rgba(80,140,255,0.22) !important;
+        border-radius: 7px !important;
+        color: rgba(170,210,255,0.85) !important;
+        font-size: 0.8rem !important;
+        cursor: pointer !important;
+        text-align: center !important;
+        font-family: "Microsoft JhengHei", sans-serif !important;
+    }
+    .sidebar-func-btn:hover { background: rgba(0,50,120,0.7) !important; }
+
+    /* 音樂/報告並排 */
+    .sidebar-func-row {
+        display: flex !important;
+        gap: 5px !important;
         margin-bottom: 0 !important;
     }
-	#player-hand {
-        /* 撤銷所有可能導致高度撐開的設定 */
-        height: 140px !important; 
-        min-height: 140px !important;
-        max-height: none !important;
-        
-        /* 核心：直接把整個區域縮小到 0.6 倍 */
-        transform: scale(0.6) !important;
-        transform-origin: center bottom !important; /* 以底部為基準縮小，這樣就不會浮空 */
-        
-        display: flex !important;
-        align-items: flex-end !important;    /* 重要：讓卡片底部齊平，避免浮空感 */
-        justify-content: center !important;
-        
-        /* 消除多餘間距 */
-        margin-bottom: 5px !important; 
-        padding: 0 !important;
-        position: relative !important;
-        z-index: 10 !important;
-        overflow: visible !important; /* 確保縮放後的文字不會被切掉 */
-		}
+    .sidebar-func-half {
+        flex: 1 !important;
+        padding: 7px 4px !important;
+        background: rgba(0,35,90,0.5) !important;
+        border: 1px solid rgba(80,140,255,0.2) !important;
+        border-radius: 7px !important;
+        color: rgba(170,210,255,0.8) !important;
+        font-size: 0.75rem !important;
+        cursor: pointer !important;
+        font-family: "Microsoft JhengHei", sans-serif !important;
+        text-align: center !important;
+    }
+    .sidebar-func-half:hover { background: rgba(0,50,120,0.7) !important; }
+    .sidebar-func-half.off { opacity: 0.4 !important; }
 
-    /* 3. 修正：結算頁面視窗大小 (0.9X) */
-    .summary-container, #game-summary-overlay > div {
-        transform: scale(0.9) !important;
-        transform-origin: center center !important;
+    /* 覆蓋舊的 fixed 位置按鈕，在桌面隱藏 */
+    #music-control[style*="position:fixed"],
+    #report-control[style*="position:fixed"] {
+        display: none !important;
     }
 
-    /* 4. 修正：頂端標題字體大小 (0.7X) */
-    #header {
-        font-size: 1.2rem !important; /* 調整原始大小 */
-        transform: scale(0.7) !important;
-        transform-origin: center top !important;
-        margin-top: 5px !important;
+    /* log-btn 桌面：使用 sidebar 內的版本，舊版隱藏 */
+    #log-btn {
+        position: static !important;
+        top: auto !important;
+        right: auto !important;
     }
-	
-	.box {
-        /* 1. 核心：縮小內部元素之間的間距 */
-        gap: 0px !important; 
-        padding: 0px !important;
-    }
-	.box span {
-        font-size: 0.3rem !important; /* 數字也隨之調小，維持比例 */
-        font-weight: 900 !important;
-        line-height: 1 !important;
-        margin-top: -2px !important;  /* 讓數字往上靠攏圖示 */
-		padding: 0px !important;
-		gap: 0px !important; 
-    }
-	.ai-cards { font-size: 0.2rem; gap: 0px !important; letter-spacing: -15px;}
 
-    /* 5. 修正：魚卡縮放與內部字體 (字體 1.1X) */
-	[class*="card"]:not(.preview-detail-card) {
-        zoom: 0.65 !important; 
+    /* 玩家狀態 */
+    #sidebar-player-status {
         display: flex !important;
         flex-direction: column !important;
+        align-items: center !important;
+        gap: 4px !important;
+        padding: 6px 0 !important;
+    }
+    #sidebar-player-avatar {
+        width: 46px !important;
+        height: 46px !important;
+        background: rgba(20,80,160,0.55) !important;
+        border: 2px solid rgba(100,180,255,0.5) !important;
+        border-radius: 50% !important;
+        display: flex !important;
+        align-items: center !important;
         justify-content: center !important;
+        font-size: 1.6rem !important;
     }
-	[class*="card"]:not(.preview-detail-card) {
-        padding: 4px 2px !important;
-        margin: 0 2px !important;
+    #sidebar-hand-count {
+        font-size: 0.72rem !important;
+        color: rgba(150,200,255,0.7) !important;
+        background: rgba(0,30,80,0.6) !important;
+        border-radius: 8px !important;
+        padding: 3px 10px !important;
     }
- /* --- 終極覆蓋：強制抓取魚卡內所有深層文字元素 --- */
- /* 1. 魚名：維持原本清晰的大小 */
-/* 1. 魚名：調整回適中大小 */
-    .card-n {
-        font-size: 3.6rem !important; 
-        font-weight: 900 !important;
-        margin-bottom: 4px !important;
-        display: block !important;
+
+    /* 版本文字 */
+    .sidebar-version {
+        margin-top: auto !important;
+        padding-top: 10px !important;
+        font-size: 0.62rem !important;
+        color: rgba(80,120,200,0.3) !important;
         text-align: center !important;
     }
 
-/* 2. 特性標籤：找回顏色並維持寬度自適應 */
-    [class*="card"]:not(.preview-detail-card) div:not(.card-n), 
-    [class*="card"]:not(.preview-detail-card) span, 
-    [class*="card"]:not(.preview-detail-card) p, 
-    [class*="card"]:not(.preview-detail-card) .tag {
-        /* 保持文字大小與粗細 */
-        font-size: 2rem !important; 
-        font-weight: 800 !important;
-        line-height: 1.0 !important;
-        
-        display: inline-flex !important; 
-        width: auto !important;          
-        max-width: 95% !important;       
-        justify-content: center !important;
-        align-self: center !important;   
-        
-        padding: 5px 10px !important;    
-        margin: 2px 0 !important; 
-        white-space: nowrap !important;
-
-        /* --- 修正重點：移除強制的 background 與 color --- */
-        /* 不要在此處設定背景色，讓原本 .card-d, .card-l 等類別的顏色生效 */
-        /* 如果原本沒有底色，可以補上這行確保透明度而非強制白色： */
-        /* background-color: transparent; */
+    /* 大型牌預覽 (card-preview-overlay) 桌面版 */
+    #card-preview-container .preview-detail-card {
+        width: 280px !important;
     }
 
-    /* 3. 確保原本的特性標籤類別權重夠高，能把顏色穿透進去 */
-    .card-d, .card-l, .card-s, .card-h, .card-i {
-        /* 如果發現還是沒顏色，請在你的顏色設定後面補上 !important */
-        /* 例如：background-color: #ff9900 !important; */
-        display: inline-flex !important; 
+    /* summon-focus-overlay 桌面調整 */
+    #summon-focus-box {
+        font-size: 1.4rem !important;
+        max-width: 500px !important;
     }
-	
-    /* 3. 稍微增加卡片內邊距，防止字體貼邊 */
-    [class*="card"]:not(.preview-detail-card) {
-        padding: 0 !important;
-        justify-content: center !important;
-    }
-	
-    /* --- 針對 Firefox 瀏覽器 (因為 Firefox 不支援 zoom 的備用方案) --- */
-    @-moz-document url-prefix() {
-        [class*="card"]:not(.preview-detail-card) {
-            transform: scale(0.7) !important;
-            transform-origin: center center !important;
-        }
-        #summon-display {
-            transform: scale(0.5) !important;
-            transform-origin: center top !important;
-        }
+
+    /* 結算頁面 */
+    #round-summary-overlay > div {
+        max-width: 500px !important;
     }
 }
 

@@ -748,17 +748,17 @@ function initGame() {
     const bgmVolume = isMobile ? 0.03 : 0.1; // 手機用 0.03，電腦用 0.1
 
     // 啟動音樂與日誌
-    document.getElementById("music-control").style.display = "flex";
-	document.getElementById("report-control").style.display = "flex";
+    const musicBtn = document.getElementById("music-control");
+    const reportBtn = document.getElementById("report-control");
+    if (musicBtn) musicBtn.style.display = "flex";
+    if (reportBtn) reportBtn.style.display = "flex";
     document.getElementById("log-btn").style.display = "flex";
     const music = document.getElementById("bgm");
     music.play().then(() => {
         music.volume = bgmVolume;
     }).catch(err => {
         console.log("播放受阻");
-        const btn = document.getElementById("music-control");
-        btn.innerText = "🔇";
-        btn.style.opacity = "0.4";
+        if (musicBtn) { musicBtn.innerText = "🔇"; musicBtn.style.opacity = "0.4"; }
     });
 
 	document.getElementById('player-hand').addEventListener('scroll', updateHandArrows);
@@ -898,6 +898,14 @@ function autoStep() {
         addLog(`【${caller.n}】抽到了一張神祕召喚。`, "secret");
         document.getElementById("summon-display").innerText = `【${caller.n}】抽到了神祕召喚！\n觀察對手出的魚，推敲召喚是什麼...`;
         phase = "WAIT";
+    }
+    // 同步到側欄
+    const _sst = document.getElementById('sidebar-summon-text');
+    if (_sst) _sst.innerText = document.getElementById('summon-display').innerText;
+    const _ssb = document.getElementById('sidebar-summon');
+    if (_ssb) {
+        if (currentS && currentS.isMazu) _ssb.classList.add('mazu-glow');
+        else _ssb.classList.remove('mazu-glow');
     }
 
     // 教學模式不顯示遮罩，直接執行後續動作
