@@ -14,9 +14,44 @@
             }
         })();
     </script>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!-- iOS Safari 強制橫屏提示（無法 JS 強制旋轉，只能提示） -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-fullscreen">
     <title>友魚勇者之路-單人版</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+    /* 直屏時顯示「請旋轉」提示遮罩 */
+    #rotate-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 99999;
+        background: #000;
+        color: white;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        font-family: "Microsoft JhengHei", sans-serif;
+        font-size: 1.4rem;
+        text-align: center;
+        gap: 20px;
+    }
+    #rotate-overlay .rotate-icon {
+        font-size: 4rem;
+        animation: rotateHint 1.5s ease-in-out infinite;
+    }
+    @keyframes rotateHint {
+        0%   { transform: rotate(0deg); }
+        40%  { transform: rotate(90deg); }
+        60%  { transform: rotate(90deg); }
+        100% { transform: rotate(0deg); }
+    }
+    /* 直屏時才顯示 */
+    @media screen and (orientation: portrait) {
+        #rotate-overlay { display: flex !important; }
+    }
+    </style>
     <script>
     // 16:9 固定比例縮放（電腦 + 手機橫屏通用）
     (function() {
@@ -29,14 +64,28 @@
         }
         document.addEventListener('DOMContentLoaded', applyScale);
         window.addEventListener('resize', applyScale);
-        // 手機旋轉時也重算
         window.addEventListener('orientationchange', function() {
             setTimeout(applyScale, 200);
+        });
+
+        // 嘗試用 Screen Orientation API 強制橫屏（Android Chrome 支援）
+        document.addEventListener('DOMContentLoaded', function() {
+            if (screen.orientation && screen.orientation.lock) {
+                screen.orientation.lock('landscape').catch(function() {
+                    // iOS / 不支援的瀏覽器會靜默失敗，改靠旋轉提示遮罩
+                });
+            }
         });
     })();
     </script>
 </head>
 <body>
+
+	<!-- 直屏提示：請旋轉裝置 -->
+	<div id="rotate-overlay">
+		<div class="rotate-icon">📱</div>
+		<div>請旋轉裝置<br>以橫屏遊玩</div>
+	</div>
 
 	<div id="welcome-screen">
 		<div class="welcome-container">
