@@ -8,13 +8,17 @@ html {
     background: #000 url('game-bg.png') no-repeat center center;
     background-size: cover;
     background-attachment: scroll;
+    /* 讓畫面延伸到 iOS 瀏海/狀態列區域 */
+    padding: env(safe-area-inset-top) env(safe-area-inset-right)
+             env(safe-area-inset-bottom) env(safe-area-inset-left);
+    box-sizing: border-box;
 }
 :root { --p: #1976D2; --ai1: #D32F2F; --ai2: #388E3C; --ai3: #7B1FA2; }
 body {
     font-family: "Microsoft JhengHei", sans-serif;
     margin: 0;
-    width: 960px;
-    height: 540px;
+    width: 720px;
+    height: 405px;
     flex: none;
     overflow: hidden;
     background: transparent;
@@ -1209,9 +1213,9 @@ body.game-started > *:not(#welcome-screen) {
       transform-origin 固定 center，讓縮放永遠置中
     */
     body {
-        /* 基準尺寸：960×540（16:9），JS 會 scale 到適合的大小 */
-        width: 960px !important;
-        height: 540px !important;
+        /* 基準尺寸：720×405（16:9），JS 會 scale 到適合的大小 */
+        width: 720px !important;
+        height: 405px !important;
         min-width: 0 !important;
         max-width: none !important;
         flex: none !important;

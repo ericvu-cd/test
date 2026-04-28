@@ -14,8 +14,8 @@
             }
         })();
     </script>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <!-- iOS Safari 強制橫屏提示（無法 JS 強制旋轉，只能提示） -->
+    <!-- viewport-fit=cover 讓畫面延伸到瀏海/狀態列下方 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-fullscreen">
     <title>友魚勇者之路-單人版</title>
@@ -53,30 +53,34 @@
     }
     </style>
     <script>
-    // 16:9 固定比例縮放（電腦 + 手機橫屏通用）
+    // ── 16:9 固定比例縮放 ──
     (function() {
-        var BASE_W = 960, BASE_H = 540;
+        // 基準畫布：720×405（比 960×540 大 1.5 倍的視覺元素，手機上更清晰）
+        var BASE_W = 720, BASE_H = 405;
+
         function applyScale() {
-            var scaleX = window.innerWidth  / BASE_W;
-            var scaleY = window.innerHeight / BASE_H;
-            var scale  = Math.min(scaleX, scaleY);
-            document.body.style.transform = 'scale(' + scale + ')';
+            // 用 screen.width/height 避免手機瀏覽器工具列干擾 innerHeight
+            var vw = window.innerWidth;
+            var vh = window.innerHeight;
+            var scale = Math.min(vw / BASE_W, vh / BASE_H);
+            var b = document.body;
+            b.style.transform = 'scale(' + scale + ')';
         }
+
         document.addEventListener('DOMContentLoaded', applyScale);
         window.addEventListener('resize', applyScale);
         window.addEventListener('orientationchange', function() {
-            setTimeout(applyScale, 200);
-        });
-
-        // 嘗試用 Screen Orientation API 強制橫屏（Android Chrome 支援）
-        document.addEventListener('DOMContentLoaded', function() {
-            if (screen.orientation && screen.orientation.lock) {
-                screen.orientation.lock('landscape').catch(function() {
-                    // iOS / 不支援的瀏覽器會靜默失敗，改靠旋轉提示遮罩
-                });
-            }
+            // 等旋轉動畫完成後重算（部分裝置需要 300ms+）
+            setTimeout(applyScale, 350);
         });
     })();
+
+    // ── Android Chrome 強制橫屏：必須在用戶手勢內呼叫 ──
+    function lockLandscape() {
+        if (screen.orientation && screen.orientation.lock) {
+            screen.orientation.lock('landscape').catch(function(){});
+        }
+    }
     </script>
 </head>
 <body>
@@ -105,12 +109,12 @@
 			</div>
 
 			<div class="menu-buttons">
-				<button id="real-start-btn" onclick="initGame()">啟航冒險</button>
+				<button id="real-start-btn" onclick="lockLandscape(); initGame()">啟航冒險</button>
 
 				<div class="sub-menu">
-					<button class="sub-btn" onclick="openStory()">📖 故事</button>
-					<button class="sub-btn" onclick="openInfo()">📘 說明</button>
-					<button class="sub-btn" onclick="startTutorial()">新手教學</button>
+					<button class="sub-btn" onclick="lockLandscape(); openStory()">📖 故事</button>
+					<button class="sub-btn" onclick="lockLandscape(); openInfo()">📘 說明</button>
+					<button class="sub-btn" onclick="lockLandscape(); startTutorial()">新手教學</button>
 				</div>
 			</div>
 
