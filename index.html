@@ -14,82 +14,11 @@
             }
         })();
     </script>
-    <!-- viewport-fit=cover 讓畫面延伸到瀏海/狀態列下方 -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-fullscreen">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>友魚勇者之路-單人版</title>
     <link rel="stylesheet" href="style.css">
-    <style>
-    /* 直屏時顯示「請旋轉」提示遮罩 */
-    #rotate-overlay {
-        display: none;
-        position: fixed;
-        inset: 0;
-        z-index: 99999;
-        background: #000;
-        color: white;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        font-family: "Microsoft JhengHei", sans-serif;
-        font-size: 1.4rem;
-        text-align: center;
-        gap: 20px;
-    }
-    #rotate-overlay .rotate-icon {
-        font-size: 4rem;
-        animation: rotateHint 1.5s ease-in-out infinite;
-    }
-    @keyframes rotateHint {
-        0%   { transform: rotate(0deg); }
-        40%  { transform: rotate(90deg); }
-        60%  { transform: rotate(90deg); }
-        100% { transform: rotate(0deg); }
-    }
-    /* 直屏時才顯示 */
-    @media screen and (orientation: portrait) {
-        #rotate-overlay { display: flex !important; }
-    }
-    </style>
-    <script>
-    // ── 16:9 固定比例縮放 ──
-    (function() {
-        // 基準畫布：720×405（比 960×540 大 1.5 倍的視覺元素，手機上更清晰）
-        var BASE_W = 720, BASE_H = 405;
-
-        function applyScale() {
-            // 用 screen.width/height 避免手機瀏覽器工具列干擾 innerHeight
-            var vw = window.innerWidth;
-            var vh = window.innerHeight;
-            var scale = Math.min(vw / BASE_W, vh / BASE_H);
-            var b = document.body;
-            b.style.transform = 'scale(' + scale + ')';
-        }
-
-        document.addEventListener('DOMContentLoaded', applyScale);
-        window.addEventListener('resize', applyScale);
-        window.addEventListener('orientationchange', function() {
-            // 等旋轉動畫完成後重算（部分裝置需要 300ms+）
-            setTimeout(applyScale, 350);
-        });
-    })();
-
-    // ── Android Chrome 強制橫屏：必須在用戶手勢內呼叫 ──
-    function lockLandscape() {
-        if (screen.orientation && screen.orientation.lock) {
-            screen.orientation.lock('landscape').catch(function(){});
-        }
-    }
-    </script>
 </head>
 <body>
-
-	<!-- 直屏提示：請旋轉裝置 -->
-	<div id="rotate-overlay">
-		<div class="rotate-icon">📱</div>
-		<div>請旋轉裝置<br>以橫屏遊玩</div>
-	</div>
 
 	<div id="welcome-screen">
 		<div class="welcome-container">
@@ -109,12 +38,12 @@
 			</div>
 
 			<div class="menu-buttons">
-				<button id="real-start-btn" onclick="lockLandscape(); initGame()">啟航冒險</button>
+				<button id="real-start-btn" onclick="initGame()">啟航冒險</button>
 
 				<div class="sub-menu">
-					<button class="sub-btn" onclick="lockLandscape(); openStory()">📖 故事</button>
-					<button class="sub-btn" onclick="lockLandscape(); openInfo()">📘 說明</button>
-					<button class="sub-btn" onclick="lockLandscape(); startTutorial()">新手教學</button>
+					<button class="sub-btn" onclick="openStory()">📖 故事</button>
+					<button class="sub-btn" onclick="openInfo()">📘 說明</button>
+					<button class="sub-btn" onclick="startTutorial()">新手教學</button>
 				</div>
 			</div>
 
@@ -131,7 +60,12 @@
         <source src="Below_the_Surface.mp3" type="audio/mpeg">
     </audio>
 
-    <!-- music/report controls now live in #sidebar -->
+    <div id="music-control" onclick="toggleMusic()" style="position:fixed; top:10px; left:10px; z-index:2000; width:40px; height:40px; background:rgba(0,0,0,0.4); border:1px solid rgba(255,255,255,0.2); border-radius:50%; display:none; justify-content:center; align-items:center; font-size:20px; cursor:pointer; backdrop-filter:blur(4px);">
+        🎵
+    </div>
+	<div id="report-control" onclick="toggleReportMode()" style="position:fixed; top:10px; right:10px; z-index:2000; width:40px; height:40px; background:rgba(0,0,0,0.4); border:1px solid rgba(255,255,255,0.2); border-radius:50%; display:none; justify-content:center; align-items:center; font-size:20px; cursor:pointer; backdrop-filter:blur(4px);">
+        📊
+    </div>
 	
     <div id="log-modal">
         <div id="log-content">
@@ -165,179 +99,30 @@
 
 		<div id="header">友魚勇者之路單人挑戰</div>
 
-	<!-- 橫屏主體：左側遊戲區 + 右側控制台 -->
-	<div id="game-layout">
+		<div class="char-area">
+			<div id="ai-1" class="box"></div>
+			<div id="ai-2" class="box"></div>
+			<div id="ai-3" class="box"></div>
+		</div>
 
-		<!-- 左側：遊戲主區 (80%) -->
-		<div id="game-main">
+		<div id="ocean">
+			<div id="fish-layer"></div>
+			<div id="bubbles"></div>
+			<div id="deck-info">剩餘召喚卡: --</div>
+			<div id="log-btn" onclick="openLog()">📜出牌記錄</div>
+			<div id="summon-display"></div>
+			<div id="table"></div>
+		</div>
 
-			<!-- 上方 AI 區 -->
-			<div class="char-area">
-				<div id="ai-1" class="box"></div>
-				<div id="ai-2" class="box"></div>
-				<div id="ai-3" class="box"></div>
-			</div>
-
-			<!-- 中間海洋 / 出牌區 -->
-			<div id="ocean">
-				<div id="fish-layer"></div>
-				<div id="bubbles"></div>
-				<div id="summon-display"></div>
-				<div id="table"></div>
-			</div>
-
-			<!-- 下方玩家手牌 -->
-			<div id="player-zone" style="position: relative; overflow: hidden;">
-				<div id="arrow-left" class="hand-arrow">〈</div>
-				<div id="player-hand" class="hand"></div>
-				<div id="arrow-right" class="hand-arrow">〉</div>
-			</div>
-
-		</div><!-- end #game-main -->
-
-		<!-- 右側控制台 (20%) -->
-		<div id="sidebar">
-
-			<!-- A: 召喚規律 -->
-			<div class="sidebar-block" id="sidebar-summon">
-				<div class="sidebar-label">召喚規律</div>
-				<div id="sidebar-summon-text">等待中...</div>
-			</div>
-
-			<div class="sidebar-divider"></div>
-
-			<!-- B: 數字資訊 -->
-			<div class="sidebar-stats">
-				<div class="stat-box">
-					<div class="stat-label">剩餘牌組</div>
-					<div class="stat-value" id="sidebar-deck-count">--</div>
-				</div>
-				<div class="stat-box">
-					<div class="stat-label">輪到</div>
-					<div class="stat-value" id="sidebar-caller">--</div>
-				</div>
-			</div>
-
-			<div class="sidebar-divider"></div>
-
-			<!-- C: 出牌操作 -->
-			<div class="sidebar-label-sm">── 操作 ──</div>
-			<button id="sidebar-confirm-btn" onclick="sidebarConfirm()" disabled>✓ 確認出牌</button>
-			<button id="sidebar-skip-btn" onclick="sidebarSkip()">⏭ 跳過回合</button>
-
-			<div class="sidebar-divider"></div>
-
-			<!-- D: 功能按鈕 -->
-			<div class="sidebar-label-sm">── 功能 ──</div>
-			<button class="sidebar-func-btn" id="log-btn" onclick="openLog()">📜 出牌記錄</button>
-			<div class="sidebar-func-row">
-				<button class="sidebar-func-half" id="music-control" onclick="toggleMusic()" style="display:none;">🎵 音樂</button>
-				<button class="sidebar-func-half" id="report-control" onclick="toggleReportMode()" style="display:none;">📊 報告</button>
-			</div>
-
-			<div class="sidebar-divider"></div>
-
-			<!-- E: 玩家狀態 -->
-			<div class="sidebar-label-sm">── 你的狀態 ──</div>
-			<div id="sidebar-player-status">
-				<div id="sidebar-player-avatar">🧑‍🚀</div>
-				<div id="sidebar-hand-count">手牌 -- 張</div>
-			</div>
-
-			<div class="sidebar-version">友魚勇者之路 單人版</div>
-		</div><!-- end #sidebar -->
-
-	</div><!-- end #game-layout -->
-
-    <div id="deck-info" style="display:none;"></div>
+		<div id="player-zone" style="position: relative; overflow: hidden;">
+			<div id="arrow-left" class="hand-arrow">〈</div>
+			<div id="player-hand" class="hand"></div>
+			<div id="arrow-right" class="hand-arrow">〉</div>	
+		</div>
 
     <script src="db.js"></script>
     <script src="main.js"></script>
 	<script src="tutorial.js"></script>
-	
-	<!-- 側欄橋接腳本 -->
-	<script>
-	// 側欄同步：每次 renderUI 後呼叫此函式同步側欄資料
-	const _origRenderUI = typeof renderUI === 'function' ? renderUI : null;
-	
-	function syncSidebar() {
-		// 召喚文字
-		const sd = document.getElementById('summon-display');
-		const st = document.getElementById('sidebar-summon-text');
-		if (sd && st) st.innerText = sd.innerText || '等待中...';
-
-		// 牌組數
-		const dc = document.getElementById('sidebar-deck-count');
-		if (dc) dc.innerText = (typeof deckS !== 'undefined') ? deckS.length : '--';
-
-		// 輪到誰
-		const sc = document.getElementById('sidebar-caller');
-		if (sc) {
-			if (typeof callerIdx !== 'undefined' && typeof players !== 'undefined' && players[callerIdx]) {
-				sc.innerText = players[callerIdx].n;
-				sc.style.color = callerIdx === 0 ? '#ffd700' : '#a0c4ff';
-			}
-		}
-
-		// 玩家手牌數
-		const shc = document.getElementById('sidebar-hand-count');
-		if (shc && typeof players !== 'undefined' && players[0]) {
-			shc.innerText = '手牌 ' + players[0].hand.length + ' 張';
-		}
-
-		// 確認出牌按鈕（有選牌時才亮）
-		const confirmBtn = document.getElementById('sidebar-confirm-btn');
-		if (confirmBtn) {
-			const active = typeof phase !== 'undefined' && phase.includes('PLAYER');
-			confirmBtn.disabled = !active;
-		}
-	}
-
-	// 覆蓋 renderUI 加入同步
-	const _baseRenderUI = window.renderUI;
-	window.renderUI = function() {
-		if (_baseRenderUI) _baseRenderUI();
-		syncSidebar();
-	};
-
-	// 側欄：確認出牌（目前選中的卡）
-	let _sidebarSelectedIdx = null;
-	function sidebarConfirm() {
-		if (typeof phase === 'undefined') return;
-		if (phase.includes('PLAYER') && _sidebarSelectedIdx !== null) {
-			playerAction(_sidebarSelectedIdx);
-			_sidebarSelectedIdx = null;
-			document.querySelectorAll('#player-hand .card.sidebar-selected')
-				.forEach(c => c.classList.remove('sidebar-selected'));
-		}
-	}
-	function sidebarSkip() {
-		if (typeof phase !== 'undefined' && phase.includes('PLAYER')) {
-			// 直接結束本輪（玩家跳過不出牌）
-			if (typeof showResult === 'function') showResult();
-		}
-	}
-
-	// 覆蓋 showCardPreview 讓側邊確認按鈕記住選牌索引
-	const _baseShowCardPreview = window.showCardPreview;
-	window.showCardPreview = function(idx, fish, isHand) {
-		if (isHand && idx !== null) {
-			_sidebarSelectedIdx = idx;
-			document.querySelectorAll('#player-hand .card').forEach((c, i) => {
-				c.classList.toggle('sidebar-selected', i === idx);
-			});
-		}
-		if (_baseShowCardPreview) _baseShowCardPreview(idx, fish, isHand);
-	};
-
-	// 同步 summon-display 變化 → 側欄
-	const summonObs = new MutationObserver(() => syncSidebar());
-	window.addEventListener('DOMContentLoaded', () => {
-		const sd = document.getElementById('summon-display');
-		if (sd) summonObs.observe(sd, { childList: true, characterData: true, subtree: true });
-		syncSidebar();
-	});
-	</script>
 	
 	<div id="chat-layer"></div>
 	<div id="tutorial-tooltip"></div>
