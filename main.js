@@ -882,7 +882,9 @@ function autoStep() {
     const aiPlayers = players.filter(p => p.isAI);
     speakingAI = aiPlayers[Math.floor(Math.random() * aiPlayers.length)];
 	document.getElementById("table").innerHTML = "";
-    document.getElementById("summon-display").classList.remove("mazu-glow"); 
+    document.getElementById("summon-display").classList.remove("mazu-glow");
+    const causticsReset = document.getElementById("ocean-caustics");
+    if (causticsReset) causticsReset.classList.remove("mazu-beams");
     
     currentS = deckS.pop();
     renderUI();
@@ -919,7 +921,9 @@ function autoStep() {
     // 聚焦遮罩：1.5秒後自動關閉才開放行動
     showSummonFocus(1500, () => {
         if (currentS.isMazu) {
-            document.getElementById("summon-display").classList.add("mazu-glow"); 
+            document.getElementById("summon-display").classList.add("mazu-glow");
+            const caustics = document.getElementById("ocean-caustics");
+            if (caustics) caustics.classList.add("mazu-beams");
             playMazuSfx(); 
             if (callerIdx !== 0) { handleMazuAI(caller); }
         } else {
