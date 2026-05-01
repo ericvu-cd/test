@@ -856,89 +856,74 @@ body.game-started > *:not(#welcome-screen) {
 .card.is-valid { transform: translateY(-5px); box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
 
 /* =============================================
-   手牌區立體魚卡（3D Card Effect）
+   手牌區浮空魚卡（Floating Card Effect）
    ============================================= */
 #player-hand .card {
     position: relative;
     border-radius: 12px;
     border: none !important;
     background: white;
+    /* 浮空感：多層陰影 — 近處清晰深影 + 遠處大範圍散影 */
     box-shadow:
-        0 1px 0 #bbb,
-        0 2px 0 #aaa,
-        0 3px 0 #999,
-        0 4px 0 #888,
-        0 5px 0 #777,
-        0 6px 8px rgba(0,0,0,0.35),
-        0 12px 20px rgba(0,0,0,0.2);
-    transform: translateY(0) perspective(600px) rotateX(2deg);
+        0 2px 4px rgba(0,0,0,0.12),
+        0 8px 16px rgba(0,0,0,0.18),
+        0 20px 40px rgba(0,0,0,0.22);
+    transform: translateY(0);
     transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
-    overflow: visible !important;
+    overflow: hidden;
 }
 
-/* 卡片底邊（厚度感） */
-#player-hand .card::after {
-    content: "";
-    position: absolute;
-    bottom: -6px;
-    left: 3px;
-    right: 3px;
-    height: 6px;
-    background: linear-gradient(to bottom, #aaa, #888);
-    border-radius: 0 0 10px 10px;
-    z-index: -1;
-}
-
-/* 卡片頂部光澤 */
+/* 卡片頂部光澤：模擬光源從左上照射 */
 #player-hand .card::before {
     content: "";
     position: absolute;
     inset: 0;
     border-radius: 12px;
     background: linear-gradient(
-        160deg,
-        rgba(255,255,255,0.55) 0%,
-        rgba(255,255,255,0.10) 40%,
-        transparent 70%
+        145deg,
+        rgba(255,255,255,0.45) 0%,
+        rgba(255,255,255,0.08) 35%,
+        transparent 65%
     );
     pointer-events: none;
     z-index: 10;
 }
 
-/* 可出牌：浮起更明顯，帶金邊光 */
-#player-hand .card.is-valid {
-    transform: translateY(-10px) perspective(600px) rotateX(1deg) !important;
-    box-shadow:
-        0 1px 0 #c8a800,
-        0 2px 0 #b89500,
-        0 3px 0 #a88200,
-        0 4px 0 #987000,
-        0 5px 0 #886000,
-        0 8px 16px rgba(200,160,0,0.45),
-        0 18px 30px rgba(0,0,0,0.25),
-        0 0 20px rgba(255,215,0,0.3) !important;
-    border: 2px solid rgba(255,210,50,0.7) !important;
+/* ::after 清空，不再做假厚度 */
+#player-hand .card::after {
+    content: none;
 }
 
-/* 不可出牌：壓扁下沉 */
+/* 可出牌：浮更高，金光暈 */
+#player-hand .card.is-valid {
+    transform: translateY(-12px) !important;
+    box-shadow:
+        0 4px 8px rgba(0,0,0,0.10),
+        0 16px 32px rgba(0,0,0,0.20),
+        0 32px 56px rgba(0,0,0,0.20),
+        0 0 24px rgba(255,210,50,0.45) !important;
+    border: 2px solid rgba(255,210,50,0.75) !important;
+}
+
+/* 不可出牌：沉下去、變暗 */
 #player-hand .card.is-not-valid {
     filter: brightness(0.55) grayscale(0.3);
-    transform: translateY(4px) perspective(600px) rotateX(3deg);
+    transform: translateY(4px);
     box-shadow:
-        0 1px 0 #888,
-        0 2px 0 #777,
-        0 3px 4px rgba(0,0,0,0.2);
+        0 1px 3px rgba(0,0,0,0.15),
+        0 4px 8px rgba(0,0,0,0.12);
 }
 
-/* 按下效果：卡片被壓下去的感覺 */
+/* 按下效果：卡片瞬間被壓下去 */
 #player-hand .card:active {
-    transform: translateY(4px) perspective(600px) rotateX(3deg) !important;
+    transform: translateY(6px) !important;
     box-shadow:
-        0 1px 0 #aaa,
-        0 2px 4px rgba(0,0,0,0.3) !important;
+        0 1px 3px rgba(0,0,0,0.2),
+        0 3px 6px rgba(0,0,0,0.15) !important;
+    transition: transform 0.08s ease, box-shadow 0.08s ease !important;
 }
 
-/* 燈號色帶加強：光-1 綠、光-2 黃、光-3 紅 */
+/* 燈號色帶 */
 #player-hand .light-1 { border-top: 4px solid #4caf50 !important; }
 #player-hand .light-2 { border-top: 4px solid #ffc107 !important; }
 #player-hand .light-3 { border-top: 4px solid #f44336 !important; }
