@@ -831,95 +831,166 @@ body.game-started > *:not(#welcome-screen) {
 .ctrl-btn { padding: 5px 10px; background: rgba(255,255,255,0.6); border: none; border-radius: 20px; font-weight: bold; cursor: pointer; font-size: 1rem; }
 #info-overlay { display: none; }
 
-.card { width: 165px; height: 245px; border-radius: 15px; border: 2px solid #bbb; background: white; flex-shrink: 0; display: flex; flex-direction: column; cursor: pointer; box-shadow: 4px 4px 10px rgba(0,0,0,0.15); transition: transform 0.2s, filter 0.2s; overflow: hidden; touch-action: manipulation; }
-.card-n { font-weight: 900; text-align: center; padding: 12px 5px; border-bottom: 2px solid #eee; font-size: 1.9rem; color: #444; }
-.light-1 .card-n { background-color: #d4f5e2 !important; }
-.light-2 .card-n { background-color: #fef3cd !important; }
-.light-3 .card-n { background-color: #ffd6da !important; }
-.card-i { padding: 8px; flex-grow: 1; color: #222; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; background-image: radial-gradient(#f1f1f1 1px, transparent 1px); background-size: 15px 15px; }
-.card:active { transform: scale(0.92); filter: brightness(0.9); }
-
-.tag { display: inline-block; padding: 4px 10px; border-radius: 8px; font-size: 1.1rem; margin: 2px; color: white; font-weight: bold; text-shadow: 1px 1px 1px rgba(0,0,0,0.3); white-space: nowrap; box-shadow: 1px 1px 3px rgba(0,0,0,0.1); line-height: 1.2; }
-.tag-spring { background-color: #f48fb1; } 
-.tag-summer { background-color: #ffd54f; color: #5d4037; } 
-.tag-autumn { background-color: #ff8a65; } 
-.tag-winter { background-color: #4fc3f7; } 
-.tag-all { background-color: #90a4ae; }    
-.tag-eco { background-color: #1B5E20; }    
-.tag-warn { background-color: #ba68c8; }   
-.tag-migratory { background-color: #8B0000; } 
-.tag-sedentary { background-color: #8d6e63; } 
-.tag-coastal { background-color: #FBC02D; color: #5D4037 !important; }  
-.tag-ocean { background-color: #1565c0; }  
-.tag-farm { background-color: #66bb6a; }  
-.is-not-valid { filter: brightness(0.6) grayscale(0.2); }
-.card.is-valid { transform: translateY(-5px); box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
-
 /* =============================================
-   手牌區浮空魚卡（Floating Card Effect）
+   卡牌基礎：冰晶玻璃 + 鐵金屬框架
    ============================================= */
-#player-hand .card {
+.card {
+    width: 165px;
+    height: 245px;
+    border-radius: 15px;
+    border: none;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    cursor: pointer;
     position: relative;
-    border-radius: 12px;
-    border: none !important;
-    background: white;
-    /* 浮空感：多層陰影 — 近處清晰深影 + 遠處大範圍散影 */
-    box-shadow:
-        0 2px 4px rgba(0,0,0,0.12),
-        0 8px 16px rgba(0,0,0,0.18),
-        0 20px 40px rgba(0,0,0,0.22);
-    transform: translateY(0);
-    transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+    touch-action: manipulation;
     overflow: hidden;
+    transition: transform 0.22s ease, box-shadow 0.22s ease, filter 0.22s ease;
+
+    /* 冰晶玻璃底 */
+    background:
+        linear-gradient(160deg,
+            rgba(255,255,255,0.18) 0%,
+            rgba(200,230,255,0.08) 40%,
+            rgba(150,200,255,0.04) 100%);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+
+    /* 鐵金屬雙層外框 + 懸浮陰影 */
+    box-shadow:
+        0 0 0 1.5px rgba(160,200,255,0.3),
+        0 0 0 3.5px rgba(80,120,180,0.2),
+        0 0 10px rgba(100,160,255,0.18),
+        0 8px 16px rgba(0,10,40,0.55),
+        0 18px 36px rgba(0,5,30,0.4);
 }
 
-/* 卡片頂部光澤：模擬光源從左上照射 */
-#player-hand .card::before {
+/* 冰晶玻璃高光層（左上光源） */
+.card::before {
     content: "";
     position: absolute;
     inset: 0;
-    border-radius: 12px;
-    background: linear-gradient(
-        145deg,
-        rgba(255,255,255,0.45) 0%,
-        rgba(255,255,255,0.08) 35%,
-        transparent 65%
-    );
+    border-radius: 15px;
     pointer-events: none;
-    z-index: 10;
+    z-index: 20;
+    background:
+        radial-gradient(ellipse at 0% 0%, rgba(255,255,255,0.38) 0%, transparent 38%),
+        radial-gradient(ellipse at 100% 0%, rgba(200,230,255,0.2) 0%, transparent 32%),
+        linear-gradient(180deg, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0.04) 18%, transparent 42%);
 }
 
-/* ::after 清空，不再做假厚度 */
-#player-hand .card::after {
-    content: none;
-}
-
-/* 可出牌：浮更高，金光暈 */
-#player-hand .card.is-valid {
-    transform: translateY(-12px) !important;
+/* 鐵框內側細線 */
+.card::after {
+    content: "";
+    position: absolute;
+    inset: 2px;
+    border-radius: 13px;
+    border: 1px solid rgba(255,255,255,0.13);
+    pointer-events: none;
+    z-index: 20;
     box-shadow:
-        0 4px 8px rgba(0,0,0,0.10),
-        0 16px 32px rgba(0,0,0,0.20),
-        0 32px 56px rgba(0,0,0,0.20),
-        0 0 24px rgba(255,210,50,0.45) !important;
-    border: 2px solid rgba(255,210,50,0.75) !important;
+        inset 0 1px 0 rgba(255,255,255,0.18),
+        inset 0 -1px 0 rgba(0,0,0,0.2);
 }
 
-/* 不可出牌：沉下去、變暗 */
+.card-n { font-weight: 900; text-align: center; padding: 12px 5px; border-bottom: 2px solid rgba(0,0,0,0.12); font-size: 1.9rem; color: #444; position: relative; z-index: 5; }
+.light-1 .card-n { background-color: #d4f5e2 !important; color: #1b4d2e; }
+.light-2 .card-n { background-color: #fef3cd !important; color: #5d4037; }
+.light-3 .card-n { background-color: #ffd6da !important; color: #7b1c2a; }
+
+.card-i { padding: 8px; flex-grow: 1; color: #222; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; background-image: radial-gradient(rgba(180,210,255,0.2) 1px, transparent 1px); background-size: 15px 15px; position: relative; z-index: 5; }
+
+.card:active { transform: scale(0.95) translateY(3px) !important; transition: transform 0.08s ease !important; }
+
+.tag { display: inline-block; padding: 4px 10px; border-radius: 8px; font-size: 1.1rem; margin: 2px; color: white; font-weight: bold; text-shadow: 1px 1px 1px rgba(0,0,0,0.3); white-space: nowrap; box-shadow: 1px 1px 3px rgba(0,0,0,0.1); line-height: 1.2; }
+.tag-spring { background-color: #f48fb1; }
+.tag-summer { background-color: #ffd54f; color: #5d4037; }
+.tag-autumn { background-color: #ff8a65; }
+.tag-winter { background-color: #4fc3f7; }
+.tag-all { background-color: #90a4ae; }
+.tag-eco { background-color: #1B5E20; }
+.tag-warn { background-color: #ba68c8; }
+.tag-migratory { background-color: #8B0000; }
+.tag-sedentary { background-color: #8d6e63; }
+.tag-coastal { background-color: #FBC02D; color: #5D4037 !important; }
+.tag-ocean { background-color: #1565c0; }
+.tag-farm { background-color: #66bb6a; }
+
+/* 不可出牌 */
+.is-not-valid { filter: brightness(0.6) grayscale(0.2); }
+
+/* 可出牌（全域，桌面卡用） */
+.card.is-valid { transform: translateY(-5px); box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+
+/* =============================================
+   手牌區卡牌
+   ============================================= */
+#player-hand .card {
+    position: relative;
+    border-radius: 15px;
+    overflow: hidden;
+    transition: transform 0.22s ease, box-shadow 0.22s ease, filter 0.22s ease;
+}
+
+/* 不可出牌：壓暗下沉 */
 #player-hand .card.is-not-valid {
     filter: brightness(0.55) grayscale(0.3);
     transform: translateY(4px);
     box-shadow:
-        0 1px 3px rgba(0,0,0,0.15),
-        0 4px 8px rgba(0,0,0,0.12);
+        0 0 0 1.5px rgba(100,130,180,0.15),
+        0 0 0 3px rgba(60,80,120,0.1),
+        0 3px 8px rgba(0,0,0,0.4);
 }
 
-/* 按下效果：卡片瞬間被壓下去 */
-#player-hand .card:active {
-    transform: translateY(6px) !important;
+/* 可出牌：白瓷發光 + 金框 + 立體浮起陰影 */
+#player-hand .card.is-valid {
+    transform: translateY(-16px) !important;
+
+    /* 白瓷底色 */
+    background:
+        linear-gradient(160deg, #ffffff 0%, #f0f6ff 45%, #e4eeff 100%) !important;
+
+    /* 金框 + 多層立體陰影 */
     box-shadow:
-        0 1px 3px rgba(0,0,0,0.2),
-        0 3px 6px rgba(0,0,0,0.15) !important;
+        0 0 0 1.5px rgba(255,210,80,0.95),
+        0 0 0 3.5px rgba(200,150,0,0.55),
+        0 0 0 5.5px rgba(255,200,50,0.22),
+        0 0 20px rgba(255,200,50,0.55),
+        0 0 40px rgba(255,175,30,0.28),
+        0 14px 22px rgba(0,10,40,0.6),
+        0 28px 52px rgba(0,5,30,0.5),
+        0 44px 75px rgba(0,0,20,0.35) !important;
+}
+
+/* 可出牌：白瓷高光層覆蓋 */
+#player-hand .card.is-valid::before {
+    background:
+        radial-gradient(ellipse at 0% 0%, rgba(255,255,255,0.72) 0%, transparent 42%),
+        radial-gradient(ellipse at 100% 0%, rgba(255,255,255,0.4) 0%, transparent 32%),
+        linear-gradient(180deg, rgba(255,255,255,0.65) 0%, rgba(255,255,255,0.1) 28%, transparent 55%) !important;
+}
+
+/* 可出牌：金框內側 */
+#player-hand .card.is-valid::after {
+    border-color: rgba(255,220,100,0.4) !important;
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.85),
+        inset 0 -1px 0 rgba(200,150,0,0.18) !important;
+}
+
+/* 可出牌時卡身點點稍深 */
+#player-hand .card.is-valid .card-i {
+    background-image: radial-gradient(rgba(100,140,220,0.18) 1px, transparent 1px);
+    background-size: 15px 15px;
+}
+
+/* 按下效果 */
+#player-hand .card:active {
+    transform: translateY(3px) !important;
+    box-shadow:
+        0 0 0 1.5px rgba(120,160,220,0.2),
+        0 2px 6px rgba(0,0,0,0.45) !important;
     transition: transform 0.08s ease, box-shadow 0.08s ease !important;
 }
 
