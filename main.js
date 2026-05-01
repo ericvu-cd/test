@@ -1031,6 +1031,63 @@ function confirmMazuGift(cardIdx, target) {
     setTimeout(finishRound, 5500);
 }
 
+// =============================================
+// 🎴 出牌飛行動畫
+// =============================================
+function playCardFlyAnimation(card, fromEl, callback) {
+    const tableEl = document.getElementById("table");
+    const oceanEl = document.getElementById("ocean");
+    if (!fromEl || !oceanEl) { if (callback) callback(); return; }
+
+    const fromRect = fromEl.getBoundingClientRect();
+    const toRect   = (tableEl || oceanEl).getBoundingClientRect();
+
+    const startX = fromRect.left + fromRect.width  / 2 - 45;
+    const startY = fromRect.top  + fromRect.height / 2 - 65;
+    const endX   = toRect.left   + toRect.width    / 2 - 45;
+    const endY   = toRect.top    + 20;
+
+    const fly = document.createElement("div");
+    fly.style.cssText = `
+        position: fixed;
+        left: ${startX}px;
+        top:  ${startY}px;
+        width: 90px;
+        border-radius: 10px;
+        overflow: hidden;
+        pointer-events: none;
+        z-index: 5000;
+        background: linear-gradient(160deg, rgba(255,255,255,0.18) 0%, rgba(200,230,255,0.08) 100%);
+        border: 1.5px solid rgba(160,200,255,0.3);
+        box-shadow: 0 0 0 3px rgba(80,120,180,0.2), 0 8px 24px rgba(0,10,40,0.6), 0 0 16px rgba(100,160,255,0.25);
+        transition: none;
+    `;
+
+    const lightBg = card.l === 1 ? "#d4f5e2" : card.l === 2 ? "#fef3cd" : "#ffd6da";
+    fly.innerHTML = `
+        <div style="background:${lightBg}; font-size:0.85rem; font-weight:900; text-align:center; padding:5px 2px; color:#444; border-bottom:1px solid rgba(0,0,0,0.1);">${card.n}</div>
+        <div style="height:38px; overflow:hidden;">
+            <img src="fishdb/${card.n}.png" onerror="this.style.display='none'" style="width:100%; height:100%; object-fit:cover;">
+        </div>
+    `;
+    document.body.appendChild(fly);
+
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+            const dx = endX - startX;
+            const dy = endY - startY;
+            fly.style.transition = "transform 2s cubic-bezier(0.4, 0, 0.2, 1), opacity 2s ease";
+            fly.style.transform  = `translate(${dx}px, ${dy}px) scale(0.75)`;
+            fly.style.opacity    = "0";
+        });
+    });
+
+    setTimeout(() => {
+        fly.remove();
+        if (callback) callback();
+    }, 2000);
+}
+
 async function playerAction(idx) {
     if (navigator.vibrate) navigator.vibrate(30);
 
@@ -1047,11 +1104,15 @@ async function playerAction(idx) {
         players[0].hand.splice(idx, 1);
         playPopSfx();
         table.push({ pIdx: 0, card: fish });
-        renderUI();
-		renderTable();
         phase = "AI_FOLLOWING";
-		
-		await new Promise(resolve => setTimeout(resolve, 800));
+
+        renderUI(); // 先更新手牌（移除打出的牌）
+
+        // 出牌飛行動畫：動畫跑完後才讓卡出現在 ocean
+        const fromEl = document.getElementById("player-zone");
+        playCardFlyAnimation(fish, fromEl, () => renderTable());
+
+        await new Promise(resolve => setTimeout(resolve, 2000)); // 等動畫跑完
         // 【關鍵修改】改用 for...of 才能支援 await
         for (let pi = 0; pi < players.length; pi++) {
             const p = players[pi];
@@ -1082,8 +1143,12 @@ function aiMove(pI, cI) {
 
     playPopSfx();
     table.push({ pIdx: pI, card: f });
-    renderTable();
-	renderUI();    // 更新 AI 手上的卡片數量 (確保閃爍的 🎴 會消失一張)
+
+    // 出牌飛行動畫：動畫跑完後才讓卡出現在 ocean
+    const fromEl = document.getElementById(p.id);
+    playCardFlyAnimation(f, fromEl, () => renderTable());
+
+    renderUI(); // 立即更新 AI 手牌數量
 
     let isCorrect = currentS && currentS.c ? currentS.c(f) : null;
 
@@ -1441,27 +1506,30 @@ function showMazuGiftEffect(fromName, toName, card, targetEl) {
     const endX   = toRect.left   + toRect.width    / 2 - 40;
     const endY   = toRect.top    + toRect.height   / 2 - 55;
 
-    // 飛行卡片（position: fixed，直接定位在視窗上）
     const flyCard = document.createElement("div");
-    flyCard.className = `card light-${card.l} mazu-gift-card-fly`;
+    flyCard.className = `mazu-gift-card-fly`;
+    const mazuLightBg = card.l === 1 ? "#d4f5e2" : card.l === 2 ? "#fef3cd" : "#ffd6da";
     flyCard.style.cssText = `
         position: fixed;
         left: ${startX}px;
         top:  ${startY}px;
-        width: 80px;
+        width: 90px;
+        border-radius: 10px;
+        overflow: hidden;
         pointer-events: none;
+        background: linear-gradient(160deg, rgba(255,255,255,0.18) 0%, rgba(200,230,255,0.08) 100%);
+        border: 1.5px solid rgba(160,200,255,0.3);
+        box-shadow: 0 0 0 3px rgba(80,120,180,0.2), 0 8px 24px rgba(0,10,40,0.6), 0 0 16px rgba(100,160,255,0.25);
         --fly-x: ${endX - startX}px;
         --fly-y: ${endY - startY}px;
         --fly-x2: ${endX - startX + 20}px;
         --fly-y2: ${endY - startY - 20}px;
     `;
     flyCard.innerHTML = `
-        <div style="width:100%; height:60px; overflow:hidden;">
-            <img src="fishdb/${card.n}.png"
-                 onerror="this.style.display='none'"
-                 style="width:100%; height:100%; object-fit:cover;">
+        <div style="background:${mazuLightBg}; font-size:0.85rem; font-weight:900; text-align:center; padding:5px 2px; color:#444; border-bottom:1px solid rgba(0,0,0,0.1);">${card.n}</div>
+        <div style="height:38px; overflow:hidden;">
+            <img src="fishdb/${card.n}.png" onerror="this.style.display='none'" style="width:100%; height:100%; object-fit:cover;">
         </div>
-        <div class="card-n" style="font-size:0.85rem; padding:4px 2px;">${card.n}</div>
     `;
     flyLayer.appendChild(flyCard);
 
