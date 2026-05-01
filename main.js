@@ -1076,7 +1076,7 @@ function playCardFlyAnimation(card, fromEl, callback) {
         requestAnimationFrame(() => {
             const dx = endX - startX;
             const dy = endY - startY;
-            fly.style.transition = "transform 2s cubic-bezier(0.4, 0, 0.2, 1), opacity 2s ease";
+            fly.style.transition = "transform 1.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 1.5s ease";
             fly.style.transform  = `translate(${dx}px, ${dy}px) scale(0.75)`;
             fly.style.opacity    = "0";
         });
@@ -1085,7 +1085,7 @@ function playCardFlyAnimation(card, fromEl, callback) {
     setTimeout(() => {
         fly.remove();
         if (callback) callback();
-    }, 2000);
+    }, 1550);
 }
 
 async function playerAction(idx) {
@@ -1112,7 +1112,7 @@ async function playerAction(idx) {
         const fromEl = document.getElementById("player-zone");
         playCardFlyAnimation(fish, fromEl, () => renderTable());
 
-        await new Promise(resolve => setTimeout(resolve, 2000)); // 等動畫跑完
+        await new Promise(resolve => setTimeout(resolve, 1550)); // 等動畫跑完
         // 【關鍵修改】改用 for...of 才能支援 await
         for (let pi = 0; pi < players.length; pi++) {
             const p = players[pi];
@@ -1155,13 +1155,75 @@ function aiMove(pI, cI) {
     aiTalk(p, f, isCorrect);
 }
 
-// 建立一個全域或區域變數來儲存當前回合的結算資料
-let roundReport = [];
+// =============================================
+// 🔙 退牌飛行動畫（ocean → 手牌區）
+// =============================================
+function playCardReturnAnimation(card, toEl, callback) {
+    const tableEl = document.getElementById("table");
+    const oceanEl = document.getElementById("ocean");
+    if (!toEl || !oceanEl) { if (callback) callback(); return; }
+
+    const fromRect = (tableEl || oceanEl).getBoundingClientRect();
+    const toRect   = toEl.getBoundingClientRect();
+
+    const startX = fromRect.left + fromRect.width  / 2 - 45;
+    const startY = fromRect.top  + 20;
+    const endX   = toRect.left   + toRect.width    / 2 - 45;
+    const endY   = toRect.top    + toRect.height   / 2 - 65;
+
+    const fly = document.createElement("div");
+    const lightBg = card.l === 1 ? "#d4f5e2" : card.l === 2 ? "#fef3cd" : "#ffd6da";
+    fly.style.cssText = `
+        position: fixed;
+        left: ${startX}px;
+        top:  ${startY}px;
+        width: 90px;
+        border-radius: 10px;
+        overflow: hidden;
+        pointer-events: none;
+        z-index: 5000;
+        opacity: 0;
+        background: linear-gradient(160deg, rgba(255,255,255,0.18) 0%, rgba(200,230,255,0.08) 100%);
+        border: 1.5px solid rgba(255,100,100,0.5);
+        box-shadow: 0 0 0 3px rgba(180,60,60,0.2), 0 8px 24px rgba(40,0,0,0.5), 0 0 16px rgba(255,80,80,0.2);
+        transition: none;
+    `;
+    fly.innerHTML = `
+        <div style="background:${lightBg}; font-size:0.85rem; font-weight:900; text-align:center; padding:5px 2px; color:#444; border-bottom:1px solid rgba(0,0,0,0.1);">${card.n}</div>
+        <div style="height:38px; overflow:hidden;">
+            <img src="fishdb/${card.n}.png" onerror="this.style.display='none'" style="width:100%; height:100%; object-fit:cover;">
+        </div>
+    `;
+    document.body.appendChild(fly);
+
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+            const dx = endX - startX;
+            const dy = endY - startY;
+            fly.style.transition = "transform 1.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 1.5s ease";
+            fly.style.transform  = `translate(${dx}px, ${dy}px) scale(1.1)`;
+            fly.style.opacity    = "1";
+        });
+    });
+
+    setTimeout(() => {
+        fly.style.transition = "opacity 0.3s ease";
+        fly.style.opacity = "0";
+        setTimeout(() => {
+            fly.remove();
+            if (callback) callback();
+        }, 300);
+    }, 1500);
+}
+
+// 全域暫存：本回合需要退回的牌
+let pendingReturns = [];
 let roundCount = 0;
 
 function showResult() {
     phase = "RESULT";
     roundReport = [];
+    pendingReturns = [];
 
     // 空白期提示，避免玩家以為當機
     const hint = document.createElement("div");
@@ -1221,7 +1283,8 @@ function showResult() {
                 playSuccessSfx();
                 addLog(`${player.n} 成功送出【${t.card.n}】`, "success");
             } else {
-                player.hand.push(t.card);
+                // 先暫存，等結算頁關閉後再動畫退回
+                pendingReturns.push({ card: t.card, player });
                 addLog(`${player.n} 的【${t.card.n}】不符規律，退回。`);
             }
         });
@@ -1239,7 +1302,7 @@ function showResult() {
             if (showSummaryMode) {
                 showRoundSummary();
             } else {
-                finishRound();
+                playPendingReturns(() => finishRound());
             }
         });
 
@@ -1315,6 +1378,28 @@ function proceedToNextRound() {
     autoStep();
 }
 
+// 結算頁關閉後，同時播所有退牌動畫，全部結束後才加入手牌
+function playPendingReturns(callback) {
+    if (pendingReturns.length === 0) { if (callback) callback(); return; }
+
+    const playerZone = document.getElementById("player-zone");
+    let done = 0;
+    const total = pendingReturns.length;
+
+    pendingReturns.forEach(({ card, player }) => {
+        const toEl = player.isAI ? document.getElementById(player.id) : playerZone;
+        playCardReturnAnimation(card, toEl, () => {
+            player.hand.push(card);
+            done++;
+            if (done === total) {
+                pendingReturns = [];
+                renderUI();
+                if (callback) callback();
+            }
+        });
+    });
+}
+
 // 新增：彈出視窗函式
 function showRoundSummary() {
 		
@@ -1385,7 +1470,7 @@ function showRoundSummary() {
 
     document.getElementById("close-summary-btn").onclick = () => {
         overlay.remove();
-        proceedToNextRound();
+        playPendingReturns(() => proceedToNextRound());
     };
 }
 
