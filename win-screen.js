@@ -10,8 +10,9 @@ function showWinScreen(winner) {
     const overlay = document.createElement("div");
     overlay.id = "win-overlay";
     overlay.style.cssText = `
-        position: fixed; inset: 0; z-index: 5000;
+        position: fixed; inset: 0; z-index: 9000;
         overflow: hidden; font-family: "Microsoft JhengHei","PingFang TC",sans-serif;
+		background: rgba(0,0,0,0.95); /* 🔥 加這行 */
         opacity: 0; transition: opacity .8s ease;
     `;
 
