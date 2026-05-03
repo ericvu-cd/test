@@ -768,8 +768,7 @@ function initGame() {
 
     const rcBtn = document.getElementById("report-control");
     rcBtn.style.display = "flex";
-    rcBtn.style.position = "relative";
-    // 預設開啟：綠色底 + 亮邊框
+    // 預設開啟：綠色底 + 亮邊框（不動 position，保持 HTML 裡的 fixed + right:10px）
     rcBtn.style.background = "rgba(0,150,80,0.55)";
     rcBtn.style.border = "1.5px solid rgba(80,255,160,0.5)";
     rcBtn.style.opacity = "1";
@@ -1365,26 +1364,6 @@ function showCountdownBubble(seconds, callback) {
     tick();
 }
 
-function showWinScreen(winner) {
-    const overlay = document.createElement("div");
-    overlay.id = "win-overlay";
-    overlay.style = `position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #a8e6cf url('bgi.png') no-repeat center center; background-size: cover; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 5000; text-align: center; padding: 20px; box-sizing: border-box; font-family: "Microsoft JhengHei", sans-serif;`;
-    const isPlayer = !winner.isAI;
-    const title = isPlayer ? "✦ 友魚勇者 任務達成 ✦" : "🌊 海域重歸寧靜";
-    const subTitle = isPlayer ? "感謝您守護海洋資源，實踐永續食魚精神！" : `由【${winner.n}】率先與大海達成和解。`;
-    const badgeHtml = isPlayer ? `<div style="position: absolute; top: -65px; right: -25px; width: 110px; height: 110px; background: #FFB3BA; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; transform: rotate(15deg); font-weight: bold; border: 4px double white; box-shadow: 0 5px 15px rgba(255,179,186,0.4); font-size: 1.1rem; letter-spacing: 1px; z-index: 10;">合格認證</div>` : "";
-
-    overlay.innerHTML = `<div style="border: 12px double #B2E2D2; padding: 45px 30px; border-radius: 40px; background: rgba(255, 255, 255, 0.92); box-shadow: 0 20px 60px rgba(0,0,0,0.15); max-width: 500px; position: relative; backdrop-filter: blur(3px);">
-        ${badgeHtml}
-        <h1 style="color: #455A64; 
-font-size: 2rem; margin-bottom: 15px; letter-spacing: 2px;">${title}</h1>
-        <p style="font-size: 1.2rem; color: #78909C; line-height: 1.6; margin-bottom: 25px;">${subTitle}</p>
-        <div style="background: #FDFCF8; border: 2px dashed #B2E2D2; padding: 20px; border-radius: 20px; margin-bottom: 30px;"><p style="color: #00796B; font-weight: bold; margin: 0; font-size: 1.2rem;">懂魚、愛魚、吃對魚</p></div>
-        <button onclick="location.reload()" style="padding: 15px 50px; font-size: 1.2rem; background: #FFDFBA; color: #D35400; border: 3px solid #FFB347; border-radius: 50px; font-weight: bold; cursor: pointer; transition: transform 0.2s; box-shadow: 0 4px 15px rgba(255,179,186,0.3);">重新開始</button>
-    </div>`;
-    document.body.appendChild(overlay);
-}
-
 function finishRound() {
     let win = players.find(p => p.hand.length === 0);
     if (win) { 
@@ -1674,19 +1653,29 @@ function toggleReportMode() {
     const btn = document.getElementById("report-control");
     if (showSummaryMode) {
         btn.classList.remove("off");
-        btn.innerHTML = "📊";
-        btn.title = "結算頁：開啟";
+        btn.innerHTML = `<span style="font-size:20px;">📊</span>`;
         btn.style.background = "rgba(0,150,80,0.55)";
         btn.style.border = "1.5px solid rgba(80,255,160,0.5)";
         btn.style.opacity = "1";
         btn.style.filter = "";
     } else {
         btn.classList.add("off");
-        btn.innerHTML = "📊<span style='position:absolute;top:3px;right:3px;width:10px;height:10px;border-radius:50%;background:#ff4444;border:1.5px solid #fff;display:block;'></span>";
-        btn.style.background = "rgba(60,0,0,0.55)";
-        btn.style.border = "1.5px solid rgba(255,80,80,0.45)";
-        btn.style.opacity = "0.7";
-        btn.style.filter = "grayscale(0.4)";
+        // 黑白圖示 + 半透明叉號疊層，不要紅圓點
+        btn.innerHTML = `
+            <span style="filter:grayscale(1);font-size:20px;">📊</span>
+            <span style="
+                position:absolute;inset:0;
+                display:flex;align-items:center;justify-content:center;
+                font-size:22px;font-weight:900;
+                color:rgba(255,255,255,0.75);
+                text-shadow:0 0 4px rgba(0,0,0,0.8);
+                pointer-events:none;
+            ">✕</span>
+        `;
+        btn.style.background = "rgba(30,30,30,0.65)";
+        btn.style.border = "1.5px solid rgba(180,180,180,0.3)";
+        btn.style.opacity = "0.85";
+        btn.style.filter = "";
     }
 }
 
