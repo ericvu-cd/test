@@ -40,8 +40,8 @@ function showWinScreen(winner) {
     bgImg.style.cssText = `
         position: absolute; inset: 0;
         background: url('bge.png') center center / cover no-repeat;
-        opacity: ${isPlayer ? .88 : .68};
-        ${isPlayer ? '' : 'filter: hue-rotate(190deg) saturate(.75) brightness(.6);'}
+        opacity: ${isPlayer ? 1 : .85};
+        ${isPlayer ? '' : 'filter: hue-rotate(190deg) saturate(.8) brightness(.55);'}
     `;
     overlay.appendChild(bgImg);
 
@@ -50,8 +50,8 @@ function showWinScreen(winner) {
     solidMask.style.cssText = `
         position: absolute; inset: 0; pointer-events: none;
         background: ${isPlayer
-            ? 'linear-gradient(180deg,rgba(2,10,6,.75) 0%,rgba(3,18,8,.52) 40%,rgba(1,10,4,.85) 100%)'
-            : 'linear-gradient(180deg,rgba(1,5,15,.85) 0%,rgba(3,12,28,.58) 40%,rgba(1,4,14,.9) 100%)'};
+            ? 'linear-gradient(180deg,rgba(2,10,6,.48) 0%,rgba(3,18,8,.28) 40%,rgba(1,10,4,.65) 100%)'
+            : 'linear-gradient(180deg,rgba(1,5,15,.58) 0%,rgba(3,12,28,.32) 40%,rgba(1,4,14,.72) 100%)'};
     `;
     overlay.appendChild(solidMask);
 
@@ -266,7 +266,7 @@ function showWinScreen(winner) {
             display:flex;align-items:center;justify-content:center;
             animation:winGlowBlue 2.8s ease-in-out infinite;
         `;
-        sigilCore.innerHTML = `<span style="font-size:40px;filter:drop-shadow(0 0 14px rgba(80,160,255,.95))">🌊</span>`;
+        sigilCore.innerHTML = `<svg width="44" height="44" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter:drop-shadow(0 0 14px rgba(80,160,255,.95))"><circle cx="22" cy="22" r="14" stroke="rgba(140,200,255,0.9)" stroke-width="2.5" fill="none"/><circle cx="22" cy="22" r="6" fill="rgba(100,170,255,0.7)"/><circle cx="22" cy="22" r="9" stroke="rgba(100,170,255,0.4)" stroke-width="1" stroke-dasharray="3 3" fill="none"/></svg>`;
         sigilWrap.appendChild(sigilCore);
         content.appendChild(sigilWrap);
 

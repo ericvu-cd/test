@@ -1,4 +1,5 @@
 let gameDifficulty = 0.7;
+let isMuted = false; // 全局靜音狀態（同時控制 BGM 與音效）
 let speakingAI = null;
 let showSummaryMode = true; // 預設開啟結算頁面
 
@@ -470,8 +471,8 @@ try {
         
     } catch(e) {}
 	}
-function playMazuSfx() { try { const ctx = new (window.AudioContext || window.webkitAudioContext)(); const osc = ctx.createOscillator(); const gain = ctx.createGain(); osc.type = 'sine'; osc.connect(gain); gain.connect(ctx.destination); osc.frequency.setValueAtTime(880, ctx.currentTime); osc.frequency.exponentialRampToValueAtTime(1760, ctx.currentTime + 0.4); gain.gain.setValueAtTime(0.3, ctx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.6); osc.start(); osc.stop(ctx.currentTime + 0.6); } catch(e) {} }
-function playSuccessSfx() { try { const ctx = new (window.AudioContext || window.webkitAudioContext)(); const osc = ctx.createOscillator(); const gain = ctx.createGain(); osc.type = 'triangle'; osc.connect(gain); gain.connect(ctx.destination); osc.frequency.setValueAtTime(523.25, ctx.currentTime); osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.1); gain.gain.setValueAtTime(0.2, ctx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3); osc.start(); osc.stop(ctx.currentTime + 0.3); } catch(e) {} }
+function playMazuSfx() { if (isMuted) return; try { const ctx = new (window.AudioContext || window.webkitAudioContext)(); const osc = ctx.createOscillator(); const gain = ctx.createGain(); osc.type = 'sine'; osc.connect(gain); gain.connect(ctx.destination); osc.frequency.setValueAtTime(880, ctx.currentTime); osc.frequency.exponentialRampToValueAtTime(1760, ctx.currentTime + 0.4); gain.gain.setValueAtTime(0.3, ctx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.6); osc.start(); osc.stop(ctx.currentTime + 0.6); } catch(e) {} }
+function playSuccessSfx() { if (isMuted) return; try { const ctx = new (window.AudioContext || window.webkitAudioContext)(); const osc = ctx.createOscillator(); const gain = ctx.createGain(); osc.type = 'triangle'; osc.connect(gain); gain.connect(ctx.destination); osc.frequency.setValueAtTime(523.25, ctx.currentTime); osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.1); gain.gain.setValueAtTime(0.2, ctx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3); osc.start(); osc.stop(ctx.currentTime + 0.3); } catch(e) {} }
 
 function addLog(m, type="") {
     const l = document.getElementById("log-messages");
@@ -486,8 +487,19 @@ function addLog(m, type="") {
 function toggleMusic() {
     const music = document.getElementById("bgm");
     const btn = document.getElementById("music-control");
-    if (music.paused) { music.play(); btn.innerText = "🎵"; btn.style.opacity = "1"; }
-    else { music.pause(); btn.innerText = "🔇"; btn.style.opacity = "0.4"; }
+    if (music.paused) {
+        music.play();
+        isMuted = false;
+        btn.innerText = "🎵";
+        btn.style.opacity = "1";
+        btn.style.filter = "";
+    } else {
+        music.pause();
+        isMuted = true;
+        btn.innerText = "🔇";
+        btn.style.opacity = "0.5";
+        btn.style.filter = "grayscale(1)";
+    }
 }
 
 function createBubble() {
@@ -1342,6 +1354,26 @@ function showCountdownBubble(seconds, callback) {
     tick();
 }
 
+function showWinScreen(winner) {
+    const overlay = document.createElement("div");
+    overlay.id = "win-overlay";
+    overlay.style = `position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #a8e6cf url('bgi.png') no-repeat center center; background-size: cover; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 5000; text-align: center; padding: 20px; box-sizing: border-box; font-family: "Microsoft JhengHei", sans-serif;`;
+    const isPlayer = !winner.isAI;
+    const title = isPlayer ? "✦ 友魚勇者 任務達成 ✦" : "🌊 海域重歸寧靜";
+    const subTitle = isPlayer ? "感謝您守護海洋資源，實踐永續食魚精神！" : `由【${winner.n}】率先與大海達成和解。`;
+    const badgeHtml = isPlayer ? `<div style="position: absolute; top: -65px; right: -25px; width: 110px; height: 110px; background: #FFB3BA; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; transform: rotate(15deg); font-weight: bold; border: 4px double white; box-shadow: 0 5px 15px rgba(255,179,186,0.4); font-size: 1.1rem; letter-spacing: 1px; z-index: 10;">合格認證</div>` : "";
+
+    overlay.innerHTML = `<div style="border: 12px double #B2E2D2; padding: 45px 30px; border-radius: 40px; background: rgba(255, 255, 255, 0.92); box-shadow: 0 20px 60px rgba(0,0,0,0.15); max-width: 500px; position: relative; backdrop-filter: blur(3px);">
+        ${badgeHtml}
+        <h1 style="color: #455A64; 
+font-size: 2rem; margin-bottom: 15px; letter-spacing: 2px;">${title}</h1>
+        <p style="font-size: 1.2rem; color: #78909C; line-height: 1.6; margin-bottom: 25px;">${subTitle}</p>
+        <div style="background: #FDFCF8; border: 2px dashed #B2E2D2; padding: 20px; border-radius: 20px; margin-bottom: 30px;"><p style="color: #00796B; font-weight: bold; margin: 0; font-size: 1.2rem;">懂魚、愛魚、吃對魚</p></div>
+        <button onclick="location.reload()" style="padding: 15px 50px; font-size: 1.2rem; background: #FFDFBA; color: #D35400; border: 3px solid #FFB347; border-radius: 50px; font-weight: bold; cursor: pointer; transition: transform 0.2s; box-shadow: 0 4px 15px rgba(255,179,186,0.3);">重新開始</button>
+    </div>`;
+    document.body.appendChild(overlay);
+}
+
 function finishRound() {
     let win = players.find(p => p.hand.length === 0);
     if (win) { 
@@ -1631,8 +1663,19 @@ function toggleReportMode() {
     const btn = document.getElementById("report-control");
     if (showSummaryMode) {
         btn.classList.remove("off");
+        btn.innerHTML = "📊";
+        btn.title = "結算頁：開啟";
+        btn.style.background = "rgba(0,150,80,0.55)";
+        btn.style.border = "1.5px solid rgba(80,255,160,0.5)";
+        btn.style.opacity = "1";
+        btn.style.filter = "";
     } else {
         btn.classList.add("off");
+        btn.innerHTML = "📊<span style='position:absolute;top:3px;right:3px;width:10px;height:10px;border-radius:50%;background:#ff4444;border:1.5px solid #fff;display:block;'></span>";
+        btn.style.background = "rgba(60,0,0,0.55)";
+        btn.style.border = "1.5px solid rgba(255,80,80,0.45)";
+        btn.style.opacity = "0.7";
+        btn.style.filter = "grayscale(0.4)";
     }
 }
 
