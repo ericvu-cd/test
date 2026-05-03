@@ -1324,47 +1324,95 @@ body.game-started > *:not(#welcome-screen) {
     50% { opacity: 0.5; }
 }
 
+/* 手牌左右箭號：外框 + 內部 SVG 三角形 */
 .hand-arrow {
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
-    /* 更醒目：深色半透明底 + 白字 + 光暈 */
-    background: rgba(0, 20, 60, 0.75);
-    border: 1.5px solid rgba(100, 200, 255, 0.55);
-    box-shadow: 0 0 14px rgba(80,180,255,0.45), 0 2px 8px rgba(0,0,0,0.5);
-    width: 34px;
+    width: 28px;
     height: 52px;
     display: none;
     align-items: center;
     justify-content: center;
-    font-size: 20px;
     z-index: 100;
-    border-radius: 10px;
     pointer-events: none;
-    color: rgba(180, 230, 255, 0.95);
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
-    text-shadow: 0 0 8px rgba(100,200,255,0.9);
+    /* 半透明深海玻璃框 */
+    background: rgba(5, 20, 55, 0.62);
+    border: 1.5px solid rgba(100, 200, 255, 0.4);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    overflow: hidden;
+}
+
+/* 三角形用 ::before 繪製，純 CSS，不需文字符號 */
+.hand-arrow::before {
+    content: "";
+    display: block;
+    width: 0;
+    height: 0;
+    border-top: 11px solid transparent;
+    border-bottom: 11px solid transparent;
+    /* 顏色在各自 id 裡設定 */
+}
+
+/* ::after 做背景光暈圓 */
+.hand-arrow::after {
+    content: "";
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(100,200,255,0.22) 0%, transparent 70%);
+    pointer-events: none;
 }
 
 #arrow-left {
-    left: 3px;
-    border-radius: 6px 10px 10px 6px;
+    left: 2px;
+    border-radius: 6px 12px 12px 6px;
     animation: arrowBlinkLeft 1.2s ease-in-out infinite;
 }
+#arrow-left::before {
+    /* 向左三角 */
+    border-right: 14px solid rgba(160, 225, 255, 0.82);
+    border-left: none;
+    margin-right: 2px;
+}
+
 #arrow-right {
-    right: 3px;
-    border-radius: 10px 6px 6px 10px;
+    right: 2px;
+    border-radius: 12px 6px 6px 12px;
     animation: arrowBlinkRight 1.2s ease-in-out infinite;
+}
+#arrow-right::before {
+    /* 向右三角 */
+    border-left: 14px solid rgba(160, 225, 255, 0.82);
+    border-right: none;
+    margin-left: 2px;
 }
 
 @keyframes arrowBlinkRight {
-    0%, 100% { opacity: 0.55; transform: translateY(-50%) translateX(0);   box-shadow: 0 0 8px rgba(80,180,255,0.3); }
-    50%       { opacity: 1;    transform: translateY(-50%) translateX(4px);  box-shadow: 0 0 20px rgba(80,200,255,0.7), 0 0 6px rgba(255,255,255,0.3); }
+    0%, 100% {
+        opacity: 0.5;
+        transform: translateY(-50%) translateX(0);
+        box-shadow: 0 0 6px rgba(80,180,255,0.25);
+    }
+    50% {
+        opacity: 1;
+        transform: translateY(-50%) translateX(5px);
+        box-shadow: 0 0 18px rgba(80,210,255,0.65), inset 0 0 8px rgba(100,200,255,0.15);
+    }
 }
 @keyframes arrowBlinkLeft {
-    0%, 100% { opacity: 0.55; transform: translateY(-50%) translateX(0);   box-shadow: 0 0 8px rgba(80,180,255,0.3); }
-    50%       { opacity: 1;    transform: translateY(-50%) translateX(-4px); box-shadow: 0 0 20px rgba(80,200,255,0.7), 0 0 6px rgba(255,255,255,0.3); }
+    0%, 100% {
+        opacity: 0.5;
+        transform: translateY(-50%) translateX(0);
+        box-shadow: 0 0 6px rgba(80,180,255,0.25);
+    }
+    50% {
+        opacity: 1;
+        transform: translateY(-50%) translateX(-5px);
+        box-shadow: 0 0 18px rgba(80,210,255,0.65), inset 0 0 8px rgba(100,200,255,0.15);
+    }
 }
 
 /* 讓手牌區可以水平滾動 */

@@ -426,6 +426,7 @@ function renderTable() {
 }
 
 function playPopSfx() { 
+if (isMuted) return;
 try {
         const ctx = new (window.AudioContext || window.webkitAudioContext)();
         
@@ -760,8 +761,18 @@ function initGame() {
     const bgmVolume = isMobile ? 0.03 : 0.1; // 手機用 0.03，電腦用 0.1
 
     // 啟動音樂與日誌
-    document.getElementById("music-control").style.display = "flex";
-	document.getElementById("report-control").style.display = "flex";
+    const mcBtn = document.getElementById("music-control");
+    mcBtn.style.display = "flex";
+    mcBtn.style.background = "rgba(0,0,0,0.4)";
+    mcBtn.style.border = "1px solid rgba(255,255,255,0.2)";
+
+    const rcBtn = document.getElementById("report-control");
+    rcBtn.style.display = "flex";
+    rcBtn.style.position = "relative";
+    // 預設開啟：綠色底 + 亮邊框
+    rcBtn.style.background = "rgba(0,150,80,0.55)";
+    rcBtn.style.border = "1.5px solid rgba(80,255,160,0.5)";
+    rcBtn.style.opacity = "1";
     document.getElementById("log-btn").style.display = "flex";
     const music = document.getElementById("bgm");
     music.play().then(() => {
