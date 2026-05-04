@@ -217,6 +217,59 @@ body.game-started > *:not(#welcome-screen) {
     box-shadow: 0 -10px 25px rgba(255, 179, 71, 0.5), inset 0 0 15px rgba(255, 223, 186, 0.8) !important;
 }
 
+/* ===== 玩家回合強化提示 ===== */
+@keyframes myTurnPulse {
+    0%, 100% {
+        box-shadow: 0 -8px 30px rgba(255, 160, 0, 0.55),
+                    inset 0 0 20px rgba(255, 220, 100, 0.25);
+    }
+    50% {
+        box-shadow: 0 -16px 50px rgba(255, 160, 0, 0.9),
+                    inset 0 0 35px rgba(255, 220, 100, 0.5),
+                    0 0 0 3px rgba(255, 179, 71, 0.4);
+    }
+}
+
+@keyframes myTurnBorderFlash {
+    0%, 100% { border-top-color: rgba(255, 179, 71, 0.5); }
+    50%       { border-top-color: rgba(255, 220, 80, 1); }
+}
+
+#player-zone.my-turn {
+    border-top: 3px solid rgba(255, 179, 71, 0.5);
+    animation: myTurnPulse 2s ease-in-out infinite,
+               myTurnBorderFlash 2s ease-in-out infinite;
+    background: linear-gradient(
+        to top,
+        rgba(255, 200, 60, 0.18) 0%,
+        rgba(255, 200, 60, 0.06) 60%,
+        transparent 100%
+    ) !important;
+}
+
+/* 玩家回合的手牌區標題提示 */
+#player-zone.my-turn::before {
+    content: "⚔️ 你的回合";
+    position: absolute;
+    top: 4px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.75rem;
+    font-weight: bold;
+    color: #ffdf80;
+    text-shadow: 0 0 10px rgba(255, 160, 0, 0.9), 0 1px 3px rgba(0,0,0,0.8);
+    white-space: nowrap;
+    z-index: 200;
+    pointer-events: none;
+    letter-spacing: 0.05em;
+    animation: myTurnLabelPulse 2s ease-in-out infinite;
+}
+
+@keyframes myTurnLabelPulse {
+    0%, 100% { opacity: 0.7; }
+    50%       { opacity: 1; }
+}
+
 .mazu-glow {
     background: rgba(60, 30, 0, 0.75) !important;
     box-shadow: 0 0 35px #f5b942, inset 0 0 20px rgba(245,185,66,0.15) !important;
@@ -1325,7 +1378,7 @@ body.game-started > *:not(#welcome-screen) {
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
-    background: rgba(255, 255, 255, 0.8);
+    background: rgba(255, 255, 255, 0.55);
     box-shadow: 0 0 10px rgba(0,0,0,0.2);
     width: 40px;
     height: 40px;
@@ -1337,14 +1390,58 @@ body.game-started > *:not(#welcome-screen) {
     border-radius: 50%;
     pointer-events: none; /* 點擊穿透 */
     color: #333;
+    backdrop-filter: blur(2px);
+    border: 1.5px solid rgba(255,255,255,0.45);
+}
+
+/* 三角形方向指示 */
+.hand-arrow::after {
+    content: "";
+    display: block;
+    width: 0;
+    height: 0;
+    border-top: 9px solid transparent;
+    border-bottom: 9px solid transparent;
+}
+
+#arrow-right::after {
+    border-left: 13px solid rgba(60, 120, 220, 0.75);
+    margin-left: 3px;
+}
+
+#arrow-left::after {
+    border-right: 13px solid rgba(60, 120, 220, 0.75);
+    margin-right: 3px;
 }
 
 #arrow-left { left: 5px; }
 #arrow-right { right: 5px; }
 
+/* 玩家回合時箭頭三角形變橙色，更醒目 */
+#player-zone.my-turn .hand-arrow {
+    background: rgba(255, 200, 80, 0.72);
+    border-color: rgba(255, 179, 71, 0.8);
+    box-shadow: 0 0 14px rgba(255, 160, 0, 0.5);
+}
+#player-zone.my-turn #arrow-right::after {
+    border-left-color: rgba(200, 80, 0, 0.9);
+}
+#player-zone.my-turn #arrow-left::after {
+    border-right-color: rgba(200, 80, 0, 0.9);
+}
+
 @keyframes arrow-blink {
-    0%, 100% { opacity: 0.3; transform: translateY(-50%) translateX(0); }
-    50% { opacity: 1; transform: translateY(-50%) translateX(5px); } /* 右箭號向右微動 */
+    0%, 100% { opacity: 0.4; transform: translateY(-50%) translateX(0); }
+    50% { opacity: 1; transform: translateY(-50%) translateX(5px); }
+}
+
+#arrow-right {
+    animation: arrow-blink-right 1.5s infinite;
+}
+
+@keyframes arrow-blink-right {
+    0%, 100% { opacity: 0.4; transform: translateY(-50%) translateX(0); }
+    50% { opacity: 1; transform: translateY(-50%) translateX(5px); }
 }
 
 /* 如果是左箭號，反向微動 */
@@ -1353,7 +1450,7 @@ body.game-started > *:not(#welcome-screen) {
 }
 
 @keyframes arrow-blink-left {
-    0%, 100% { opacity: 0.3; transform: translateY(-50%) translateX(0); }
+    0%, 100% { opacity: 0.4; transform: translateY(-50%) translateX(0); }
     50% { opacity: 1; transform: translateY(-50%) translateX(-5px); }
 }
 
