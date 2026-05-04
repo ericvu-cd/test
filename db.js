@@ -167,12 +167,12 @@ const mazuCards = [
 ];
 
 const characterDB = [
-    { n: "阿海", img: "阿海.jpg", personality: "tricky" },
-    { n: "波哥", img: "波哥.jpg", personality: "smart" },
-    { n: "龍船長", img: "龍船長.jpg", personality: "chaotic" },
-    { n: "琳博士", img: "琳博士.jpg", personality: "smart" },
-    { n: "婷婷", img: "婷婷.jpg", personality: "tricky" },
-    { n: "春嬌姨", img: "春嬌姨.jpg", personality: "chaotic" }
+    { n: "阿海", img: "阿海.webp", personality: "tricky" },
+    { n: "波哥", img: "波哥.webp", personality: "smart" },
+    { n: "龍船長", img: "龍船長.webp", personality: "chaotic" },
+    { n: "琳博士", img: "琳博士.webp", personality: "smart" },
+    { n: "婷婷", img: "婷婷.webp", personality: "tricky" },
+    { n: "春嬌姨", img: "春嬌姨.webp", personality: "chaotic" }
 ];
 
 const dialogueDB = {
