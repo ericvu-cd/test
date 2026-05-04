@@ -1,6 +1,6 @@
 let gameDifficulty = 0.7;
-let isMuted = false; // 全局靜音狀態（同時控制 BGM 與音效）
 let speakingAI = null;
+let sfxEnabled = true;
 let showSummaryMode = true; // 預設開啟結算頁面
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
@@ -426,7 +426,7 @@ function renderTable() {
 }
 
 function playPopSfx() { 
-if (isMuted) return;
+if (!sfxEnabled) return;
 try {
         const ctx = new (window.AudioContext || window.webkitAudioContext)();
         
@@ -472,8 +472,8 @@ try {
         
     } catch(e) {}
 	}
-function playMazuSfx() { if (isMuted) return; try { const ctx = new (window.AudioContext || window.webkitAudioContext)(); const osc = ctx.createOscillator(); const gain = ctx.createGain(); osc.type = 'sine'; osc.connect(gain); gain.connect(ctx.destination); osc.frequency.setValueAtTime(880, ctx.currentTime); osc.frequency.exponentialRampToValueAtTime(1760, ctx.currentTime + 0.4); gain.gain.setValueAtTime(0.3, ctx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.6); osc.start(); osc.stop(ctx.currentTime + 0.6); } catch(e) {} }
-function playSuccessSfx() { if (isMuted) return; try { const ctx = new (window.AudioContext || window.webkitAudioContext)(); const osc = ctx.createOscillator(); const gain = ctx.createGain(); osc.type = 'triangle'; osc.connect(gain); gain.connect(ctx.destination); osc.frequency.setValueAtTime(523.25, ctx.currentTime); osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.1); gain.gain.setValueAtTime(0.2, ctx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3); osc.start(); osc.stop(ctx.currentTime + 0.3); } catch(e) {} }
+function playMazuSfx() { if (!sfxEnabled) return; try { const ctx = new (window.AudioContext || window.webkitAudioContext)(); const osc = ctx.createOscillator(); const gain = ctx.createGain(); osc.type = 'sine'; osc.connect(gain); gain.connect(ctx.destination); osc.frequency.setValueAtTime(880, ctx.currentTime); osc.frequency.exponentialRampToValueAtTime(1760, ctx.currentTime + 0.4); gain.gain.setValueAtTime(0.3, ctx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.6); osc.start(); osc.stop(ctx.currentTime + 0.6); } catch(e) {} }
+function playSuccessSfx() { if (!sfxEnabled) return; try { const ctx = new (window.AudioContext || window.webkitAudioContext)(); const osc = ctx.createOscillator(); const gain = ctx.createGain(); osc.type = 'triangle'; osc.connect(gain); gain.connect(ctx.destination); osc.frequency.setValueAtTime(523.25, ctx.currentTime); osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.1); gain.gain.setValueAtTime(0.2, ctx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3); osc.start(); osc.stop(ctx.currentTime + 0.3); } catch(e) {} }
 
 function addLog(m, type="") {
     const l = document.getElementById("log-messages");
@@ -490,16 +490,14 @@ function toggleMusic() {
     const btn = document.getElementById("music-control");
     if (music.paused) {
         music.play();
-        isMuted = false;
+        sfxEnabled = true;
         btn.innerText = "🎵";
         btn.style.opacity = "1";
-        btn.style.filter = "";
     } else {
         music.pause();
-        isMuted = true;
+        sfxEnabled = false;
         btn.innerText = "🔇";
-        btn.style.opacity = "0.5";
-        btn.style.filter = "grayscale(1)";
+        btn.style.opacity = "0.4";
     }
 }
 
@@ -761,17 +759,8 @@ function initGame() {
     const bgmVolume = isMobile ? 0.03 : 0.1; // 手機用 0.03，電腦用 0.1
 
     // 啟動音樂與日誌
-    const mcBtn = document.getElementById("music-control");
-    mcBtn.style.display = "flex";
-    mcBtn.style.background = "rgba(0,0,0,0.4)";
-    mcBtn.style.border = "1px solid rgba(255,255,255,0.2)";
-
-    const rcBtn = document.getElementById("report-control");
-    rcBtn.style.display = "flex";
-    // 預設開啟：綠色底 + 亮邊框（不動 position，保持 HTML 裡的 fixed + right:10px）
-    rcBtn.style.background = "rgba(0,150,80,0.55)";
-    rcBtn.style.border = "1.5px solid rgba(80,255,160,0.5)";
-    rcBtn.style.opacity = "1";
+    document.getElementById("music-control").style.display = "flex";
+	document.getElementById("report-control").style.display = "flex";
     document.getElementById("log-btn").style.display = "flex";
     const music = document.getElementById("bgm");
     music.play().then(() => {
@@ -817,7 +806,8 @@ function startGame() {
     players.forEach(p => p.hand = fishD.splice(0, 6));
     deckS = [...summonDB, ...mazuCards].sort(()=>Math.random()-0.5);
     
-    addLog("勇者集結！注意觀察大家的出牌...");
+    const diffLabel = gameDifficulty <= 0.4 ? "隨興(難度0.4)" : gameDifficulty >= 0.9 ? "專注(難度0.9)" : "普通(難度0.7)";
+    addLog(`勇者集結！難度：${diffLabel}。注意觀察大家的出牌...`);
 
     // 顯示等待藍框（HTML 已預先填好文字）
     const overlay = document.getElementById("summon-focus-overlay");
@@ -1256,6 +1246,12 @@ function showResult() {
 
     setTimeout(() => {
         hint.remove();
+        // AI 是召喚者時，全員出牌後才揭曉召喚條件
+        if (callerIdx !== 0 && currentS && !currentS.isMazu) {
+            const callerName = players[callerIdx].n;
+            addLog(`揭曉《${callerName}》的神秘召喚：${currentS.t.replace(/\n/g, " ")}`, "cmd");
+            document.getElementById("summon-display").innerText = `【${callerName}的召喚】\n${currentS.t}`;
+        }
         table.forEach(t => {
             const isSuccess = currentS.c(t.card);
             const player = players[t.pIdx];
@@ -1312,10 +1308,15 @@ function showResult() {
         });
 
         renderUI();
-        
-        let win = players.find(p => p.hand.length === 0);
-        if (win) {
-            showCountdownBubble(4, () => showWinScreen(win));
+
+        // ⚠️ 勝負判定：排除仍在 pendingReturns 等待退牌的玩家
+        // hand.length===0 但牌還在退回途中，不算真正出完
+        const realWin = players.find(p =>
+            p.hand.length === 0 &&
+            !pendingReturns.some(r => r.player === p)
+        );
+        if (realWin) {
+            showCountdownBubble(4, () => showWinScreen(realWin));
             return;
         }
 
@@ -1375,6 +1376,8 @@ function finishRound() {
 
 // 新增：處理下一回合的邏輯轉換
 function proceedToNextRound() {
+    // 每回合結束後重排所有玩家手牌，避免 AI 因陣列順序固定而每次選同一張
+    players.forEach(p => { if (p.isAI) p.hand.sort(() => Math.random() - 0.5); });
     callerIdx = (callerIdx + 1) % players.length;
     phase = "WAIT";
     autoStep();
@@ -1479,36 +1482,110 @@ function showRoundSummary() {
 function aiChooseCard(p) {
     let difficulty = gameDifficulty;
 
-    if (p.personality === "smart") difficulty += 0.1;
-    if (p.personality === "chaotic") difficulty -= 0.2;
+    if (p.personality === "smart")   difficulty += 0.15;
+    if (p.personality === "chaotic") difficulty -= 0.25;
+    if (p.personality === "tricky")  difficulty -= 0.1;
 
-    difficulty = Math.max(0.1, Math.min(0.95, difficulty));
+    difficulty = Math.max(0.05, Math.min(0.97, difficulty));
 
+    // ── 情境 A：AI 是召喚者（自己先出，table 為空）──
     if (table.length === 0) {
-        return Math.floor(Math.random() * p.hand.length);
+        const validCards = p.hand
+            .map((f, idx) => ({ f, idx }))
+            .filter(c => currentS && currentS.c && currentS.c(c.f));
+
+        const invalidCards = p.hand
+            .map((f, idx) => ({ f, idx }))
+            .filter(c => !(currentS && currentS.c && currentS.c(c.f)));
+
+        // 低難度：傾向出正確牌（玩家容易看懂規律、跟對牌）
+        // 高難度：傾向出錯誤牌（玩家難以從 AI 出牌推敲條件）
+        const playCorrect = Math.random() > difficulty;
+
+        // 問題3：手上沒有符合牌時，記錄到 log 讓玩家知道
+        if (validCards.length === 0) {
+            addLog(`${p.n} 手上沒有符合召喚的牌，隨機出牌。`, "secret");
+            return Math.floor(Math.random() * p.hand.length);
+        }
+
+        const pool = playCorrect ? validCards : (invalidCards.length > 0 ? invalidCards : validCards);
+        return pool[Math.floor(Math.random() * pool.length)].idx;
     }
 
+    // ── 情境 B：AI 是跟牌者（看桌面推測召喚條件）──
     const played = table.map(t => t.card);
 
-    let candidates = p.hand.map((f, idx) => ({ f, idx, score: 0 }));
+    // 預先計算桌面牌的共同特徵，避免在 forEach 內重複運算（修 Bug2）
+    const allSameL = played.every(f => f.l === played[0].l);
+    const allSameH = played.every(f => f.h === played[0].h);
+    const allSameD = played.every(f => f.d === played[0].d);
 
-    candidates.forEach(c => {
-        if (played.every(f => f.l === played[0].l) && c.f.l === played[0].l) c.score++;
-        if (played.every(f => f.h === played[0].h) && c.f.h === played[0].h) c.score++;
-        if (played.every(f => f.d === played[0].d) && c.f.d === played[0].d) c.score++;
+    // 季節：找出桌面牌都共有的季節（全年視為包含所有季節）
+    const seasons = ["春", "夏", "秋", "冬"];
+    const commonSeasons = seasons.filter(s =>
+        played.every(f => f.s.includes("全年") || f.s.includes(s))
+    );
+    // 桌面所有牌都有的共同漁法
+    const commonMethods = played[0].m.filter(method =>
+        played.every(f => f.m.includes(method))
+    );
+
+    // 評分：比對手牌與桌面共同特徵的吻合度
+    let candidates = p.hand.map((f, idx) => {
+        let score = 0;
+        if (allSameL && f.l === played[0].l) score++;
+        if (allSameH && f.h === played[0].h) score++;
+        if (allSameD && f.d === played[0].d) score++;
+        // 季節：手牌含全年、或含任一共同季節，給分
+        if (commonSeasons.length > 0 &&
+            (f.s.includes("全年") || commonSeasons.some(s => f.s.includes(s))))
+            score++;
+        // 漁法：手牌含任一共同漁法，給分
+        if (commonMethods.length > 0 && commonMethods.some(m => f.m.includes(m)))
+            score++;
+        return { f, idx, score };
     });
 
     candidates.sort((a, b) => b.score - a.score);
+    const topScore = candidates[0].score;
 
-    if (p.personality === "tricky" && Math.random() < 0.4) {
-        return Math.floor(Math.random() * p.hand.length);
+    // 三組：最佳匹配、部分匹配、完全不匹配
+    const bestPool    = candidates.filter(c => c.score === topScore && topScore > 0);
+    const partialPool = candidates.filter(c => c.score > 0 && c.score < topScore);
+    const wrongPool   = candidates.filter(c => c.score === 0);
+
+    // 問題4：topScore === 0 時（手牌完全沒有與桌面共同特徵的牌），
+    // 不應 fallback 到 wrongPool（等同完全隨機），
+    // 而是直接從分數最高的 candidates 中選（雖然分數都是 0，但至少不是亂選）
+    if (topScore === 0) {
+        // 手牌沒有任何特徵吻合，高難度仍嘗試從 candidates 前段選，低難度完全隨機
+        const roll = Math.random();
+        if (roll < difficulty) {
+            // 高難度：從 candidates 最前段選（雖然都是 0 分，但維持一致行為）
+            return candidates[Math.floor(Math.random() * Math.min(2, candidates.length))].idx;
+        }
+        return candidates[Math.floor(Math.random() * candidates.length)].idx;
     }
 
-    if (Math.random() < difficulty && candidates[0].score > 0) {
-        return candidates[0].idx;
+    // 難度決定從哪組選牌
+    const roll = Math.random();
+    if (roll < difficulty) {
+        // 高難度：從最佳匹配中選
+        return bestPool[Math.floor(Math.random() * bestPool.length)].idx;
+    } else if (roll < difficulty + (1 - difficulty) * 0.4) {
+        // 中間：從部分匹配中選
+        if (partialPool.length > 0)
+            return partialPool[Math.floor(Math.random() * partialPool.length)].idx;
     }
 
-    return Math.floor(Math.random() * p.hand.length);
+    // 低難度落點：從完全不匹配的牌中選，讓玩家容易看出差異
+    if (wrongPool.length > 0)
+        return wrongPool[Math.floor(Math.random() * wrongPool.length)].idx;
+
+    // wrongPool 也空（代表所有牌都有分），退回 partialPool 或 bestPool
+    if (partialPool.length > 0)
+        return partialPool[Math.floor(Math.random() * partialPool.length)].idx;
+    return bestPool[Math.floor(Math.random() * bestPool.length)].idx;
 }
 
 function showChat(p, msg) {
@@ -1651,31 +1728,21 @@ function showMazuGiftEffect(fromName, toName, card, targetEl) {
 function toggleReportMode() {
     showSummaryMode = !showSummaryMode;
     const btn = document.getElementById("report-control");
+    // 直接操作 inline style，避免被開始時設的 style.display 蓋過
     if (showSummaryMode) {
-        btn.classList.remove("off");
-        btn.innerHTML = `<span style="font-size:20px;">📊</span>`;
-        btn.style.background = "rgba(0,150,80,0.55)";
-        btn.style.border = "1.5px solid rgba(80,255,160,0.5)";
         btn.style.opacity = "1";
         btn.style.filter = "";
+        btn.textContent = "📊";
     } else {
-        btn.classList.add("off");
-        // 黑白圖示 + 半透明叉號疊層，不要紅圓點
-        btn.innerHTML = `
-            <span style="filter:grayscale(1);font-size:20px;">📊</span>
-            <span style="
-                position:absolute;inset:0;
-                display:flex;align-items:center;justify-content:center;
-                font-size:22px;font-weight:900;
-                color:rgba(255,255,255,0.75);
-                text-shadow:0 0 4px rgba(0,0,0,0.8);
-                pointer-events:none;
-            ">✕</span>
-        `;
-        btn.style.background = "rgba(30,30,30,0.65)";
-        btn.style.border = "1.5px solid rgba(180,180,180,0.3)";
-        btn.style.opacity = "0.85";
-        btn.style.filter = "";
+        btn.style.opacity = "0.4";
+        btn.style.filter = "grayscale(1)";
+        btn.textContent = "❌";
+        // 關掉時清除可能殘留的結算 overlay
+        const existing = document.getElementById("round-summary-overlay");
+        if (existing) {
+            existing.remove();
+            playPendingReturns(() => proceedToNextRound());
+        }
     }
 }
 
