@@ -202,12 +202,13 @@ body.game-started > *:not(#welcome-screen) {
 .btn-cancel { background: #FFB3BA; color: white; }
 
 /* 輪到誰的動畫特效 */
-@keyframes aiBounceGlow {
-    0% { transform: translateY(0); box-shadow: 0 0 5px currentColor; }
-    100% { transform: translateY(-8px); box-shadow: 0 0 20px currentColor, 0 0 10px white inset; }
+@keyframes aiPulseGlow {
+    0%   { transform: scale(1);   box-shadow: 0 0 6px 1px currentColor; filter: brightness(1); }
+    50%  { transform: scale(1.8); box-shadow: 0 0 18px 4px currentColor; filter: brightness(1.1); }
+    100% { transform: scale(1);   box-shadow: 0 0 6px 1px currentColor; filter: brightness(1); }
 }
 .box.is-caller .avatar-img {
-    animation: aiBounceGlow 0.6s infinite alternate;
+    animation: aiPulseGlow 5s ease-in-out infinite;
     border-color: #ffdfba !important;
     color: #ffdfba !important;
 }
@@ -994,14 +995,10 @@ body.game-started > *:not(#welcome-screen) {
     transition: transform 0.08s ease, box-shadow 0.08s ease !important;
 }
 
-/* 燈號色帶：改用卡片最頂端的 inset 色條，不受 overflow:hidden 影響 */
-#player-hand .light-1 { border-top: none !important; }
-#player-hand .light-2 { border-top: none !important; }
-#player-hand .light-3 { border-top: none !important; }
-
-#player-hand .light-1 .card-n { border-top: 4px solid #4caf50 !important; }
-#player-hand .light-2 .card-n { border-top: 4px solid #ffc107 !important; }
-#player-hand .light-3 .card-n { border-top: 4px solid #f44336 !important; }
+/* 燈號色帶 */
+#player-hand .light-1 { border-top: 4px solid #4caf50 !important; }
+#player-hand .light-2 { border-top: 4px solid #ffc107 !important; }
+#player-hand .light-3 { border-top: 4px solid #f44336 !important; }
 
 /* 手機版調整 */
 @media (max-width: 768px) {
@@ -1253,16 +1250,33 @@ body.game-started > *:not(#welcome-screen) {
 	display: none;
 }
 
-/* report-control：位置與背景完全由 HTML inline style + JS 控制
-   CSS 只補充互動過渡與疊層支援 */
 #report-control {
-    overflow: visible !important; /* 讓絕對子層可超出 */
-    transition: box-shadow 0.2s, opacity 0.2s;
+    position: fixed;
+    top: 20px;
+    right: 80px; 
+    width: 45px;
+    height: 45px;
+    background: white;
+    border-radius: 50%;
+    display: flex; /* 預設啟航後顯示 */
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    cursor: pointer;
+    z-index: 2000;
+    font-size: 1.5rem;
+    transition: all 0.3s;
     user-select: none;
 }
 
+#report-control.off {
+    background: #ccc;
+    filter: grayscale(1);
+    opacity: 0.7;
+}
+
 #report-control:hover {
-    transform: scale(1.08);
+    transform: scale(1.1);
 }
 
 /* 定義彈出動畫：從 0.8 倍縮放並淡入至原大小 */
@@ -1307,95 +1321,40 @@ body.game-started > *:not(#welcome-screen) {
     50% { opacity: 0.5; }
 }
 
-/* 手牌左右箭號：外框 + 內部 SVG 三角形 */
 .hand-arrow {
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
-    width: 28px;
-    height: 52px;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    z-index: 100;
-    pointer-events: none;
-    /* 半透明深海玻璃框 */
-    background: rgba(5, 20, 55, 0.62);
-    border: 1.5px solid rgba(100, 200, 255, 0.4);
-    backdrop-filter: blur(5px);
-    -webkit-backdrop-filter: blur(5px);
-    overflow: hidden;
-}
-
-/* 三角形用 ::before 繪製，純 CSS，不需文字符號 */
-.hand-arrow::before {
-    content: "";
-    display: block;
-    width: 0;
-    height: 0;
-    border-top: 11px solid transparent;
-    border-bottom: 11px solid transparent;
-    /* 顏色在各自 id 裡設定 */
-}
-
-/* ::after 做背景光暈圓 */
-.hand-arrow::after {
-    content: "";
-    position: absolute;
+    background: rgba(255, 255, 255, 0.8);
+    box-shadow: 0 0 10px rgba(0,0,0,0.2);
     width: 40px;
     height: 40px;
+    display: none; /* 【修改】預設不顯示 */
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    z-index: 100;
     border-radius: 50%;
-    background: radial-gradient(circle, rgba(100,200,255,0.22) 0%, transparent 70%);
-    pointer-events: none;
+    pointer-events: none; /* 點擊穿透 */
+    color: #333;
 }
 
+#arrow-left { left: 5px; }
+#arrow-right { right: 5px; }
+
+@keyframes arrow-blink {
+    0%, 100% { opacity: 0.3; transform: translateY(-50%) translateX(0); }
+    50% { opacity: 1; transform: translateY(-50%) translateX(5px); } /* 右箭號向右微動 */
+}
+
+/* 如果是左箭號，反向微動 */
 #arrow-left {
-    left: 2px;
-    border-radius: 6px 12px 12px 6px;
-    animation: arrowBlinkLeft 1.2s ease-in-out infinite;
-}
-#arrow-left::before {
-    /* 向左三角 */
-    border-right: 14px solid rgba(160, 225, 255, 0.82);
-    border-left: none;
-    margin-right: 2px;
+    animation: arrow-blink-left 1.5s infinite;
 }
 
-#arrow-right {
-    right: 2px;
-    border-radius: 12px 6px 6px 12px;
-    animation: arrowBlinkRight 1.2s ease-in-out infinite;
-}
-#arrow-right::before {
-    /* 向右三角 */
-    border-left: 14px solid rgba(160, 225, 255, 0.82);
-    border-right: none;
-    margin-left: 2px;
-}
-
-@keyframes arrowBlinkRight {
-    0%, 100% {
-        opacity: 0.5;
-        transform: translateY(-50%) translateX(0);
-        box-shadow: 0 0 6px rgba(80,180,255,0.25);
-    }
-    50% {
-        opacity: 1;
-        transform: translateY(-50%) translateX(5px);
-        box-shadow: 0 0 18px rgba(80,210,255,0.65), inset 0 0 8px rgba(100,200,255,0.15);
-    }
-}
-@keyframes arrowBlinkLeft {
-    0%, 100% {
-        opacity: 0.5;
-        transform: translateY(-50%) translateX(0);
-        box-shadow: 0 0 6px rgba(80,180,255,0.25);
-    }
-    50% {
-        opacity: 1;
-        transform: translateY(-50%) translateX(-5px);
-        box-shadow: 0 0 18px rgba(80,210,255,0.65), inset 0 0 8px rgba(100,200,255,0.15);
-    }
+@keyframes arrow-blink-left {
+    0%, 100% { opacity: 0.3; transform: translateY(-50%) translateX(0); }
+    50% { opacity: 1; transform: translateY(-50%) translateX(-5px); }
 }
 
 /* 讓手牌區可以水平滾動 */
