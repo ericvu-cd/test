@@ -70,14 +70,6 @@ body.game-started > *:not(#welcome-screen) {
     pointer-events: none; /* 確保徹底無法被點擊 */
 }
 
-#real-start-btn {
-    padding: 20px 60px; font-size: 2.5rem; background: rgba(255, 223, 186, 0.5); 
-    color: #d35400; border: 5px solid rgba(255, 179, 71, 0.5); border-radius: 50px;
-    font-weight: bold; cursor: pointer; box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-    transition: transform 0.2s, opacity 0.2s;
-}
-#real-start-btn:active { transform: scale(0.95); }
-
 #header {
     background: transparent;
     color: transparent;
@@ -323,7 +315,6 @@ body.game-started > *:not(#welcome-screen) {
     transition: background 0.2s, transform 0.15s;
 }
 .mazu-target-btn:active { transform: scale(0.96); }
-.mazu-target-btn:hover  { background: rgba(245,185,66,0.25); }
 .mazu-target-btn .btn-cards {
     font-size: 0.9rem;
     color: #f5cb75;
@@ -834,27 +825,23 @@ body.game-started > *:not(#welcome-screen) {
     text-align: justify;
 }
 
-/* 手機版詳情卡片 */
-@media (max-width: 768px) {
-    .preview-detail-card {
-        width: 260px;
-    }
-    .preview-fish-img-wrap {
-        height: 173px;
-    }
-    .preview-fish-name {
-        font-size: 1.6rem;
-    }
-    .preview-fish-tags .tag {
-        font-size: 0.85rem;
-        padding: 4px 10px;
-    }
-    .preview-fish-desc {
-        font-size: 1.1rem;
-    }
+.preview-detail-card {
+    width: 260px;
+}
+.preview-fish-img-wrap {
+    height: 173px;
+}
+.preview-fish-name {
+    font-size: 1.6rem;
+}
+.preview-fish-tags .tag {
+    font-size: 0.85rem;
+    padding: 4px 10px;
+}
+.preview-fish-desc {
+    font-size: 1.1rem;
 }
 
-.sub-btn { padding: 10px 35px; font-size: 1.6rem; background: rgba(255, 223, 186, 0.7); color: #00796b; border: 4px solid rgba(178, 223, 219, 0.5); border-radius: 30px; font-weight: bold; cursor: pointer; transition: 0.2s; opacity: 0.8; }
 .sub-btn:active { transform: scale(0.95); }
 .sub-btnd {
     padding: 10px 22px;
@@ -1053,35 +1040,32 @@ body.game-started > *:not(#welcome-screen) {
 #player-hand .light-2 { border-top: 4px solid #ffc107 !important; }
 #player-hand .light-3 { border-top: 4px solid #f44336 !important; }
 
-/* 手機版調整 */
-@media (max-width: 768px) {
-    #header { font-size: 1.3rem; padding: 10px; }
-	#log-btn {
-        font-size: 0.8rem;
-        padding: 4px 10px;
-        top: 5px;      /* 與手機版 #deck-info 高度一致 */
-        right: 5px;     /* 與右側的 5px 對稱 */
-        height: auto;  /* 讓高度隨文字調整 */
-    }
-	.sub-menu {
-        flex-direction: column;
-        align-items: center;
-    }
-    .char-area { padding: 30px 2px; }
-    .avatar-img { width: 40px; height: 40px; font-size: 1.3rem; border-width: 2px; }
-    .ai-name { font-size: 0.85rem; }
-    #ocean { margin: 5px; border-radius: 12px; padding-top: 35px; }
-    #deck-info { font-size: 0.8rem; padding: 4px 10px; top: 5px; left: 5px; background: rgba(252, 230, 127, 0.6); }
-    #summon-display { font-size: 1.05rem; padding: 10px; width: 92%; min-height: 50px; margin-bottom: 5px; border-width: 3px; border-radius: 12px; }
-    #table { min-height: 122px; gap: 6px; } 
-    #player-zone { padding: 8px; border-radius: 15px 15px 0 0; }
-    .hand { min-height: 126px; gap: 6px; padding-bottom: 5px; } 
-    .card { width: 74px; height: 115px; border-radius: 8px; border-width: 1px; }
-    .card-n { font-size: 0.8rem; padding: 4px 1px; border-bottom-width: 1px; }
-    .card-i { padding: 2px; }
-    .tag { font-size: 0.6rem; padding: 2px 4px; border-radius: 4px; margin: 1px; line-height: 1.1; } 
-    #real-start-btn { padding: 15px 40px; font-size: 1.8rem; }
+#header { font-size: 1.3rem; padding: 10px; }
+#log-btn {
+    font-size: 0.8rem;
+    padding: 4px 10px;
+    top: 5px;
+    right: 5px;
+    height: auto;
 }
+.sub-menu {
+    flex-direction: column;
+    align-items: center;
+}
+.char-area { padding: 30px 2px; }
+.avatar-img { width: 40px; height: 40px; font-size: 1.3rem; border-width: 2px; }
+.ai-name { font-size: 0.85rem; }
+#ocean { margin: 5px; border-radius: 12px; padding-top: 35px; }
+#deck-info { font-size: 0.8rem; padding: 4px 10px; top: 5px; left: 5px; background: rgba(252, 230, 127, 0.6); }
+#summon-display { font-size: 1.05rem; padding: 10px; width: 92%; min-height: 50px; margin-bottom: 5px; border-width: 3px; border-radius: 12px; }
+#table { min-height: 122px; gap: 6px; }
+#player-zone { padding: 8px; border-radius: 15px 15px 0 0; }
+.hand { min-height: 126px; gap: 6px; padding-bottom: 5px; }
+.card { width: 74px; height: 115px; border-radius: 8px; border-width: 1px; }
+.card-n { font-size: 0.8rem; padding: 4px 1px; border-bottom-width: 1px; }
+.card-i { padding: 2px; }
+.tag { font-size: 0.6rem; padding: 2px 4px; border-radius: 4px; margin: 1px; line-height: 1.1; }
+#real-start-btn { padding: 15px 40px; font-size: 1.8rem; }
 
 @keyframes playCardAnim {
     0% { transform: translateY(100px) scale(0.5); opacity: 0; }
@@ -1186,10 +1170,6 @@ body.game-started > *:not(#welcome-screen) {
     transition: all 0.2s;
 }
 
-#real-start-btn:hover {
-    transform: scale(1.08);
-}
-
 #real-start-btn:active {
     transform: scale(0.95);
 }
@@ -1214,11 +1194,6 @@ body.game-started > *:not(#welcome-screen) {
     backdrop-filter: blur(5px);
 
     transition: 0.2s;
-}
-
-.sub-btn:hover {
-    background: rgba(255,255,255,0.3);
-    transform: translateY(-2px);
 }
 
 .mbubble {
@@ -1303,35 +1278,6 @@ body.game-started > *:not(#welcome-screen) {
 	display: none;
 }
 
-#report-control {
-    position: fixed;
-    top: 20px;
-    right: 80px; 
-    width: 45px;
-    height: 45px;
-    background: white;
-    border-radius: 50%;
-    display: flex; /* 預設啟航後顯示 */
-    justify-content: center;
-    align-items: center;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-    cursor: pointer;
-    z-index: 2000;
-    font-size: 1.5rem;
-    transition: all 0.3s;
-    user-select: none;
-}
-
-#report-control.off {
-    background: #ccc;
-    filter: grayscale(1);
-    opacity: 0.7;
-}
-
-#report-control:hover {
-    transform: scale(1.1);
-}
-
 /* 定義彈出動畫：從 0.8 倍縮放並淡入至原大小 */
 @keyframes modalPop {
     from { 
@@ -1374,336 +1320,73 @@ body.game-started > *:not(#welcome-screen) {
     50% { opacity: 0.5; }
 }
 
+/* 手牌左右溢出指示箭頭（純視覺，手機觸控滑動用） */
 .hand-arrow {
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
-    background: rgba(255, 255, 255, 0.55);
-    box-shadow: 0 0 10px rgba(0,0,0,0.2);
-    width: 40px;
-    height: 40px;
-    display: none; /* 【修改】預設不顯示 */
+    width: 28px;
+    height: 50px;
+    display: none;
     align-items: center;
     justify-content: center;
-    font-size: 24px;
     z-index: 100;
-    border-radius: 50%;
-    pointer-events: none; /* 點擊穿透 */
-    color: #333;
-    backdrop-filter: blur(2px);
-    border: 1.5px solid rgba(255,255,255,0.45);
+    pointer-events: none;
+    border-radius: 6px;
+    background: linear-gradient(to right, rgba(0,10,30,0.55), rgba(0,10,30,0.0));
 }
 
-/* 三角形方向指示 */
+#arrow-left  { left: 0; background: linear-gradient(to right, rgba(0,10,30,0.6), rgba(0,10,30,0.0)); }
+#arrow-right { right: 0; background: linear-gradient(to left,  rgba(0,10,30,0.6), rgba(0,10,30,0.0)); }
+
+/* 三角形指示 */
 .hand-arrow::after {
     content: "";
     display: block;
     width: 0;
     height: 0;
-    border-top: 9px solid transparent;
-    border-bottom: 9px solid transparent;
+    border-top: 8px solid transparent;
+    border-bottom: 8px solid transparent;
 }
-
 #arrow-right::after {
-    border-left: 13px solid rgba(60, 120, 220, 0.75);
-    margin-left: 3px;
+    border-left: 11px solid rgba(255, 220, 120, 0.85);
+    margin-left: 4px;
 }
-
 #arrow-left::after {
-    border-right: 13px solid rgba(60, 120, 220, 0.75);
-    margin-right: 3px;
+    border-right: 11px solid rgba(255, 220, 120, 0.85);
+    margin-right: 4px;
 }
 
-#arrow-left { left: 5px; }
-#arrow-right { right: 5px; }
-
-/* 玩家回合時箭頭三角形變橙色，更醒目 */
-#player-zone.my-turn .hand-arrow {
-    background: rgba(255, 200, 80, 0.72);
-    border-color: rgba(255, 179, 71, 0.8);
-    box-shadow: 0 0 14px rgba(255, 160, 0, 0.5);
-}
+/* 玩家回合時箭頭更醒目 */
 #player-zone.my-turn #arrow-right::after {
-    border-left-color: rgba(200, 80, 0, 0.9);
+    border-left-color: rgba(255, 160, 30, 1);
 }
 #player-zone.my-turn #arrow-left::after {
-    border-right-color: rgba(200, 80, 0, 0.9);
+    border-right-color: rgba(255, 160, 30, 1);
 }
 
-@keyframes arrow-blink {
-    0%, 100% { opacity: 0.4; transform: translateY(-50%) translateX(0); }
-    50% { opacity: 1; transform: translateY(-50%) translateX(5px); }
+@keyframes arrow-pulse-right {
+    0%, 100% { opacity: 0.5; transform: translateY(-50%) translateX(0); }
+    50%       { opacity: 1;   transform: translateY(-50%) translateX(3px); }
 }
-
-#arrow-right {
-    animation: arrow-blink-right 1.5s infinite;
+@keyframes arrow-pulse-left {
+    0%, 100% { opacity: 0.5; transform: translateY(-50%) translateX(0); }
+    50%       { opacity: 1;   transform: translateY(-50%) translateX(-3px); }
 }
-
-@keyframes arrow-blink-right {
-    0%, 100% { opacity: 0.4; transform: translateY(-50%) translateX(0); }
-    50% { opacity: 1; transform: translateY(-50%) translateX(5px); }
-}
-
-/* 如果是左箭號，反向微動 */
-#arrow-left {
-    animation: arrow-blink-left 1.5s infinite;
-}
-
-@keyframes arrow-blink-left {
-    0%, 100% { opacity: 0.4; transform: translateY(-50%) translateX(0); }
-    50% { opacity: 1; transform: translateY(-50%) translateX(-5px); }
-}
+#arrow-right { animation: arrow-pulse-right 1.6s ease-in-out infinite; }
+#arrow-left  { animation: arrow-pulse-left  1.6s ease-in-out infinite; }
 
 /* 讓手牌區可以水平滾動 */
 #player-hand {
     display: flex;
-    overflow-x: auto; /* 啟用水平滾動 */
+    overflow-x: auto;
     scroll-behavior: smooth;
-    -webkit-overflow-scrolling: touch; /* 讓手機滑動更順暢 */
-    padding: 10px 40px; /* 留出左右空間給箭號 */
+    -webkit-overflow-scrolling: touch;
+    padding: 10px 8px;
     gap: 10px;
 }
 
-/* 隱藏滾動條（選配，讓畫面更乾淨） */
+/* 隱藏滾動條（讓畫面更乾淨） */
 #player-hand::-webkit-scrollbar {
-    display: none;
-}
-
-/* --- 強制視窗縮放 --- */
-
-@media screen and (min-width: 800px) {
-    /* 1. 外層背景：讓螢幕呈現置中畫布 */
-    html {
-        background-color: #2c3e50 !important;
-        width: 100vw !important;
-        height: 100vh !important;
-        display: flex !important;
-        justify-content: center !important;
-        align-items: center !important;
-        overflow: hidden !important;
-    }
-
-    /* 2. 手機本體：縮小基準尺寸，並限制最大縮放比例 */
-    body {
-        /* 改用 iPhone X 的精緻比例，避免畫面過大 */
-        width: 400px !important;
-        height: 720px !important;
-        
-        position: relative !important;
-        margin: 0 !important;
-        flex: none !important;
-
-        /* 縮放邏輯：適應視窗高度，但「最大不超過原始大小 (1倍)」 */
-        transform: scale(min(calc(100vh / 720 * 0.9), 1)) !important;
-        transform-origin: center center !important;
-
-        /* 手機外觀美化 */
-        border: 12px solid #222 !important;
-        border-radius: 35px !important;
-        box-shadow: 0 0 60px rgba(0,0,0,0.8) !important;
-		overflow: hidden !important;
-        background: #4f6a6e !important;
-		
-		/* 解決手牌偏下：確保 body 本身不要有奇怪的 padding */
-        padding: 0 !important;
-    }
-
-    /* 3. 將所有彈窗與覆蓋層「關」進縮放後的手機框內 */
-    #welcome-screen, 
-    #story-overlay, 
-    #game-summary-overlay, 
-    #info-overlay, 
-    #card-preview-overlay,
-    #log-overlay {
-        position: absolute !important;
-        width: 100% !important;
-        height: 100% !important;
-        top: 0 !important;
-        left: 0 !important;
-        
-        /* ⚠️ 絕對不加 visibility / opacity 的 !important，把控制權還給 JavaScript ⚠️ */
-        transform: none !important;
-        margin: 0 !important;
-    }
-	
-	/* =========================================
-       以下新增：修正卡牌太大、字體太大與按鈕跑位
-       ========================================= */
-
-    /* 1. 修正左右上方的控制按鈕跑出版面 */
-    /* 將 fixed 強制改為 absolute，這樣它們就會乖乖貼在手機框的角落，而不是電腦螢幕邊緣 */
-    #music-control, 
-    #report-control {
-        position: absolute !important;
-        z-index: 9999 !important;
-    }
-
-    /* 2. 縮小 summon-display 顯示文字 */
-    #summon-display {
-        font-size: 1rem !important;
-        line-height: 1.3 !important;
-        padding: 8px 10px !important;
-        height: auto !important;
-        min-height: 44px !important;
-        overflow: hidden !important;
-        width: 90% !important;
-        box-sizing: border-box !important;
-    }
-	
-	#ocean .card {
-        /* 核心：將縮放比例從 0.8 或 1.0 調降至 0.55 */
-        transform: scale(0.75) !important; 
-        transform-origin: center center !important;
-        
-        /* 移除可能產生的位移 */
-        margin: 0 !important;
-		margin-left: -25px !important; 
-        margin-right: -25px !important;		
-        box-shadow: 0 4px 15px rgba(0,0,0,0.3) !important;
-    }
-	
-	body {
-        display: flex !important;
-        flex-direction: column !important;
-        justify-content: space-between !important; /* 讓頭、中、尾自動撐開 */
-    }
-/* 2. 修正：手牌區（player-hand）垂直居中與溢出問題 */
-	#ocean {
-        flex: 1 !important;
-        margin-bottom: 0 !important;
-    }
-	#player-hand {
-        /* 撤銷所有可能導致高度撐開的設定 */
-        height: 140px !important; 
-        min-height: 140px !important;
-        max-height: none !important;
-        
-        /* 核心：直接把整個區域縮小到 0.6 倍 */
-        transform: scale(0.6) !important;
-        transform-origin: center bottom !important; /* 以底部為基準縮小，這樣就不會浮空 */
-        
-        display: flex !important;
-        align-items: flex-end !important;    /* 重要：讓卡片底部齊平，避免浮空感 */
-        justify-content: center !important;
-        
-        /* 消除多餘間距 */
-        margin-bottom: 5px !important; 
-        padding: 0 !important;
-        position: relative !important;
-        z-index: 10 !important;
-        overflow: visible !important; /* 確保縮放後的文字不會被切掉 */
-		}
-
-    /* 3. 修正：結算頁面視窗大小 (0.9X) */
-    .summary-container, #game-summary-overlay > div {
-        transform: scale(0.9) !important;
-        transform-origin: center center !important;
-    }
-
-    /* 4. 修正：頂端標題字體大小 (0.7X) */
-    #header {
-        font-size: 1.2rem !important; /* 調整原始大小 */
-        transform: scale(0.7) !important;
-        transform-origin: center top !important;
-        margin-top: 5px !important;
-    }
-	
-	.box {
-        /* 1. 核心：縮小內部元素之間的間距 */
-        gap: 0px !important; 
-        padding: 0px !important;
-    }
-	.box span {
-        font-size: 0.3rem !important; /* 數字也隨之調小，維持比例 */
-        font-weight: 900 !important;
-        line-height: 1 !important;
-        margin-top: -2px !important;  /* 讓數字往上靠攏圖示 */
-		padding: 0px !important;
-		gap: 0px !important; 
-    }
-	.ai-cards { font-size: 0.2rem; gap: 0px !important; letter-spacing: -15px;}
-
-    /* 5. 修正：魚卡縮放與內部字體 (字體 1.1X) */
-	[class*="card"]:not(.preview-detail-card) {
-        zoom: 0.65 !important; 
-        display: flex !important;
-        flex-direction: column !important;
-        justify-content: center !important;
-    }
-	[class*="card"]:not(.preview-detail-card) {
-        padding: 4px 2px !important;
-        margin: 0 2px !important;
-    }
- /* --- 終極覆蓋：強制抓取魚卡內所有深層文字元素 --- */
- /* 1. 魚名：維持原本清晰的大小 */
-/* 1. 魚名：調整回適中大小 */
-    .card-n {
-        font-size: 3.6rem !important; 
-        font-weight: 900 !important;
-        margin-bottom: 4px !important;
-        display: block !important;
-        text-align: center !important;
-    }
-
-/* 2. 特性標籤：找回顏色並維持寬度自適應 */
-    [class*="card"]:not(.preview-detail-card) div:not(.card-n), 
-    [class*="card"]:not(.preview-detail-card) span, 
-    [class*="card"]:not(.preview-detail-card) p, 
-    [class*="card"]:not(.preview-detail-card) .tag {
-        /* 保持文字大小與粗細 */
-        font-size: 2rem !important; 
-        font-weight: 800 !important;
-        line-height: 1.0 !important;
-        
-        display: inline-flex !important; 
-        width: auto !important;          
-        max-width: 95% !important;       
-        justify-content: center !important;
-        align-self: center !important;   
-        
-        padding: 5px 10px !important;    
-        margin: 2px 0 !important; 
-        white-space: nowrap !important;
-
-        /* --- 修正重點：移除強制的 background 與 color --- */
-        /* 不要在此處設定背景色，讓原本 .card-d, .card-l 等類別的顏色生效 */
-        /* 如果原本沒有底色，可以補上這行確保透明度而非強制白色： */
-        /* background-color: transparent; */
-    }
-
-    /* 3. 確保原本的特性標籤類別權重夠高，能把顏色穿透進去 */
-    .card-d, .card-l, .card-s, .card-h, .card-i {
-        /* 如果發現還是沒顏色，請在你的顏色設定後面補上 !important */
-        /* 例如：background-color: #ff9900 !important; */
-        display: inline-flex !important; 
-    }
-	
-    /* 3. 稍微增加卡片內邊距，防止字體貼邊 */
-    [class*="card"]:not(.preview-detail-card) {
-        padding: 0 !important;
-        justify-content: center !important;
-    }
-	
-    /* --- 針對 Firefox 瀏覽器 (因為 Firefox 不支援 zoom 的備用方案) --- */
-    @-moz-document url-prefix() {
-        [class*="card"]:not(.preview-detail-card) {
-            transform: scale(0.7) !important;
-            transform-origin: center center !important;
-        }
-        #summon-display {
-            transform: scale(0.5) !important;
-            transform-origin: center top !important;
-        }
-    }
-}
-
-#tutorial-tooltip {
-    position: fixed;
-    background: white;
-    color: black;
-    padding: 12px;
-    border-radius: 8px;
-    z-index: 99999;
-    max-width: 260px;
     display: none;
 }

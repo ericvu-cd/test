@@ -30,11 +30,6 @@ function preloadFishImages() {
     });
 }
 
-// 當視窗大小改變時，觸發 updateHandArrows 函式重新計算
-window.addEventListener('resize', () => {
-    updateHandArrows();
-});
-
 function setDifficulty(d, btn) {
     gameDifficulty = d;
 	document.querySelectorAll('.sub-btnd').forEach(b => b.classList.remove('active'));
@@ -396,7 +391,24 @@ function renderUI() {
     });
 	// 只要階段包含 PLAYER，就幫玩家區加上 my-turn 類別
     document.getElementById("player-zone").classList.toggle("my-turn", phase.includes("PLAYER"));
-	setTimeout(updateHandArrows, 50);
+    setTimeout(updateHandArrows, 50);
+}
+
+function updateHandArrows() {
+    const hand = document.getElementById('player-hand');
+    const leftArrow  = document.getElementById('arrow-left');
+    const rightArrow = document.getElementById('arrow-right');
+    if (!hand || !leftArrow || !rightArrow) return;
+
+    const isOverflowing = hand.scrollWidth > hand.clientWidth + 2;
+    if (isOverflowing) {
+        leftArrow.style.display  = hand.scrollLeft > 5 ? 'flex' : 'none';
+        const maxScroll = hand.scrollWidth - hand.clientWidth;
+        rightArrow.style.display = hand.scrollLeft < maxScroll - 5 ? 'flex' : 'none';
+    } else {
+        leftArrow.style.display  = 'none';
+        rightArrow.style.display = 'none';
+    }
 }
 
 // 確保點擊遮罩背景也能關閉預覽
@@ -755,16 +767,13 @@ function initGame() {
     const welcomeScreen = document.getElementById("welcome-screen");
     welcomeScreen.classList.add("fade-out");
 	
-	const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    const bgmVolume = isMobile ? 0.03 : 0.1; // 手機用 0.03，電腦用 0.1
-
     // 啟動音樂與日誌
     document.getElementById("music-control").style.display = "flex";
 	document.getElementById("report-control").style.display = "flex";
     document.getElementById("log-btn").style.display = "flex";
     const music = document.getElementById("bgm");
     music.play().then(() => {
-        music.volume = bgmVolume;
+        music.volume = 0.03;
     }).catch(err => {
         console.log("播放受阻");
         const btn = document.getElementById("music-control");
@@ -772,9 +781,8 @@ function initGame() {
         btn.style.opacity = "0.4";
     });
 
-	document.getElementById('player-hand').addEventListener('scroll', updateHandArrows);
-
     // 直接切換畫面並開始遊戲
+    document.getElementById('player-hand').addEventListener('scroll', updateHandArrows);
     setTimeout(() => {
         startGame();
     }, 3500); // 保留 3.5 秒的淡出過渡效果
@@ -1746,27 +1754,3 @@ function toggleReportMode() {
     }
 }
 
-function updateHandArrows() {
-    const hand = document.getElementById('player-hand');
-    const leftArrow = document.getElementById('arrow-left');
-    const rightArrow = document.getElementById('arrow-right');
-
-    if (!hand || !leftArrow || !rightArrow) return;
-
-    // 1. 判斷是否「溢出」：內容寬度 > 容器寬度
-    const isOverflowing = hand.scrollWidth > hand.clientWidth;
-
-    if (isOverflowing) {
-        // 2. 如果溢出，根據滾動位置判斷顯示哪邊
-        // 往右滑了超過 5px 才顯示左箭頭
-        leftArrow.style.display = hand.scrollLeft > 5 ? 'flex' : 'none';
-        
-        // 還有超過 5px 的空間可以往右滑，才顯示右箭頭
-        const maxScroll = hand.scrollWidth - hand.clientWidth;
-        rightArrow.style.display = (hand.scrollLeft < maxScroll - 5) ? 'flex' : 'none';
-    } else {
-        // 3. 沒溢出就全部隱藏
-        leftArrow.style.display = 'none';
-        rightArrow.style.display = 'none';
-    }
-}
