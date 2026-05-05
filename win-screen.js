@@ -308,8 +308,6 @@ function showWinScreen(winner) {
         transition:transform .15s,box-shadow .15s;
     `;
     btnMain.textContent = "↺ 重新啟航冒險";
-    btnMain.onmouseenter = () => { btnMain.style.transform = "translateY(-2px)"; };
-    btnMain.onmouseleave = () => { btnMain.style.transform = ""; };
     btnMain.onclick = () => {
         winBgm.pause();
         if (gameBgm) gameBgm.play().catch(()=>{});

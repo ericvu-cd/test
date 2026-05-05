@@ -838,9 +838,6 @@ body.game-started > *:not(#welcome-screen) {
     font-size: 0.85rem;
     padding: 4px 10px;
 }
-.preview-fish-desc {
-    font-size: 1.1rem;
-}
 
 .sub-btn:active { transform: scale(0.95); }
 .sub-btnd {
@@ -1122,18 +1119,6 @@ body.game-started > *:not(#welcome-screen) {
 @keyframes countdownBreathe {
     0%, 100% { box-shadow: 0 4px 10px rgba(119,217,168,0.3); }
     50%       { box-shadow: 0 4px 28px rgba(119,217,168,0.9), 0 0 0 4px rgba(119,217,168,0.15); }
-}
-
-/* 簡單的呼吸發光效果 */
-@keyframes breathe {
-    from { box-shadow: 0 0 3px #81d4fa; }
-    to { box-shadow: 0 0 20px #4fc3f7; }
-}
-
-/* 輪到玩家時套用的類別 */
-.my-turn {
-    animation: breathe 1.5s infinite alternate;
-    border-top: 4px solid #4fc3f7 !important;
 }
 
 .game-title {
