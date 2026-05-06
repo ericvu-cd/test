@@ -4,7 +4,28 @@ html {
     background-size: cover;
     background-attachment: scroll;
 }
+/* 禁用長按彈出瀏覽器選單與文字選取（全手機遊戲通用設定） */
+* {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+/* 輸入欄位恢復正常（若未來有表單） */
+input, textarea {
+    -webkit-user-select: text;
+    user-select: text;
+}
 :root { --p: #1976D2; --ai1: #D32F2F; --ai2: #388E3C; --ai3: #7B1FA2; }
+/* 等待鎖定遮罩：透明但攔截所有觸控 */
+#ui-lock {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 9000;
+    background: transparent;
+    pointer-events: all;
+}
 body {
     font-family: "Microsoft JhengHei", sans-serif;
     margin: 0;

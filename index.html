@@ -127,9 +127,14 @@
 	
 	<div id="chat-layer"></div>
 	<div id="tutorial-tooltip"></div>
+	<div id="ui-lock"></div>
 	<div id="summon-focus-overlay">
 		<div id="summon-focus-box">🔍 尋找勇者...<br>等待中...</div>
 	</div>
+	<script>
+		// 攔截右鍵/長按瀏覽器選單
+		document.addEventListener('contextmenu', e => e.preventDefault());
+	</script>
 
 </body>
 </html>

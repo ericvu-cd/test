@@ -218,6 +218,25 @@ function closeLog() {
 
 let players = [], deckS = [], table = [], currentS = null, callerIdx = 0, phase = "WAIT";
 
+// 真正均勻的 Fisher-Yates 洗牌（取代有偏的 sort+random）
+function shuffle(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+}
+
+// UI 鎖定：等待動畫/AI計算時，攔截所有使用者觸控
+function lockUI() {
+    const el = document.getElementById("ui-lock");
+    if (el) el.style.display = "block";
+}
+function unlockUI() {
+    const el = document.getElementById("ui-lock");
+    if (el) el.style.display = "none";
+}
+
 // --- 標籤生成邏輯 ---
 function getFishTags(f) {
     let html = '<div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 1px;">';
@@ -705,7 +724,7 @@ function initGame() {
 
 function startGame() {
 // 1. 從資料庫中隨機挑選 3 個角色
-    let aiPool = [...characterDB].sort(() => Math.random() - 0.5).slice(0, 3);
+    let aiPool = shuffle([...characterDB]).slice(0, 3);
     
     // 2. 初始化玩家與隨機選出的 AI
     players = [
@@ -725,9 +744,9 @@ function startGame() {
         });
     });	
 	
-    let fishD = [...fishDB].sort(()=>Math.random()-0.5);
+    let fishD = shuffle([...fishDB]);
     players.forEach(p => p.hand = fishD.splice(0, 6));
-    deckS = [...summonDB, ...mazuCards].sort(()=>Math.random()-0.5);
+    deckS = shuffle([...summonDB, ...mazuCards]);
     
     const diffLabel = gameDifficulty <= 0.4 ? "隨興(難度0.4)" : gameDifficulty >= 0.9 ? "專注(難度0.9)" : "普通(難度0.7)";
     addLog(`勇者集結！難度：${diffLabel}。注意觀察大家的出牌...`);
@@ -797,6 +816,7 @@ function showSummonFocus(duration, callback) {
 }
 
 function autoStep() {
+    lockUI(); // 每回合開始立刻鎖定
     if (deckS.length === 0) { 
         addLog("召喚卡已用盡！開始結算剩餘手牌...", "cmd");
                 // 找出手中剩餘卡牌最少的玩家
@@ -859,14 +879,18 @@ function autoStep() {
             document.getElementById("summon-display").classList.add("mazu-glow");
             const caustics = document.getElementById("ocean-caustics");
             if (caustics) caustics.classList.add("mazu-beams");
-            playMazuSfx(); 
-            if (callerIdx !== 0) { handleMazuAI(caller); }
+            playMazuSfx();
+            if (callerIdx === 0) unlockUI(); // 玩家是媽祖召喚者，解鎖讓選牌
+            else handleMazuAI(caller);
         } else {
             if (callerIdx !== 0) {
                 let idx = aiChooseCard(players[callerIdx]);
                 aiMove(callerIdx, idx);
                 phase = "PLAYER_TURN";
                 renderUI();
+                unlockUI(); // AI 召喚完畢，玩家要跟牌，解鎖
+            } else {
+                unlockUI(); // 玩家自己是召喚者，解鎖讓出牌
             }
         }
     });
@@ -962,7 +986,7 @@ function confirmMazuGift(cardIdx, target) {
 
     phase = "RESULT";
     renderUI();
-    // banner 顯示 5.5 秒後進入下一回合
+    lockUI(); // 等 banner 顯示完畢
     setTimeout(finishRound, 5500);
 }
 
@@ -1040,31 +1064,25 @@ async function playerAction(idx) {
         playPopSfx();
         table.push({ pIdx: 0, card: fish });
         phase = "AI_FOLLOWING";
+        lockUI(); // 出牌後鎖定，防止亂點
 
-        renderUI(); // 先更新手牌（移除打出的牌）
+        renderUI();
 
-        // 出牌飛行動畫：動畫跑完後才讓卡出現在 ocean
         const fromEl = document.getElementById("player-zone");
         playCardFlyAnimation(fish, fromEl, () => renderTable());
 
-        await new Promise(resolve => setTimeout(resolve, 1550)); // 等動畫跑完
-        // 【關鍵修改】改用 for...of 才能支援 await
+        await new Promise(resolve => setTimeout(resolve, 1550));
         for (let pi = 0; pi < players.length; pi++) {
             const p = players[pi];
-            
-            // 排除玩家本人 (pi === 0) 且如果是 AI 且不是目前的召喚者 (如果是 AI 跟牌)
             if (p.isAI && pi !== callerIdx) {
                 let matchIdx = aiChooseCard(p);
-                
-                // 每位 AI 出牌前先等 0.6 秒
                 await new Promise(resolve => setTimeout(resolve, 600));
-                
                 aiMove(pi, matchIdx); 
             }
         }
 
-        // 所有 AI 出完後再等 0.2 秒進結果
         await new Promise(resolve => setTimeout(resolve, 200));
+        unlockUI(); // AI 全部出完才解鎖
         showResult();
 		
     }
@@ -1300,7 +1318,7 @@ function finishRound() {
 // 新增：處理下一回合的邏輯轉換
 function proceedToNextRound() {
     // 每回合結束後重排所有玩家手牌，避免 AI 因陣列順序固定而每次選同一張
-    players.forEach(p => { if (p.isAI) p.hand.sort(() => Math.random() - 0.5); });
+    players.forEach(p => { if (p.isAI) shuffle(p.hand); });
     callerIdx = (callerIdx + 1) % players.length;
     phase = "WAIT";
     autoStep();
@@ -1398,6 +1416,7 @@ function showRoundSummary() {
 
     document.getElementById("close-summary-btn").onclick = () => {
         overlay.remove();
+        lockUI(); // 退牌動畫期間鎖定
         playPendingReturns(() => proceedToNextRound());
     };
 }
