@@ -905,10 +905,11 @@ function handleMazuAI(caller) {
 
         let card = caller.hand.pop();
         let target = players.filter(p => p !== caller).sort((a,b) => a.hand.length - b.hand.length)[0];
+        const callerEl = document.getElementById(caller.id); // 送牌者的實際 AI 格子
         const targetEl = target.isAI
             ? document.getElementById(target.id)
             : document.getElementById("player-zone");
-        showMazuGiftEffect(caller.n, target.n, card, targetEl);
+        showMazuGiftEffect(caller.n, target.n, card, targetEl, callerEl);
 
         // 1. 送牌者先說話
         aiTalkMazuGive(caller, target, card);
@@ -974,7 +975,8 @@ function confirmMazuGift(cardIdx, target) {
     const card = players[0].hand.splice(cardIdx, 1)[0];
 
     const targetEl = document.getElementById(target.id);
-    showMazuGiftEffect("你", target.n, card, targetEl);
+    const playerEl = document.getElementById("player-zone");
+    showMazuGiftEffect("你", target.n, card, targetEl, playerEl);
 
     target.hand.push(card);
     playPopSfx();
@@ -1592,20 +1594,20 @@ function aiTalkMazuReceive(p, from, card) {
 
 
 
-function showMazuGiftEffect(fromName, toName, card, targetEl) {
-    // 建立飛行層
+function showMazuGiftEffect(fromName, toName, card, targetEl, fromEl) {
     const flyLayer = document.createElement("div");
     flyLayer.id = "mazu-gift-effect";
     document.body.appendChild(flyLayer);
 
-    // 計算起點（送牌者位置）與終點（接收者位置）
-    const fromEl = fromName === "你"
-        ? document.getElementById("player-zone")
-        : document.querySelector(".char-area");
+    // 起點：直接用傳入的 fromEl，fallback 到 player-zone 或 char-area
+    const resolvedFromEl = fromEl
+        || (fromName === "你"
+            ? document.getElementById("player-zone")
+            : document.querySelector(".char-area"));
     const toEl = targetEl || document.querySelector(".char-area");
 
-    const fromRect = (fromEl || document.body).getBoundingClientRect();
-    const toRect   = (toEl   || document.body).getBoundingClientRect();
+    const fromRect = (resolvedFromEl || document.body).getBoundingClientRect();
+    const toRect   = (toEl          || document.body).getBoundingClientRect();
 
     const startX = fromRect.left + fromRect.width  / 2 - 40;
     const startY = fromRect.top  + fromRect.height / 2 - 55;
