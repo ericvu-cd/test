@@ -204,33 +204,35 @@ body.game-started > *:not(#welcome-screen) {
     border-color: #ffdfba !important;
     color: #ffdfba !important;
 }
-/* 玩家輪次的高亮 */
+/* 玩家輪次的高亮（is-caller：玩家是召喚者，AI 跟牌中）*/
+@keyframes isCallerPulse {
+    0%, 100% { box-shadow: 0 -4px 10px rgba(255, 179, 71, 0.15), inset 0 0 5px rgba(255, 223, 186, 0.2); }
+    50%       { box-shadow: 0 -10px 25px rgba(255, 179, 71, 0.5), inset 0 0 15px rgba(255, 223, 186, 0.8); }
+}
 #player-zone.is-caller {
-    box-shadow: 0 -10px 25px rgba(255, 179, 71, 0.5), inset 0 0 15px rgba(255, 223, 186, 0.8) !important;
+    animation: isCallerPulse 1.5s ease-in-out infinite;
 }
 
-/* ===== 玩家回合強化提示 ===== */
+/* ===== 玩家回合強化提示（my-turn：玩家需要出牌）===== */
 @keyframes myTurnPulse {
     0%, 100% {
-        box-shadow: 0 -8px 30px rgba(255, 160, 0, 0.55),
+        box-shadow: 0 -10px 35px rgba(255, 160, 0, 0.65),
                     inset 0 0 20px rgba(255, 220, 100, 0.25);
     }
     50% {
-        box-shadow: 0 -16px 50px rgba(255, 160, 0, 0.9),
-                    inset 0 0 35px rgba(255, 220, 100, 0.5),
-                    0 0 0 3px rgba(255, 179, 71, 0.4);
+        box-shadow: 0 -20px 60px rgba(255, 160, 0, 1),
+                    inset 0 0 40px rgba(255, 220, 100, 0.6),
+                    0 0 0 3px rgba(255, 179, 71, 0.5);
     }
 }
-
 @keyframes myTurnBorderFlash {
-    0%, 100% { border-top-color: rgba(255, 179, 71, 0.5); }
+    0%, 100% { border-top-color: rgba(255, 179, 71, 0.4); }
     50%       { border-top-color: rgba(255, 220, 80, 1); }
 }
-
 #player-zone.my-turn {
     border-top: 3px solid rgba(255, 179, 71, 0.5);
-    animation: myTurnPulse 2s ease-in-out infinite,
-               myTurnBorderFlash 2s ease-in-out infinite;
+    animation: myTurnPulse 1.5s ease-in-out infinite,
+               myTurnBorderFlash 1.5s ease-in-out infinite;
     background: linear-gradient(
         to top,
         rgba(255, 200, 60, 0.18) 0%,
@@ -241,7 +243,7 @@ body.game-started > *:not(#welcome-screen) {
 
 /* 玩家回合的手牌區標題提示 */
 #player-zone.my-turn::before {
-    content: "⚔️ 你的回合";
+    content: "✨ 你的選擇";
     position: absolute;
     top: 4px;
     left: 50%;
@@ -1334,20 +1336,20 @@ body.game-started > *:not(#welcome-screen) {
     border-bottom: 8px solid transparent;
 }
 #arrow-right::after {
-    border-left: 11px solid rgba(255, 220, 120, 0.85);
+    border-left: 11px solid rgba(255, 255, 255, 0.55);
     margin-left: 4px;
 }
 #arrow-left::after {
-    border-right: 11px solid rgba(255, 220, 120, 0.85);
+    border-right: 11px solid rgba(255, 255, 255, 0.55);
     margin-right: 4px;
 }
 
-/* 玩家回合時箭頭更醒目 */
+/* 玩家回合時箭頭更醒目但仍柔和 */
 #player-zone.my-turn #arrow-right::after {
-    border-left-color: rgba(255, 160, 30, 1);
+    border-left-color: rgba(255, 210, 120, 0.80);
 }
 #player-zone.my-turn #arrow-left::after {
-    border-right-color: rgba(255, 160, 30, 1);
+    border-right-color: rgba(255, 210, 120, 0.80);
 }
 
 @keyframes arrow-pulse-right {

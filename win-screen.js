@@ -40,18 +40,18 @@ function showWinScreen(winner) {
     bgImg.style.cssText = `
         position: absolute; inset: 0;
         background: url('bge.png') center center / cover no-repeat;
-        opacity: ${isPlayer ? 1 : .85};
-        ${isPlayer ? '' : 'filter: hue-rotate(190deg) saturate(.8) brightness(.55);'}
+        opacity: ${isPlayer ? 1 : 0.95};
+        ${isPlayer ? '' : 'filter: hue-rotate(190deg) saturate(.9) brightness(.7);'}
     `;
     overlay.appendChild(bgImg);
 
-    // ── 深色疊層（確保文字可讀）──────────────────
+    // ── 深色疊層（薄化以讓背景圖更明顯）──────────
     const solidMask = document.createElement("div");
     solidMask.style.cssText = `
         position: absolute; inset: 0; pointer-events: none;
         background: ${isPlayer
-            ? 'linear-gradient(180deg,rgba(2,10,6,.48) 0%,rgba(3,18,8,.28) 40%,rgba(1,10,4,.65) 100%)'
-            : 'linear-gradient(180deg,rgba(1,5,15,.58) 0%,rgba(3,12,28,.32) 40%,rgba(1,4,14,.72) 100%)'};
+            ? 'linear-gradient(180deg,rgba(2,10,6,.22) 0%,rgba(3,18,8,.08) 40%,rgba(1,10,4,.38) 100%)'
+            : 'linear-gradient(180deg,rgba(1,5,15,.30) 0%,rgba(3,12,28,.12) 40%,rgba(1,4,14,.45) 100%)'};
     `;
     overlay.appendChild(solidMask);
 

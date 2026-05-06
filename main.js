@@ -11,11 +11,12 @@ function preloadImages(prefix, count) {
     for (let i = 1; i <= count; i++) {
         const img = new Image();
         img.src = `${prefix}${i}.jpg`;
+        img.decode().catch(() => {}); // 背景解碼，避免顯示時卡頓
     }
 }
 
-// 頁面載入後立即執行預載
-window.addEventListener('load', () => {
+// DOMContentLoaded 即刻預載（比 load 早，不等 BGM/大圖載完）
+document.addEventListener('DOMContentLoaded', () => {
     preloadImages('P', 6);  // 預載故事 P1-P6
     preloadImages('F', 18); // 預載說明 F1-F18
     preloadFishImages();     // 預載所有魚圖片
@@ -28,6 +29,7 @@ function preloadFishImages() {
     fishDB.forEach(f => {
         const img = new Image();
         img.src = `fishdb/${f.n}.png`;
+        img.decode().catch(() => {}); // 背景解碼，顯示時零延遲
     });
 }
 
@@ -49,10 +51,15 @@ infoBGM.loop = true; // 設定循環播放
 let touchStartX = 0;
 let touchEndX = 0;
 
-// 判斷滑動方向（僅支援向左滑下一頁）
+function prevStory() {
+    stopStoryTimer();
+    if (storyIdx > 1) { storyIdx--; updateStory(); startStoryTimer(); }
+}
+
 function handleSwipe() {
     const diff = touchEndX - touchStartX;
     if (diff < -50) nextStory();
+    else if (diff > 50) prevStory();
 }
 
 // 故事功能
@@ -126,10 +133,16 @@ const totalInfo = 18;
 let infoTouchStartX = 0;
 let infoTouchEndX = 0;
 
-// 判斷滑動方向（僅支援向左滑下一頁）
+// 判斷滑動方向（左滑下一頁，右滑上一頁）
+function prevInfo() {
+    stopInfoTimer();
+    if (infoIdx > 1) { infoIdx--; updateInfo(); startInfoTimer(); }
+}
+
 function handleSwipeInfo() {
     const diff = infoTouchEndX - infoTouchStartX;
     if (diff < -50) nextInfo();
+    else if (diff > 50) prevInfo();
 }
 
 function openInfo() {
@@ -355,8 +368,9 @@ function renderUI() {
         
         handEl.appendChild(c);
     });
-	// 只要階段包含 PLAYER，就幫玩家區加上 my-turn 類別
-    document.getElementById("player-zone").classList.toggle("my-turn", phase.includes("PLAYER"));
+    // 玩家回合時強高亮手牌區
+    const isMyTurn = phase === "PLAYER_TURN" || phase === "PLAYER_MAZU";
+    document.getElementById("player-zone").classList.toggle("my-turn", isMyTurn);
     setTimeout(updateHandArrows, 50);
 }
 
@@ -470,11 +484,13 @@ function toggleMusic() {
         music.play();
         sfxEnabled = true;
         btn.innerText = "🎵";
+        btn.style.filter = "sepia(1) saturate(3) hue-rotate(175deg) brightness(1.4)";
         btn.style.opacity = "1";
     } else {
         music.pause();
         sfxEnabled = false;
         btn.innerText = "🔇";
+        btn.style.filter = "";
         btn.style.opacity = "0.4";
     }
 }
@@ -671,6 +687,8 @@ function initGame() {
     const music = document.getElementById("bgm");
     music.play().then(() => {
         music.volume = 0.03;
+        const btn = document.getElementById("music-control");
+        btn.style.filter = "sepia(1) saturate(3) hue-rotate(175deg) brightness(1.4)";
     }).catch(err => {
         console.log("播放受阻");
         const btn = document.getElementById("music-control");
@@ -1633,15 +1651,12 @@ function showMazuGiftEffect(fromName, toName, card, targetEl) {
 function toggleReportMode() {
     showSummaryMode = !showSummaryMode;
     const btn = document.getElementById("report-control");
-    // 直接操作 inline style，避免被開始時設的 style.display 蓋過
     if (showSummaryMode) {
         btn.style.opacity = "1";
-        btn.style.filter = "";
-        btn.textContent = "📊";
+        btn.innerHTML = "📊";
     } else {
-        btn.style.opacity = "0.4";
-        btn.style.filter = "grayscale(1)";
-        btn.textContent = "❌";
+        btn.style.opacity = "0.85";
+        btn.innerHTML = `<span style="filter:grayscale(1);display:inline-block;">📊</span><span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:1.2em;font-weight:900;color:#ff2222;pointer-events:none;">✕</span>`;
         // 關掉時清除可能殘留的結算 overlay
         const existing = document.getElementById("round-summary-overlay");
         if (existing) {
