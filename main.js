@@ -803,6 +803,32 @@ function startGame() {
 
     deckS = shuffle([...summonDB, ...mazuCards]);
 
+    // 新手保護：確保玩家前2次召喚不會抽到沒牌可出的召喚卡
+    // 4人輪流，玩家(callerIdx=0)的召喚在 deckS 末端：
+    //   第1次玩家召喚 → deckS[length-1]（第1回合）
+    //   第2次玩家召喚 → deckS[length-5]（第5回合）
+    if (gameDifficulty <= 0.4) {
+        const playerHand = players[0].hand;
+        const isSafe = s => !s.isMazu && playerHand.some(f => { try { return s.c(f); } catch(e) { return false; } });
+
+        const len = deckS.length;
+        const slots = [len - 1, len - 5];
+        const usedSwapSlots = new Set(slots); // 保護位置本身不能作為來源
+
+        slots.forEach(slot => {
+            if (slot < 0 || slot >= len) return;
+            if (isSafe(deckS[slot])) return; // 已經安全，不換
+            // 找一個不在保護位置、且是安全牌的位置來交換
+            let swapFrom = -1;
+            for (let i = 0; i < len; i++) {
+                if (!usedSwapSlots.has(i) && isSafe(deckS[i])) { swapFrom = i; break; }
+            }
+            if (swapFrom === -1) return; // 找不到就放棄
+            [deckS[slot], deckS[swapFrom]] = [deckS[swapFrom], deckS[slot]];
+            usedSwapSlots.add(swapFrom); // 這個來源已被用，下次不能再用
+        });
+    }
+
     // 記錄初始手牌快照（遊戲結束時寫入 LOG 供分析）
     initialHands = players.map(p => ({
         name: p.n,
@@ -968,14 +994,20 @@ function handleMazuAI(caller) {
         let card = caller.hand.pop();
 
         // 目標選擇：70% 送給手牌最少的人（多人並列時隨機選一位），30% 隨機送給任一人
-        const others = players.filter(p => p !== caller);
+        // 新手模式：AI 只能送給其他 AI，不能送給玩家
+        const isNovice = gameDifficulty <= 0.4;
+        const others = players.filter(p => p !== caller && (isNovice ? p.isAI : true));
+
+        // 若新手模式下其他 AI 全空，fallback 到所有人（避免死鎖）
+        const pool = others.length > 0 ? others : players.filter(p => p !== caller);
+
         let target;
         if (Math.random() < 0.70) {
-            const minCount = Math.min(...others.map(p => p.hand.length));
-            const fewest = others.filter(p => p.hand.length === minCount);
+            const minCount = Math.min(...pool.map(p => p.hand.length));
+            const fewest = pool.filter(p => p.hand.length === minCount);
             target = fewest[Math.floor(Math.random() * fewest.length)];
         } else {
-            target = others[Math.floor(Math.random() * others.length)];
+            target = pool[Math.floor(Math.random() * pool.length)];
         }
         const callerEl = document.getElementById(caller.id); // 送牌者的實際 AI 格子
         const targetEl = target.isAI
