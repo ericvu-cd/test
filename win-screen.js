@@ -6,6 +6,10 @@
 function showWinScreen(winner) {
     const isPlayer = !winner.isAI;
 
+    // 勝利畫面開始，立即解除 ui-lock（否則所有按鈕都無法觸控）
+    const uiLock = document.getElementById("ui-lock");
+    if (uiLock) uiLock.style.display = "none";
+
     // ── 遊戲結束時寫入初始手牌快照（供日後分析）──
     if (typeof initialHands !== "undefined" && initialHands.length > 0) {
         const diff = typeof gameDifficulty !== "undefined" ? gameDifficulty : "?";
