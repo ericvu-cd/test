@@ -6,6 +6,22 @@
 function showWinScreen(winner) {
     const isPlayer = !winner.isAI;
 
+    // ── 遊戲結束時寫入初始手牌快照（供日後分析）──
+    if (typeof initialHands !== "undefined" && initialHands.length > 0) {
+        const diff = typeof gameDifficulty !== "undefined" ? gameDifficulty : "?";
+        const winnerName = winner.n;
+        const lines = initialHands.map(p => {
+            const fishList = p.hand.map(f =>
+                `${f.n}(燈${f.l}/${f.d}/${f.h}/${f.s}/${f.m.join(",")})`
+            ).join("、");
+            return `  ${p.name}：${fishList}`;
+        }).join("\n");
+        addLog(
+            `[局末記錄] 難度:${diff} 勝者:${winnerName} 回合:${typeof roundCount !== "undefined" ? roundCount : "?"}\n初始手牌:\n${lines}`,
+            "secret"
+        );
+    }
+
     // ── 暫停遊戲 BGM，播放結算音樂 ───────────────
     const gameBgm = document.getElementById("bgm");
     const musicWasOn = gameBgm && !gameBgm.paused;

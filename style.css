@@ -149,6 +149,11 @@ body.game-started > *:not(#welcome-screen) {
 .log-header button {
     background: #ffdfba; border: none; border-radius: 10px;
     padding: 5px 15px; font-weight: bold; color: #d35400; cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+}
+#log-copy-btn {
+    background: rgba(255,255,255,0.25);
+    color: white;
 }
 #log-messages {
     padding: 15px; overflow-y: auto; flex-grow: 1; font-size: 1.1rem; line-height: 1.6;

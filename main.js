@@ -217,6 +217,7 @@ function closeLog() {
 }
 
 let players = [], deckS = [], table = [], currentS = null, callerIdx = 0, phase = "WAIT";
+let initialHands = []; // 各局開始時的初始手牌快照，遊戲結束時寫入 LOG
 
 // 真正均勻的 Fisher-Yates 洗牌（取代有偏的 sort+random）
 function shuffle(arr) {
@@ -486,14 +487,48 @@ try {
 function playMazuSfx() { if (!sfxEnabled) return; try { const ctx = new (window.AudioContext || window.webkitAudioContext)(); const osc = ctx.createOscillator(); const gain = ctx.createGain(); osc.type = 'sine'; osc.connect(gain); gain.connect(ctx.destination); osc.frequency.setValueAtTime(880, ctx.currentTime); osc.frequency.exponentialRampToValueAtTime(1760, ctx.currentTime + 0.4); gain.gain.setValueAtTime(0.3, ctx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.6); osc.start(); osc.stop(ctx.currentTime + 0.6); } catch(e) {} }
 function playSuccessSfx() { if (!sfxEnabled) return; try { const ctx = new (window.AudioContext || window.webkitAudioContext)(); const osc = ctx.createOscillator(); const gain = ctx.createGain(); osc.type = 'triangle'; osc.connect(gain); gain.connect(ctx.destination); osc.frequency.setValueAtTime(523.25, ctx.currentTime); osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.1); gain.gain.setValueAtTime(0.2, ctx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3); osc.start(); osc.stop(ctx.currentTime + 0.3); } catch(e) {} }
 
+let logPlainText = []; // 純文字 log，供複製分析用
+
 function addLog(m, type="") {
     const l = document.getElementById("log-messages");
     let className = "log-entry";
     if(type === "cmd") className += " log-cmd";
     if(type === "secret") className += " log-secret";
     if(type === "success") className += " log-success";
+    const rPrefix = roundCount > 0 ? `[R${roundCount}] ` : "";
+    // 純文字版本（移除 HTML 標籤）
+    const plainLine = `${rPrefix}${m.replace(/<[^>]*>/g, "")}`;
+    logPlainText.unshift(plainLine); // 同樣最新在前
     const prefix = roundCount > 0 ? `<span style="color:#aaa; font-size:0.85em;">[R${roundCount}]</span> ` : "";
     l.innerHTML = `<div class="${className}">> ${prefix}${m}</div>` + l.innerHTML;
+}
+
+function copyLog() {
+    const text = logPlainText.join("\n");
+    const btn = document.getElementById("log-copy-btn");
+    navigator.clipboard.writeText(text).then(() => {
+        btn.textContent = "✓ 已複製";
+        btn.style.background = "#b9f6ca";
+        btn.style.color = "#1b5e20";
+        setTimeout(() => {
+            btn.textContent = "📋 複製";
+            btn.style.background = "";
+            btn.style.color = "";
+        }, 2000);
+    }).catch(() => {
+        // fallback：建立 textarea 手動選取
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        ta.style.cssText = "position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:80%;height:50vh;z-index:9999;font-size:12px;";
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        btn.textContent = "👆 長按選取";
+        setTimeout(() => {
+            ta.remove();
+            btn.textContent = "📋 複製";
+        }, 8000);
+    });
 }
 
 function toggleMusic() {
@@ -745,10 +780,37 @@ function startGame() {
     });	
 	
     let fishD = shuffle([...fishDB]);
-    players.forEach(p => p.hand = fishD.splice(0, 6));
-    deckS = shuffle([...summonDB, ...mazuCards]);
     
-    const diffLabel = gameDifficulty <= 0.4 ? "隨興(難度0.4)" : gameDifficulty >= 0.9 ? "專注(難度0.9)" : "普通(難度0.7)";
+    // 新手難度：玩家優先從 e:1（容易）牌池抽牌，AI 從剩餘隨機抽
+    // 專業難度：完全隨機，不分等級
+    if (gameDifficulty <= 0.4) {
+        const easyPool   = fishD.filter(f => f.e === 1);
+        const otherPool  = fishD.filter(f => f.e !== 1);
+        const playerHand = [];
+        // 玩家盡量拿 e:1 的牌（最多 6 張，不夠就從 otherPool 補）
+        while (playerHand.length < 6) {
+            if (easyPool.length > 0) playerHand.push(easyPool.splice(0, 1)[0]);
+            else playerHand.push(otherPool.splice(0, 1)[0]);
+        }
+        players[0].hand = playerHand;
+        // AI 從剩餘（easyPool 剩餘 + otherPool）隨機抽
+        const remaining = shuffle([...easyPool, ...otherPool]);
+        players.slice(1).forEach(p => p.hand = remaining.splice(0, 6));
+    } else {
+        // 普通/專業：完全隨機
+        players.forEach(p => p.hand = fishD.splice(0, 6));
+    }
+
+    deckS = shuffle([...summonDB, ...mazuCards]);
+
+    // 記錄初始手牌快照（遊戲結束時寫入 LOG 供分析）
+    initialHands = players.map(p => ({
+        name: p.n,
+        hand: p.hand.map(f => ({ n: f.n, l: f.l, d: f.d, m: [...f.m], h: f.h, s: f.s }))
+    }));
+    logPlainText = []; // 清空上局紀錄
+    
+    const diffLabel = gameDifficulty <= 0.4 ? "新手(難度0.4)" : gameDifficulty >= 0.9 ? "專業(難度0.9)" : "標準(難度0.7)";
     addLog(`勇者集結！難度：${diffLabel}。注意觀察大家的出牌...`);
 
     // 顯示等待藍框（HTML 已預先填好文字）
@@ -904,7 +966,17 @@ function handleMazuAI(caller) {
         if (caller.hand.length === 0) { finishRound(); return; }
 
         let card = caller.hand.pop();
-        let target = players.filter(p => p !== caller).sort((a,b) => a.hand.length - b.hand.length)[0];
+
+        // 目標選擇：70% 送給手牌最少的人（多人並列時隨機選一位），30% 隨機送給任一人
+        const others = players.filter(p => p !== caller);
+        let target;
+        if (Math.random() < 0.70) {
+            const minCount = Math.min(...others.map(p => p.hand.length));
+            const fewest = others.filter(p => p.hand.length === minCount);
+            target = fewest[Math.floor(Math.random() * fewest.length)];
+        } else {
+            target = others[Math.floor(Math.random() * others.length)];
+        }
         const callerEl = document.getElementById(caller.id); // 送牌者的實際 AI 格子
         const targetEl = target.isAI
             ? document.getElementById(target.id)
@@ -1442,9 +1514,12 @@ function aiChooseCard(p) {
             .map((f, idx) => ({ f, idx }))
             .filter(c => !(currentS && currentS.c && currentS.c(c.f)));
 
-        // 低難度：傾向出正確牌（玩家容易看懂規律、跟對牌）
-        // 高難度：傾向出錯誤牌（玩家難以從 AI 出牌推敲條件）
-        const playCorrect = Math.random() > difficulty;
+        // 召喚者出正確牌的機率：
+        // 公式：min(0.95, max(0.50, 1.030 - 0.537 * difficulty))
+        // 新手+chaotic(eff=0.15) → 95%、專業+smart(eff=0.97) → 51%
+        // 永遠不低於 50%（避免反指標）、不高於 95%（保留少量不確定性）
+        const correctChance = Math.min(0.95, Math.max(0.50, 1.030 - 0.537 * difficulty));
+        const playCorrect = Math.random() < correctChance;
 
         // 問題3：手上沒有符合牌時，記錄到 log 讓玩家知道
         if (validCards.length === 0) {
@@ -1498,38 +1573,44 @@ function aiChooseCard(p) {
     const partialPool = candidates.filter(c => c.score > 0 && c.score < topScore);
     const wrongPool   = candidates.filter(c => c.score === 0);
 
-    // 問題4：topScore === 0 時（手牌完全沒有與桌面共同特徵的牌），
-    // 不應 fallback 到 wrongPool（等同完全隨機），
-    // 而是直接從分數最高的 candidates 中選（雖然分數都是 0，但至少不是亂選）
+    // 手牌沒有任何特徵吻合（topScore === 0）：只能隨機，難度無法幫助
     if (topScore === 0) {
-        // 手牌沒有任何特徵吻合，高難度仍嘗試從 candidates 前段選，低難度完全隨機
-        const roll = Math.random();
-        if (roll < difficulty) {
-            // 高難度：從 candidates 最前段選（雖然都是 0 分，但維持一致行為）
-            return candidates[Math.floor(Math.random() * Math.min(2, candidates.length))].idx;
-        }
         return candidates[Math.floor(Math.random() * candidates.length)].idx;
     }
 
-    // 難度決定從哪組選牌
+    // 跟牌邏輯：目標永遠是盡量跟對牌（清手牌）
+    // 難度影響的是「推測能力」：高難度估得準（best 機率高），低難度估得不準（偶爾落到 partial）
+    // 任何情況都不主動選 wrong pool（跟錯牌退回來對自己沒好處）
+    //
+    // 機率分配：
+    //   difficulty 0.97（smart 專業）→ best 97%、partial 3%、wrong 0%
+    //   difficulty 0.55（smart 新手）→ best 80%、partial 18%、wrong 2%
+    //   difficulty 0.15（chaotic 新手）→ best 60%、partial 33%、wrong 7%
+    //
+    // 公式：
+    //   P(best)    = 0.45 + difficulty * 0.535   → clamp [0.60, 0.97]
+    //   P(partial) = (1 - P(best)) * 0.80
+    //   P(wrong)   = (1 - P(best)) * 0.20
+
+    const pBest    = Math.min(0.97, Math.max(0.60, 0.45 + difficulty * 0.535));
+    const pPartial = (1 - pBest) * 0.80;
+    // pWrong = (1 - pBest) * 0.20（剩餘）
+
     const roll = Math.random();
-    if (roll < difficulty) {
-        // 高難度：從最佳匹配中選
+    if (roll < pBest) {
         return bestPool[Math.floor(Math.random() * bestPool.length)].idx;
-    } else if (roll < difficulty + (1 - difficulty) * 0.4) {
-        // 中間：從部分匹配中選
+    } else if (roll < pBest + pPartial) {
         if (partialPool.length > 0)
             return partialPool[Math.floor(Math.random() * partialPool.length)].idx;
+        return bestPool[Math.floor(Math.random() * bestPool.length)].idx;
+    } else {
+        // 極低機率的 wrong（估錯），若 wrongPool 空則退回 partial 或 best
+        if (wrongPool.length > 0)
+            return wrongPool[Math.floor(Math.random() * wrongPool.length)].idx;
+        if (partialPool.length > 0)
+            return partialPool[Math.floor(Math.random() * partialPool.length)].idx;
+        return bestPool[Math.floor(Math.random() * bestPool.length)].idx;
     }
-
-    // 低難度落點：從完全不匹配的牌中選，讓玩家容易看出差異
-    if (wrongPool.length > 0)
-        return wrongPool[Math.floor(Math.random() * wrongPool.length)].idx;
-
-    // wrongPool 也空（代表所有牌都有分），退回 partialPool 或 bestPool
-    if (partialPool.length > 0)
-        return partialPool[Math.floor(Math.random() * partialPool.length)].idx;
-    return bestPool[Math.floor(Math.random() * bestPool.length)].idx;
 }
 
 function showChat(p, msg) {

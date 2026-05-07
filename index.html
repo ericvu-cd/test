@@ -31,9 +31,9 @@
 			<div class="difficulty-select">
 				<div class="diff-title">🎯 選擇難度</div>
 				<div class="diff-options">
-					<button class="sub-btnd" onclick="setDifficulty(0.4, this)">隨興</button>
-					<button class="sub-btnd active" onclick="setDifficulty(0.7, this)">普通</button>
-					<button class="sub-btnd" onclick="setDifficulty(0.9, this)">專注</button>
+					<button class="sub-btnd" onclick="setDifficulty(0.4, this)">新手</button>
+					<button class="sub-btnd active" onclick="setDifficulty(0.7, this)">標準</button>
+					<button class="sub-btnd" onclick="setDifficulty(0.9, this)">專業</button>
 				</div>
 			</div>
 
@@ -71,7 +71,10 @@
         <div id="log-content">
             <div class="log-header">
                 <span>出牌紀錄</span>
-                <button onclick="closeLog()">關閉</button>
+                <div style="display:flex;gap:8px;align-items:center;">
+                    <button id="log-copy-btn" onclick="copyLog()">📋 複製</button>
+                    <button onclick="closeLog()">關閉</button>
+                </div>
             </div>
             <div id="log-messages"></div>
         </div>
