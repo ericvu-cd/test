@@ -360,7 +360,28 @@ function showWinScreen(winner) {
         };
     };
 
+    // ── 分享按鈕 ──────────────────────────────────
+    const btnShare = document.createElement("button");
+    btnShare.style.cssText = `
+        width:100%;padding:15px;border-radius:50px;cursor:pointer;
+        font-size:1.05rem;font-weight:700;letter-spacing:.5px;
+        font-family:"Microsoft JhengHei","PingFang TC",sans-serif;
+        border:1.5px solid ${isPlayer?'rgba(100,220,150,.4)':'rgba(100,165,255,.38)'};
+        background:${isPlayer?'rgba(60,180,100,.14)':'rgba(60,100,200,.14)'};
+        color:${isPlayer?'rgba(165,248,194,.94)':'rgba(158,208,255,.92)'};
+        transition:background .2s;
+    `;
+    btnShare.textContent = "📸 分享成就";
+    btnShare.onclick = () => {
+        if (typeof captureAndShare === "function") {
+            captureAndShare(overlay, isPlayer, btnShare);
+        } else {
+            alert("分享功能載入中，請稍後再試。");
+        }
+    };
+
     btnZone.appendChild(btnMain);
+    btnZone.appendChild(btnShare);
     btnZone.appendChild(btnSub);
     content.appendChild(btnZone);
     overlay.appendChild(content);
