@@ -3,6 +3,7 @@ let speakingAI = null;
 let sfxEnabled = true;
 let showSummaryMode = true; // 預設開啟結算頁面
 let roundReport = [];       // 每回合出牌結果紀錄
+let gameLog = [];            // 玩家出牌歷史（供分享圖卡用）
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -305,7 +306,7 @@ function showCardPreview(idx, fish, isHand = true) {
 
     container.appendChild(card);
 
-    // 出牌按鈕（手牌且輪到玩家）
+    // 出牌模式：手牌 + 玩家回合 → 綠勾紅叉；閱覽模式 → 只有紅叉
     if (isHand && phase.includes("PLAYER")) {
         const controls = document.createElement("div");
         controls.className = "preview-controls";
@@ -322,6 +323,18 @@ function showCardPreview(idx, fish, isHand = true) {
 
         controls.appendChild(btnConfirm);
         controls.appendChild(btnCancel);
+        container.appendChild(controls);
+    } else {
+        // 閱覽模式：紅叉提早關閉（計時器仍會自動關閉）
+        const controls = document.createElement("div");
+        controls.className = "preview-controls";
+
+        const btnClose = document.createElement("button");
+        btnClose.className = "preview-btn btn-cancel";
+        btnClose.innerHTML = "❌";
+        btnClose.onclick = (e) => { e.stopPropagation(); closePreview(); };
+
+        controls.appendChild(btnClose);
         container.appendChild(controls);
     }
 
@@ -372,16 +385,17 @@ function renderUI() {
     handEl.innerHTML = "";
     
     const isNormalTask = currentS && !currentS.isMazu && phase === "PLAYER_TURN" && callerIdx === 0;
-    const hasValid = isNormalTask && players[0].hand.some(f => currentS.c(f));
 
     players[0].hand.forEach((f, idx) => {
         const c = document.createElement("div");
         c.className = `card light-${f.l}`;
-        if (hasValid) {
-            if (currentS.c(f)) c.classList.add("is-valid");
-            else c.classList.add("is-not-valid");
-        }
+        const isValid = isNormalTask && currentS.c(f);
         c.innerHTML = `<div class="card-n">${f.n}</div><div class="card-i">${getFishTags(f)}</div>`;
+        if (isValid) {
+            const dot = document.createElement("span");
+            dot.className = "valid-dot";
+            c.appendChild(dot);
+        }
         
         // 手牌點擊：放大預覽，並帶有出牌功能
         c.onclick = () => showCardPreview(idx, f, true);
@@ -835,6 +849,7 @@ function startGame() {
         hand: p.hand.map(f => ({ n: f.n, l: f.l, d: f.d, m: [...f.m], h: f.h, s: f.s }))
     }));
     logPlainText = []; // 清空上局紀錄
+    gameLog = [];      // 清空出牌歷史
     
     const diffLabel = gameDifficulty <= 0.4 ? "新手(難度0.4)" : gameDifficulty >= 0.9 ? "專業(難度0.9)" : "標準(難度0.7)";
     addLog(`勇者集結！難度：${diffLabel}。注意觀察大家的出牌...`);
@@ -1162,13 +1177,10 @@ async function playerAction(idx) {
         return;
     } else if (phase === "PLAYER_TURN") {
         const fish = players[0].hand[idx];
-        if (callerIdx === 0 && currentS.c) {
-            let hasValid = players[0].hand.some(f => currentS.c(f));
-            if (hasValid && !currentS.c(fish)) { alert("必須符合你抽到的規律！"); return; }
-        }
         players[0].hand.splice(idx, 1);
         playPopSfx();
         table.push({ pIdx: 0, card: fish });
+        gameLog.push({ fishName: fish.n, light: fish.l, success: null }); // success 在結算後填入
         phase = "AI_FOLLOWING";
         lockUI(); // 出牌後鎖定，防止亂點
 
@@ -1347,10 +1359,20 @@ function showResult() {
             if (isSuccess) {
                 playSuccessSfx();
                 addLog(`${player.n} 成功送出【${t.card.n}】`, "success");
+                // 更新玩家出牌紀錄的 success 狀態
+                if (t.pIdx === 0) {
+                    const entry = [...gameLog].reverse().find(g => g.fishName === t.card.n && g.success === null);
+                    if (entry) entry.success = true;
+                }
             } else {
                 // 先暫存，等結算頁關閉後再動畫退回
                 pendingReturns.push({ card: t.card, player });
                 addLog(`${player.n} 的【${t.card.n}】不符規律，退回。`);
+                // 更新玩家出牌紀錄的 success 狀態
+                if (t.pIdx === 0) {
+                    const entry = [...gameLog].reverse().find(g => g.fishName === t.card.n && g.success === null);
+                    if (entry) entry.success = false;
+                }
             }
         });
 

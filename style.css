@@ -960,7 +960,7 @@ body.game-started > *:not(#welcome-screen) {
         inset 0 -1px 0 rgba(0,0,0,0.2);
 }
 
-.card-n { font-weight: 900; text-align: center; padding: 12px 5px; border-bottom: 2px solid rgba(0,0,0,0.12); font-size: 1.9rem; color: #444; position: relative; z-index: 5; }
+.card-n { font-weight: 900; text-align: center; padding: 12px 5px; border-bottom: 2px solid rgba(0,0,0,0.12); font-size: 1.9rem; color: #444; position: relative; z-index: 5; border-radius: 15px 15px 0 0; }
 .light-1 .card-n { background-color: #d4f5e2 !important; color: #1b4d2e; }
 .light-2 .card-n { background-color: #fef3cd !important; color: #5d4037; }
 .light-3 .card-n { background-color: #ffd6da !important; color: #7b1c2a; }
@@ -999,56 +999,24 @@ body.game-started > *:not(#welcome-screen) {
     transition: transform 0.22s ease, box-shadow 0.22s ease, filter 0.22s ease;
 }
 
-/* 不可出牌：壓暗下沉 */
-#player-hand .card.is-not-valid {
-    filter: brightness(0.55) grayscale(0.3);
-    transform: translateY(4px);
-    box-shadow:
-        0 0 0 1.5px rgba(100,130,180,0.15),
-        0 0 0 3px rgba(60,80,120,0.1),
-        0 3px 8px rgba(0,0,0,0.4);
+/* 符合條件的紅點標記 — 貼在卡片右上角外側，像通知徽章 */
+.valid-dot {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    width: 14px;
+    height: 14px;
+    background: #e53935;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.9);
+    box-shadow: 0 0 6px rgba(229,57,53,0.9), 0 0 12px rgba(229,57,53,0.5);
+    pointer-events: none;
+    z-index: 30;
 }
 
-/* 可出牌：白瓷發光 + 金框 + 立體浮起陰影 */
-#player-hand .card.is-valid {
-    transform: translateY(-16px) !important;
-
-    /* 白瓷底色 */
-    background:
-        linear-gradient(160deg, #ffffff 0%, #f0f6ff 45%, #e4eeff 100%) !important;
-
-    /* 金框 + 多層立體陰影 */
-    box-shadow:
-        0 0 0 1.5px rgba(255,210,80,0.95),
-        0 0 0 3.5px rgba(200,150,0,0.55),
-        0 0 0 5.5px rgba(255,200,50,0.22),
-        0 0 20px rgba(255,200,50,0.55),
-        0 0 40px rgba(255,175,30,0.28),
-        0 14px 22px rgba(0,10,40,0.6),
-        0 28px 52px rgba(0,5,30,0.5),
-        0 44px 75px rgba(0,0,20,0.35) !important;
-}
-
-/* 可出牌：白瓷高光層覆蓋 */
-#player-hand .card.is-valid::before {
-    background:
-        radial-gradient(ellipse at 0% 0%, rgba(255,255,255,0.72) 0%, transparent 42%),
-        radial-gradient(ellipse at 100% 0%, rgba(255,255,255,0.4) 0%, transparent 32%),
-        linear-gradient(180deg, rgba(255,255,255,0.65) 0%, rgba(255,255,255,0.1) 28%, transparent 55%) !important;
-}
-
-/* 可出牌：金框內側 */
-#player-hand .card.is-valid::after {
-    border-color: rgba(255,220,100,0.4) !important;
-    box-shadow:
-        inset 0 1px 0 rgba(255,255,255,0.85),
-        inset 0 -1px 0 rgba(200,150,0,0.18) !important;
-}
-
-/* 可出牌時卡身點點稍深 */
-#player-hand .card.is-valid .card-i {
-    background-image: radial-gradient(rgba(100,140,220,0.18) 1px, transparent 1px);
-    background-size: 15px 15px;
+/* 手牌允許紅點溢出卡片邊框 */
+#player-hand .card {
+    overflow: visible;
 }
 
 /* 按下效果 */
