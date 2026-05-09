@@ -366,19 +366,17 @@ function showWinScreen(winner) {
         width:100%;padding:15px;border-radius:50px;cursor:pointer;
         font-size:1.05rem;font-weight:700;letter-spacing:.5px;
         font-family:"Microsoft JhengHei","PingFang TC",sans-serif;
-        border:1.5px solid ${isPlayer?'rgba(100,220,150,.4)':'rgba(100,165,255,.38)'};
-        background:${isPlayer?'rgba(60,180,100,.14)':'rgba(60,100,200,.14)'};
-        color:${isPlayer?'rgba(165,248,194,.94)':'rgba(158,208,255,.92)'};
+        border:1.5px solid ${isPlayer?'rgba(255,210,80,.45)':'rgba(100,165,255,.38)'};
+        background:${isPlayer?'rgba(255,190,40,.13)':'rgba(60,100,200,.14)'};
+        color:${isPlayer?'rgba(255,235,160,.95)':'rgba(158,208,255,.92)'};
         transition:background .2s;
     `;
-    btnShare.textContent = "📸 分享成就";
-    btnShare.onclick = () => {
-        captureAndShare(overlay, isPlayer, btnShare);
-    };
+    btnShare.textContent = "📤 分享這場冒險";
+    btnShare.onclick = () => shareGameCard(isPlayer, winner);
 
     btnZone.appendChild(btnMain);
-    btnZone.appendChild(btnShare);
     btnZone.appendChild(btnSub);
+    btnZone.appendChild(btnShare);
     content.appendChild(btnZone);
     overlay.appendChild(content);
 
@@ -411,4 +409,188 @@ function showWinScreen(winner) {
     requestAnimationFrame(() => requestAnimationFrame(() => {
         overlay.style.opacity = "1";
     }));
+}
+
+// =============================================
+// 📤 分享卡片功能（純 Canvas 繪製，無外部依賴）
+// =============================================
+
+async function shareGameCard(isPlayer, winner) {
+    const diffLabel = gameDifficulty <= 0.4 ? "新手" : gameDifficulty >= 0.9 ? "專業" : "標準";
+    const rounds = typeof roundCount !== "undefined" ? roundCount : 0;
+
+    const W = 390, H = 693;
+    const canvas = document.createElement("canvas");
+    canvas.width  = W * 2;   // @2x 高解析
+    canvas.height = H * 2;
+    const ctx = canvas.getContext("2d");
+    ctx.scale(2, 2);
+
+    // ── 1. 載入 bge.png ──────────────────────────
+    let bgImg = null;
+    try {
+        bgImg = await loadImageAsBlob("bge.png");
+    } catch(_) { /* 沒圖就純色底 */ }
+
+    // ── 2. 畫背景 ────────────────────────────────
+    ctx.fillStyle = "#000";
+    ctx.fillRect(0, 0, W, H);
+
+    if (bgImg) {
+        // 保持 cover 比例置中
+        const scale = Math.max(W / bgImg.width, H / bgImg.height);
+        const sw = bgImg.width  * scale;
+        const sh = bgImg.height * scale;
+        const sx = (W - sw) / 2;
+        const sy = (H - sh) / 2;
+
+        ctx.save();
+        ctx.globalAlpha = isPlayer ? 0.92 : 0.62;
+        if (!isPlayer) {
+            // 失敗：藍移
+            ctx.filter = "hue-rotate(190deg) saturate(0.85) brightness(0.65)";
+        }
+        ctx.drawImage(bgImg, sx, sy, sw, sh);
+        ctx.filter = "none";
+        ctx.restore();
+    }
+
+    // ── 3. 疊層漸層 ──────────────────────────────
+    const grad = ctx.createLinearGradient(0, 0, 0, H);
+    if (isPlayer) {
+        grad.addColorStop(0,   "rgba(2,14,6,0.42)");
+        grad.addColorStop(0.45,"rgba(1,8,4,0.18)");
+        grad.addColorStop(1,   "rgba(0,12,5,0.78)");
+    } else {
+        grad.addColorStop(0,   "rgba(2,6,20,0.55)");
+        grad.addColorStop(0.45,"rgba(1,4,14,0.25)");
+        grad.addColorStop(1,   "rgba(0,4,18,0.84)");
+    }
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H);
+
+    // ── 4. 文字排版 ──────────────────────────────
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+
+    const CX = W / 2;   // 中心 X
+    let   Y  = 190;     // 起始 Y，留上邊距
+
+    // 裝飾小字
+    ctx.font = "500 13px 'PingFang TC','Microsoft JhengHei',sans-serif";
+    ctx.letterSpacing = "6px";
+    ctx.fillStyle = isPlayer ? "rgba(180,255,210,0.55)" : "rgba(120,170,255,0.48)";
+    ctx.fillText("✦  FRIENDFISH  ✦", CX, Y);
+    Y += 54;
+
+    // 遊戲主標
+    ctx.font = "900 42px 'PingFang TC','Microsoft JhengHei',sans-serif";
+    ctx.letterSpacing = "4px";
+    ctx.shadowColor = isPlayer ? "rgba(100,255,160,0.55)" : "rgba(50,130,255,0.5)";
+    ctx.shadowBlur  = 28;
+    ctx.fillStyle   = isPlayer ? "#ffffff" : "rgba(215,235,255,0.96)";
+    ctx.fillText("友魚勇者之路", CX, Y);
+    ctx.shadowBlur  = 0;
+    Y += 40;
+
+    // 副標
+    ctx.font      = "500 16px 'PingFang TC','Microsoft JhengHei',sans-serif";
+    ctx.letterSpacing = "3px";
+    ctx.fillStyle = isPlayer ? "rgba(160,245,195,0.72)" : "rgba(130,180,255,0.62)";
+    ctx.fillText("單人挑戰", CX, Y);
+    Y += 54;
+
+    // 裝飾橫線
+    const lineGrad = ctx.createLinearGradient(CX - 36, 0, CX + 36, 0);
+    lineGrad.addColorStop(0,   "transparent");
+    lineGrad.addColorStop(0.5, isPlayer ? "rgba(120,255,160,0.6)" : "rgba(80,140,255,0.5)");
+    lineGrad.addColorStop(1,   "transparent");
+    ctx.strokeStyle = lineGrad;
+    ctx.lineWidth   = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(CX - 36, Y); ctx.lineTo(CX + 36, Y);
+    ctx.stroke();
+    Y += 52;
+
+    // 主文案
+    ctx.letterSpacing = "0px";
+    ctx.shadowBlur = 0;
+
+    if (isPlayer) {
+        // 勝利：三行敘事
+        const lines = [
+            `在【${diffLabel}】難度的考驗下`,
+            `與大海交手了 ${rounds} 個回合`,
+            `守護了海洋的平衡`
+        ];
+        ctx.font      = "700 22px 'PingFang TC','Microsoft JhengHei',sans-serif";
+        ctx.fillStyle = "#ffffff";
+        ctx.shadowColor = "rgba(80,255,140,0.35)";
+        ctx.shadowBlur  = 16;
+        lines.forEach(line => {
+            ctx.fillText(line, CX, Y);
+            Y += 40;
+        });
+        ctx.shadowBlur = 0;
+        Y += 24;
+
+        // 推廣語
+        ctx.font      = "500 16px 'PingFang TC','Microsoft JhengHei',sans-serif";
+        ctx.fillStyle = "rgba(160,245,195,0.82)";
+        ctx.fillText("🐟 每一張牌，都是一個選擇", CX, Y);
+
+    } else {
+        // 失敗：一句話
+        ctx.font      = "900 28px 'PingFang TC','Microsoft JhengHei',sans-serif";
+        ctx.fillStyle = "rgba(210,230,255,0.95)";
+        ctx.shadowColor = "rgba(50,120,255,0.38)";
+        ctx.shadowBlur  = 18;
+        ctx.fillText("大海這次贏了。", CX, Y);
+        ctx.shadowBlur = 0;
+        Y += 52;
+
+        ctx.font      = "500 16px 'PingFang TC','Microsoft JhengHei',sans-serif";
+        ctx.fillStyle = "rgba(130,185,255,0.68)";
+        ctx.fillText("勇者折返，海域等你再來", CX, Y);
+    }
+
+    // ── 5. 轉 Blob → 分享或下載 ─────────────────
+    canvas.toBlob(async (blob) => {
+        if (!blob) { alert("卡片產生失敗"); return; }
+
+        const file = new File([blob], "友魚勇者之路.png", { type: "image/png" });
+        const shareText = isPlayer
+            ? `我在《友魚勇者之路》守護了海洋！難度【${diffLabel}】，共 ${rounds} 回合的激戰 🎉🌊`
+            : `《友魚勇者之路》這次沒守住…下次再來 🌊`;
+
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            // 手機：系統分享選單（Line / IG 均出現）
+            try {
+                await navigator.share({ files: [file], text: shareText });
+            } catch (e) {
+                if (e.name !== "AbortError") fallbackDownload(canvas);
+            }
+        } else {
+            // 桌機：直接下載圖片
+            fallbackDownload(canvas);
+        }
+    }, "image/png");
+}
+
+// ── 把圖片 URL 載成可繪製的 ImageBitmap ────────
+function loadImageAsBlob(src) {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.onload  = () => resolve(img);
+        img.onerror = reject;
+        img.src = src + "?_=" + Date.now(); // 避免快取跨域問題
+    });
+}
+
+function fallbackDownload(canvas) {
+    const a = document.createElement("a");
+    a.href     = canvas.toDataURL("image/png");
+    a.download = "友魚勇者之路.png";
+    a.click();
 }
