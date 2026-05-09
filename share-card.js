@@ -1,14 +1,12 @@
 // =============================================
-// 📸 share-card.js
-// 截圖結算畫面 → 疊浮水印 → 分享 / 下載
+// 📸 share-card.js  v5（手機專用，穩定版）
+//
+// 關鍵做法：
+//   截圖前把 overlay position:fixed → absolute
+//   讓 html-to-image 能完整看到整個元素
+//   截完立刻還原
 // =============================================
 
-/**
- * 主入口：截圖 win-overlay，疊浮水印後分享或下載
- * @param {HTMLElement} overlayEl  - win-overlay 的 DOM 元素
- * @param {boolean}     isPlayer   - true=勝利, false=失敗（影響浮水印配色）
- * @param {HTMLElement} btnEl      - 分享按鈕本身（用來切換 loading 狀態）
- */
 async function captureAndShare(overlayEl, isPlayer, btnEl) {
     const originalText = btnEl ? btnEl.textContent : "";
     if (btnEl) {
@@ -16,47 +14,57 @@ async function captureAndShare(overlayEl, isPlayer, btnEl) {
         btnEl.disabled = true;
     }
 
+    // 暫時隱藏按鈕（不截進圖）
+    if (btnEl) btnEl.style.visibility = "hidden";
+
+    // ── 把 fixed 改成 absolute，讓截圖套件看得到 ──
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    overlayEl.style.position = "absolute";
+    overlayEl.style.width    = vw + "px";
+    overlayEl.style.height   = vh + "px";
+    overlayEl.style.top      = window.scrollY + "px";
+    overlayEl.style.left     = "0";
+    document.body.style.overflow = "hidden";
+
     try {
-        // ── 1. html2canvas 截圖 ────────────────────────
-        const canvas = await html2canvas(overlayEl, {
-            useCORS: true,
-            allowTaint: false,
-            scale: window.devicePixelRatio || 2, // Retina 清晰
-            width: window.innerWidth,
-            height: window.innerHeight,
-            windowWidth: window.innerWidth,
-            windowHeight: window.innerHeight,
-            x: 0,
-            y: 0,
-            scrollX: 0,
-            scrollY: 0,
-            logging: false,
-            imageTimeout: 8000,
-            backgroundColor: null,
-            ignoreElements: (el) => {
-                // 排除分享按鈕本身，避免截進去
-                return el === btnEl;
-            }
+        const dataUrl = await htmlToImage.toPng(overlayEl, {
+            width:      vw,
+            height:     vh,
+            pixelRatio: Math.min(window.devicePixelRatio || 2, 3),
+            cacheBust:  true,
         });
 
-        // ── 2. 疊浮水印 ────────────────────────────────
-        const finalCanvas = addWatermark(canvas, isPlayer);
+        // ── 還原樣式 ──
+        overlayEl.style.position = "fixed";
+        overlayEl.style.width    = "";
+        overlayEl.style.height   = "";
+        overlayEl.style.top      = "";
+        overlayEl.style.left     = "";
+        document.body.style.overflow = "";
+        if (btnEl) btnEl.style.visibility = "";
 
-        // ── 3. 轉成 Blob ───────────────────────────────
-        const blob = await new Promise(resolve =>
-            finalCanvas.toBlob(resolve, "image/png", 1.0)
-        );
-
-        // ── 4. 分享或下載 ──────────────────────────────
+        // ── 疊浮水印 ──
+        const finalDataUrl = await addWatermark(dataUrl, isPlayer);
+        const blob = dataUrlToBlob(finalDataUrl);
         await shareOrDownload(blob, isPlayer);
 
     } catch (err) {
-        console.error("截圖失敗:", err);
-        alert("截圖失敗，請稍後再試。");
+        // 還原樣式
+        overlayEl.style.position = "fixed";
+        overlayEl.style.width    = "";
+        overlayEl.style.height   = "";
+        overlayEl.style.top      = "";
+        overlayEl.style.left     = "";
+        document.body.style.overflow = "";
+        if (btnEl) btnEl.style.visibility = "";
+
+        console.error("[share-card]", err);
+        alert("截圖失敗：" + err.message);
     } finally {
         if (btnEl) {
             btnEl.textContent = originalText;
-            btnEl.disabled = false;
+            btnEl.disabled    = false;
         }
     }
 }
@@ -64,80 +72,84 @@ async function captureAndShare(overlayEl, isPlayer, btnEl) {
 // =============================================
 // 🖋 疊浮水印
 // =============================================
-function addWatermark(srcCanvas, isPlayer) {
-    const w = srcCanvas.width;
-    const h = srcCanvas.height;
+function addWatermark(dataUrl, isPlayer) {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => {
+            const w   = img.width;
+            const h   = img.height;
+            const dpr = Math.min(window.devicePixelRatio || 2, 3);
 
-    const out = document.createElement("canvas");
-    out.width  = w;
-    out.height = h;
-    const ctx = out.getContext("2d");
+            const c   = document.createElement("canvas");
+            c.width   = w;
+            c.height  = h;
+            const ctx = c.getContext("2d");
+            ctx.drawImage(img, 0, 0);
 
-    // 原圖貼入
-    ctx.drawImage(srcCanvas, 0, 0);
+            const padX = 22 * dpr;
+            const padY = 18 * dpr;
 
-    const dpr = window.devicePixelRatio || 2;
+            // 底部漸層遮條
+            const barH = 110 * dpr;
+            const grad = ctx.createLinearGradient(0, h - barH, 0, h);
+            grad.addColorStop(0, "rgba(0,0,0,0)");
+            grad.addColorStop(1, isPlayer ? "rgba(0,18,8,0.88)" : "rgba(0,4,18,0.88)");
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, h - barH, w, barH);
 
-    // ── 底部半透明遮條（確保文字可讀）────────────────
-    const barH = 88 * dpr;
-    const grad = ctx.createLinearGradient(0, h - barH, 0, h);
-    grad.addColorStop(0, "rgba(0,0,0,0)");
-    grad.addColorStop(1, isPlayer ? "rgba(0,20,8,0.82)" : "rgba(0,4,18,0.82)");
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, h - barH, w, barH);
+            // 遊戲主標題
+            const titlePx = Math.round(17 * dpr);
+            ctx.font          = `900 ${titlePx}px "PingFang TC","Microsoft JhengHei",sans-serif`;
+            ctx.textBaseline  = "bottom";
+            ctx.textAlign     = "left";
+            ctx.shadowColor   = "rgba(0,0,0,0.95)";
+            ctx.shadowBlur    = 12 * dpr;
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 2 * dpr;
+            ctx.fillStyle     = isPlayer ? "rgba(160,255,200,0.96)" : "rgba(140,195,255,0.96)";
+            ctx.fillText("友魚勇者之路", padX, h - padY);
 
-    // ── 遊戲主標題 ────────────────────────────────────
-    const titleSize = Math.round(18 * dpr);
-    ctx.font         = `900 ${titleSize}px "PingFang TC","Microsoft JhengHei",sans-serif`;
-    ctx.textBaseline = "bottom";
-    ctx.textAlign    = "left";
+            // Hashtag
+            const subPx = Math.round(11 * dpr);
+            ctx.font      = `500 ${subPx}px "PingFang TC","Microsoft JhengHei",sans-serif`;
+            ctx.fillStyle = isPlayer ? "rgba(120,230,170,0.82)" : "rgba(110,170,240,0.82)";
+            ctx.shadowBlur = 8 * dpr;
+            ctx.fillText("#永續食魚  #友魚勇者之路", padX, h - padY - titlePx - 7 * dpr);
 
-    // 文字底色（陰影）
-    ctx.shadowColor   = "rgba(0,0,0,0.9)";
-    ctx.shadowBlur    = 10 * dpr;
-    ctx.shadowOffsetX = 0;
-    ctx.shadowOffsetY = 2 * dpr;
+            // 右下角小字
+            ctx.font      = `400 ${Math.round(10 * dpr)}px "PingFang TC","Microsoft JhengHei",sans-serif`;
+            ctx.fillStyle = "rgba(255,255,255,0.48)";
+            ctx.textAlign = "right";
+            ctx.shadowBlur = 4 * dpr;
+            ctx.fillText("你也來挑戰看看！", w - padX, h - padY);
 
-    ctx.fillStyle = isPlayer
-        ? "rgba(160,255,200,0.95)"   // 勝利：淡綠
-        : "rgba(140,195,255,0.95)";  // 失敗：淡藍
+            ctx.shadowColor = "transparent";
+            ctx.shadowBlur  = 0;
 
-    const padX = 22 * dpr;
-    const padY = 16 * dpr;
-    ctx.fillText("友魚勇者之路", padX, h - padY);
-
-    // ── 副標（Hashtag / 推廣語）──────────────────────
-    const subSize = Math.round(11 * dpr);
-    ctx.font      = `500 ${subSize}px "PingFang TC","Microsoft JhengHei",sans-serif`;
-    ctx.fillStyle = isPlayer
-        ? "rgba(120,230,170,0.80)"
-        : "rgba(110,170,240,0.80)";
-    ctx.shadowBlur = 6 * dpr;
-
-    ctx.fillText("#永續食魚  #友魚勇者之路", padX, h - padY - titleSize - 6 * dpr);
-
-    // ── 右下角小字（鼓勵分享）───────────────────────
-    const hintSize = Math.round(10 * dpr);
-    ctx.font      = `400 ${hintSize}px "PingFang TC","Microsoft JhengHei",sans-serif`;
-    ctx.fillStyle = "rgba(255,255,255,0.50)";
-    ctx.textAlign = "right";
-    ctx.shadowBlur = 4 * dpr;
-    ctx.fillText("你也來挑戰看看！", w - 22 * dpr, h - padY);
-
-    // 重置 shadow 避免影響後續操作
-    ctx.shadowColor   = "transparent";
-    ctx.shadowBlur    = 0;
-    ctx.shadowOffsetX = 0;
-    ctx.shadowOffsetY = 0;
-
-    return out;
+            resolve(c.toDataURL("image/png"));
+        };
+        img.onerror = reject;
+        img.src = dataUrl;
+    });
 }
 
 // =============================================
-// 📤 分享 or 下載
+// 🔧 DataURL → Blob
+// =============================================
+function dataUrlToBlob(dataUrl) {
+    const [header, data] = dataUrl.split(",");
+    const mime   = header.match(/:(.*?);/)[1];
+    const binary = atob(data);
+    const arr    = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) arr[i] = binary.charCodeAt(i);
+    return new Blob([arr], { type: mime });
+}
+
+// =============================================
+// 📤 分享（手機）or 下載（桌機 fallback）
 // =============================================
 async function shareOrDownload(blob, isPlayer) {
-    const filename = isPlayer ? "友魚勇者-勝利.png" : "友魚勇者-挑戰.png";
+    const filename   = isPlayer ? "友魚勇者-勝利.png"        : "友魚勇者-挑戰.png";
     const shareTitle = isPlayer ? "友魚勇者之路 — 任務達成！" : "友魚勇者之路 — 挑戰中";
     const shareText  = isPlayer
         ? "我完成了永續食魚挑戰！一起來守護海洋資源 🐟"
@@ -145,37 +157,22 @@ async function shareOrDownload(blob, isPlayer) {
 
     const file = new File([blob], filename, { type: "image/png" });
 
-    // Web Share API Level 2（行動端：iOS Safari 15+、Android Chrome 86+）
-    if (
-        navigator.share &&
-        navigator.canShare &&
-        navigator.canShare({ files: [file] })
-    ) {
+    // 手機：Web Share API with files
+    if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
         try {
-            await navigator.share({
-                files: [file],
-                title: shareTitle,
-                text: shareText,
-            });
+            await navigator.share({ files: [file], title: shareTitle, text: shareText });
             return;
         } catch (err) {
-            // 使用者取消分享（AbortError）不視為錯誤
             if (err.name === "AbortError") return;
-            // 其他錯誤 fallback 下載
-            console.warn("Web Share 失敗，改為下載:", err);
+            console.warn("[share-card] Web Share 失敗:", err);
         }
     }
 
-    // Fallback：桌機 / Line 內建瀏覽器 → 觸發下載
+    // 桌機 fallback：下載
     const url = URL.createObjectURL(blob);
     const a   = document.createElement("a");
-    a.href     = url;
-    a.download = filename;
-    a.style.display = "none";
+    a.href = url; a.download = filename; a.style.display = "none";
     document.body.appendChild(a);
     a.click();
-    setTimeout(() => {
-        a.remove();
-        URL.revokeObjectURL(url);
-    }, 3000);
+    setTimeout(() => { a.remove(); URL.revokeObjectURL(url); }, 3000);
 }

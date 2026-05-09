@@ -373,11 +373,7 @@ function showWinScreen(winner) {
     `;
     btnShare.textContent = "📸 分享成就";
     btnShare.onclick = () => {
-        if (typeof captureAndShare === "function") {
-            captureAndShare(overlay, isPlayer, btnShare);
-        } else {
-            alert("分享功能載入中，請稍後再試。");
-        }
+        captureAndShare(overlay, isPlayer, btnShare);
     };
 
     btnZone.appendChild(btnMain);
