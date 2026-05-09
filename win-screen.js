@@ -474,14 +474,7 @@ async function shareGameCard(isPlayer, winner) {
     ctx.textBaseline = "middle";
 
     const CX = W / 2;   // 中心 X
-    let   Y  = 190;     // 起始 Y，留上邊距
-
-    // 裝飾小字
-    ctx.font = "500 13px 'PingFang TC','Microsoft JhengHei',sans-serif";
-    ctx.letterSpacing = "6px";
-    ctx.fillStyle = isPlayer ? "rgba(180,255,210,0.55)" : "rgba(120,170,255,0.48)";
-    ctx.fillText("✦  FRIENDFISH  ✦", CX, Y);
-    Y += 54;
+    let   Y  = 220;     // 起始 Y，留上邊距
 
     // 遊戲主標
     ctx.font = "900 42px 'PingFang TC','Microsoft JhengHei',sans-serif";
@@ -535,7 +528,7 @@ async function shareGameCard(isPlayer, winner) {
         Y += 24;
 
         // 推廣語
-        ctx.font      = "500 16px 'PingFang TC','Microsoft JhengHei',sans-serif";
+        ctx.font      = "500 20px 'PingFang TC','Microsoft JhengHei',sans-serif";
         ctx.fillStyle = "rgba(160,245,195,0.82)";
         ctx.fillText("🐟 每一張牌，都是一個選擇", CX, Y);
 
@@ -549,7 +542,7 @@ async function shareGameCard(isPlayer, winner) {
         ctx.shadowBlur = 0;
         Y += 52;
 
-        ctx.font      = "500 16px 'PingFang TC','Microsoft JhengHei',sans-serif";
+        ctx.font      = "500 20px 'PingFang TC','Microsoft JhengHei',sans-serif";
         ctx.fillStyle = "rgba(130,185,255,0.68)";
         ctx.fillText("勇者折返，海域等你再來", CX, Y);
     }
