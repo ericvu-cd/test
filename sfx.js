@@ -127,20 +127,20 @@ const SFX = (() => {
             o.type = "triangle";
             o.frequency.setValueAtTime(180, ctx.currentTime);
             o.frequency.exponentialRampToValueAtTime(45, ctx.currentTime + 0.09);
-            og.gain.setValueAtTime(0.85, ctx.currentTime);
+            og.gain.setValueAtTime(1.28, ctx.currentTime);
             og.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.10);
             o.connect(og); og.connect(dest);
             o.start(); o.stop(ctx.currentTime + 0.12);
 
             // 氣泡感（高頻短噪）
-            noise(0.04, 0.35, 0.001, dest, 0, 3500);
+            noise(0.04, 0.53, 0.001, dest, 0, 3500);
 
             // 尾音（低沉共鳴，像水中回音）
             const o2 = ctx.createOscillator();
             const og2 = ctx.createGain();
             o2.type = "sine";
             o2.frequency.setValueAtTime(90, ctx.currentTime + 0.05);
-            og2.gain.setValueAtTime(0.22, ctx.currentTime + 0.05);
+            og2.gain.setValueAtTime(0.33, ctx.currentTime + 0.05);
             og2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
             o2.connect(og2); og2.connect(dest);
             o2.start(ctx.currentTime + 0.05);
@@ -164,13 +164,13 @@ const SFX = (() => {
             o.type = "triangle";
             o.frequency.setValueAtTime(130, ctx.currentTime);
             o.frequency.exponentialRampToValueAtTime(38, ctx.currentTime + 0.07);
-            og.gain.setValueAtTime(0.65, ctx.currentTime);
+            og.gain.setValueAtTime(0.98, ctx.currentTime);
             og.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.08);
             o.connect(og); og.connect(dest);
             o.start(); o.stop(ctx.currentTime + 0.10);
 
             // 微弱水聲尾巴
-            noise(0.06, 0.20, 0.001, dest, 0.01, 1800);
+            noise(0.06, 0.30, 0.001, dest, 0.01, 1800);
 
         } catch(e) { console.warn("SFX.cardAI error:", e); }
     }
@@ -192,7 +192,7 @@ const SFX = (() => {
                 o.type = "sawtooth";
                 o.frequency.setValueAtTime(320, ctx.currentTime + delay);
                 o.frequency.exponentialRampToValueAtTime(160, ctx.currentTime + delay + 0.10);
-                og.gain.setValueAtTime(0.20, ctx.currentTime + delay);
+                og.gain.setValueAtTime(0.30, ctx.currentTime + delay);
                 og.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.12);
                 o.connect(og); og.connect(dest);
                 o.start(ctx.currentTime + delay);
@@ -214,13 +214,13 @@ const SFX = (() => {
             // 殘響節點
             const reverb = createReverb(2.0);
             const reverbGain = ctx.createGain();
-            reverbGain.gain.value = 0.45;
+            reverbGain.gain.value = 0.54;
             reverb.connect(reverbGain);
             reverbGain.connect(master());
 
             // 乾聲也接到 master
             const dryGain = ctx.createGain();
-            dryGain.gain.value = 0.7;
+            dryGain.gain.value = 0.84;
             dryGain.connect(master());
 
             // 三聲鐘（比例：1 : 1.5 : 2，模擬銅鐘泛音）
@@ -236,7 +236,7 @@ const SFX = (() => {
                 const og = ctx.createGain();
                 o.type = "sine";
                 o.frequency.value = freq;
-                og.gain.setValueAtTime(0.28, ctx.currentTime + delay);
+                og.gain.setValueAtTime(0.34, ctx.currentTime + delay);
                 og.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + dur);
                 o.connect(og);
                 og.connect(dryGain);
@@ -249,7 +249,7 @@ const SFX = (() => {
                 const og2 = ctx.createGain();
                 o2.type = "triangle";
                 o2.frequency.value = freq * 2.76; // 鐘的自然泛音比
-                og2.gain.setValueAtTime(0.10, ctx.currentTime + delay);
+                og2.gain.setValueAtTime(0.12, ctx.currentTime + delay);
                 og2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + dur * 0.6);
                 o2.connect(og2);
                 og2.connect(dryGain);
@@ -257,7 +257,7 @@ const SFX = (() => {
                 o2.stop(ctx.currentTime + delay + dur * 0.6 + 0.1);
 
                 // 撞擊瞬間短噪（敲擊感）
-                noise(0.025, 0.12, 0.001, dryGain, delay, freq * 1.5);
+                noise(0.025, 0.14, 0.001, dryGain, delay, freq * 1.5);
             });
 
         } catch(e) { console.warn("SFX.mazu error:", e); }
@@ -273,12 +273,12 @@ const SFX = (() => {
             const ctx = getCtx();
             const reverb = createReverb(0.8);
             const rvg = ctx.createGain();
-            rvg.gain.value = 0.3;
+            rvg.gain.value = 0.36;
             reverb.connect(rvg);
             rvg.connect(master());
 
             const dryg = ctx.createGain();
-            dryg.gain.value = 0.6;
+            dryg.gain.value = 0.72;
             dryg.connect(master());
 
             // 輕快上升五音
@@ -289,7 +289,7 @@ const SFX = (() => {
                 const og = ctx.createGain();
                 o.type = "sine";
                 o.frequency.value = freq;
-                og.gain.setValueAtTime(0.20, ctx.currentTime + delay);
+                og.gain.setValueAtTime(0.24, ctx.currentTime + delay);
                 og.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.28);
                 o.connect(og);
                 og.connect(dryg);
@@ -306,7 +306,7 @@ const SFX = (() => {
                 const og = ctx.createGain();
                 o.type = "sine";
                 o.frequency.value = freq;
-                og.gain.setValueAtTime(0.10, ctx.currentTime + delay);
+                og.gain.setValueAtTime(0.12, ctx.currentTime + delay);
                 og.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.18);
                 o.connect(og);
                 og.connect(reverb);
@@ -334,17 +334,17 @@ const SFX = (() => {
             o.frequency.setValueAtTime(200, ctx.currentTime);
             o.frequency.exponentialRampToValueAtTime(440, ctx.currentTime + 0.25);
             og.gain.setValueAtTime(0.0, ctx.currentTime);
-            og.gain.linearRampToValueAtTime(0.22, ctx.currentTime + 0.08);
+            og.gain.linearRampToValueAtTime(0.44, ctx.currentTime + 0.08);
             og.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
             o.connect(og); og.connect(dest);
             o.start(); o.stop(ctx.currentTime + 0.38);
 
             // 寬頻噪音掃過（「嗖」的感覺）
-            noise(0.28, 0.12, 0.001, dest, 0, 800);
+            noise(0.28, 0.24, 0.001, dest, 0, 800);
 
             // 小氣泡音（水中浮起感）
             [0.18, 0.26].forEach(d => {
-                noise(0.04, 0.07, 0.001, dest, d, 3200);
+                noise(0.04, 0.14, 0.001, dest, d, 3200);
             });
 
         } catch(e) { console.warn("SFX.draw error:", e); }
@@ -360,12 +360,12 @@ const SFX = (() => {
             const ctx = getCtx();
             const reverb = createReverb(1.0);
             const rvg = ctx.createGain();
-            rvg.gain.value = 0.35;
+            rvg.gain.value = 0.42;
             reverb.connect(rvg);
             rvg.connect(master());
 
             const dryg = ctx.createGain();
-            dryg.gain.value = 0.65;
+            dryg.gain.value = 0.78;
             dryg.connect(master());
 
             // 主音：清脆水滴（兩個音符上行）
@@ -378,7 +378,7 @@ const SFX = (() => {
                 const og = ctx.createGain();
                 o.type = "sine";
                 o.frequency.value = freq;
-                og.gain.setValueAtTime(0.26, ctx.currentTime + delay);
+                og.gain.setValueAtTime(0.31, ctx.currentTime + delay);
                 og.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.40);
                 o.connect(og);
                 og.connect(dryg);
@@ -392,7 +392,7 @@ const SFX = (() => {
             const hig = ctx.createGain();
             hi.type = "triangle";
             hi.frequency.value = 1760;
-            hig.gain.setValueAtTime(0.08, ctx.currentTime + 0.20);
+            hig.gain.setValueAtTime(0.10, ctx.currentTime + 0.20);
             hig.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.45);
             hi.connect(hig); hig.connect(reverb);
             hi.start(ctx.currentTime + 0.20);
@@ -411,12 +411,12 @@ const SFX = (() => {
             const ctx = getCtx();
             const reverb = createReverb(2.5);
             const rvg = ctx.createGain();
-            rvg.gain.value = 0.4;
+            rvg.gain.value = 0.48;
             reverb.connect(rvg);
             rvg.connect(master());
 
             const dryg = ctx.createGain();
-            dryg.gain.value = 0.7;
+            dryg.gain.value = 0.84;
             dryg.connect(master());
 
             // Do Re Mi Fa Sol La Ti Do（C4 ~ C5）
@@ -429,7 +429,7 @@ const SFX = (() => {
                 const og = ctx.createGain();
                 o.type = isFinal ? "triangle" : "sine";
                 o.frequency.value = freq;
-                og.gain.setValueAtTime(isFinal ? 0.38 : 0.22, ctx.currentTime + delay);
+                og.gain.setValueAtTime(isFinal ? 0.46 : 0.26, ctx.currentTime + delay);
                 og.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + (isFinal ? 1.5 : 0.22));
                 o.connect(og);
                 og.connect(dryg);
@@ -443,7 +443,7 @@ const SFX = (() => {
                     const og3 = ctx.createGain();
                     o3.type = "sine";
                     o3.frequency.value = freq * 1.5; // 完全五度
-                    og3.gain.setValueAtTime(0.16, ctx.currentTime + delay);
+                    og3.gain.setValueAtTime(0.19, ctx.currentTime + delay);
                     og3.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 1.2);
                     o3.connect(og3); og3.connect(reverb);
                     o3.start(ctx.currentTime + delay);
@@ -454,7 +454,7 @@ const SFX = (() => {
             // 結尾氣泡爆發
             for (let i = 0; i < 6; i++) {
                 const d = 0.72 + i * 0.04;
-                noise(0.06, 0.06, 0.001, dryg, d, 2000 + i * 400);
+                noise(0.06, 0.07, 0.001, dryg, d, 2000 + i * 400);
             }
 
         } catch(e) { console.warn("SFX.win error:", e); }
@@ -470,12 +470,12 @@ const SFX = (() => {
             const ctx = getCtx();
             const reverb = createReverb(1.8);
             const rvg = ctx.createGain();
-            rvg.gain.value = 0.4;
+            rvg.gain.value = 0.48;
             reverb.connect(rvg);
             rvg.connect(master());
 
             const dryg = ctx.createGain();
-            dryg.gain.value = 0.6;
+            dryg.gain.value = 0.72;
             dryg.connect(master());
 
             // 下降三音（悲傷感）
@@ -486,7 +486,7 @@ const SFX = (() => {
                 const og = ctx.createGain();
                 o.type = "sine";
                 o.frequency.value = freq;
-                og.gain.setValueAtTime(0.22, ctx.currentTime + delay);
+                og.gain.setValueAtTime(0.26, ctx.currentTime + delay);
                 og.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.5);
                 o.connect(og);
                 og.connect(dryg);
@@ -501,7 +501,7 @@ const SFX = (() => {
             bass.type = "sine";
             bass.frequency.setValueAtTime(110, ctx.currentTime + 0.5);
             bass.frequency.exponentialRampToValueAtTime(60, ctx.currentTime + 1.8);
-            bassg.gain.setValueAtTime(0.18, ctx.currentTime + 0.5);
+            bassg.gain.setValueAtTime(0.22, ctx.currentTime + 0.5);
             bassg.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 2.0);
             bass.connect(bassg); bassg.connect(reverb);
             bass.start(ctx.currentTime + 0.5);
