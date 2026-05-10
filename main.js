@@ -74,7 +74,7 @@ function openStory() {
     overlay.style.opacity = "1"; // 確保不透明
 	
 	infoBGM.currentTime = 0; // 從頭播放
-    BGM.play(infoBGM, 0.08);
+    infoBGM.play().catch(e => console.log("音樂播放受阻，需使用者互動過才能播放:", e));
 	
     startStoryTimer();
 
@@ -156,7 +156,7 @@ function openInfo() {
     overlay.style.opacity = "1";
 	
 	infoBGM.currentTime = 0; // 從頭播放
-    BGM.play(infoBGM, 0.08);
+    infoBGM.play().catch(e => console.log("音樂播放受阻，需使用者互動過才能播放:", e));
 	
     startInfoTimer();
 
@@ -502,7 +502,7 @@ function toggleMusic() {
     const music = document.getElementById("bgm");
     const btn = document.getElementById("music-control");
     if (music.paused) {
-        BGM.play(music, 0.08);
+        music.play();
         sfxEnabled = true;
         localStorage.setItem("sfxEnabled", "true");
         btn.innerText = "🎵";
@@ -711,12 +711,19 @@ function initGame() {
     const btn = document.getElementById("music-control");
 
     if (sfxEnabled) {
-        // 上局是開的，繼續播放（透過 BGM 模組接進 Web Audio，與音效同路由）
-        BGM.play(music, 0.08);
-        music.loop = true;
-        btn.style.filter = "sepia(1) saturate(3) hue-rotate(175deg) brightness(1.4)";
-        btn.innerText = "🎵";
-        btn.style.opacity = "1";
+        // 上局是開的，繼續播放
+        music.play().then(() => {
+            music.volume = 0.03;
+            btn.style.filter = "sepia(1) saturate(3) hue-rotate(175deg) brightness(1.4)";
+            btn.innerText = "🎵";
+            btn.style.opacity = "1";
+        }).catch(() => {
+            // 播放受阻（瀏覽器政策），顯示靜音狀態
+            sfxEnabled = false;
+            localStorage.setItem("sfxEnabled", "false");
+            btn.innerText = "🔇";
+            btn.style.opacity = "0.4";
+        });
     } else {
         // 上局是關的，保持靜音
         music.pause();

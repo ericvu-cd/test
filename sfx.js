@@ -6,8 +6,6 @@
 //   2. 主 GainNode — 統一音量控制，可淡入淡出
 //   3. 音效佇列 — 防止重疊爆音
 //   4. 海洋主題 — 每個音效都有水聲、氣泡、共鳴感
-//   5. BGM 也接進 Web Audio API — 手機上與音效走同一音訊路由，
-//      避免 <audio> 媒體音量 vs Web Audio 鈴聲音量不一致的問題
 // =============================================
 
 const SFX = (() => {
@@ -507,93 +505,7 @@ const SFX = (() => {
     }
 
     // ── 對外 API ──────────────────────────────────
-    return { card, cardAI, invalid, mazu, gift, draw, success, win, lose, getCtx };
-
-})();
-
-// =============================================
-// 🎶 BGM 管理器
-// 把 <audio> 元素接進同一個 AudioContext，
-// 讓 BGM 與音效走同一條音訊路由。
-// 手機上 <audio> 走媒體音量、Web Audio 走鈴聲音量，
-// 兩者不同調，接進來後由 bgmGain 統一控制比例。
-// =============================================
-const BGM = (() => {
-
-    // 已接線的 <audio> → 對應的 GainNode，避免同一元素重複 createMediaElementSource
-    const _wired = new WeakMap();
-
-    // 把一個 <audio> 元素接進 AudioContext，回傳專屬 GainNode
-    function _wire(audioEl) {
-        if (_wired.has(audioEl)) return _wired.get(audioEl);
-
-        // 共用 SFX 的 AudioContext，確保兩者在同一路由
-        const ctx = SFX.getCtx();
-
-        let src;
-        try {
-            src = ctx.createMediaElementSource(audioEl);
-        } catch(e) {
-            // 已被接線或瀏覽器不支援，回傳 null 觸發 fallback
-            return null;
-        }
-
-        const gainNode = ctx.createGain();
-        src.connect(gainNode);
-        gainNode.connect(ctx.destination);
-        _wired.set(audioEl, gainNode);
-        return gainNode;
-    }
-
-    // 播放，volume 是在 Web Audio 路由中的增益（0.08 ≈ BGM 比音效小很多）
-    function play(audioEl, volume = 0.08) {
-        if (!audioEl) return;
-        SFX.getCtx(); // 確保 ctx 已 resume
-
-        const gainNode = _wire(audioEl);
-        if (gainNode) {
-            gainNode.gain.value = volume;
-            audioEl.volume = 1; // 原生 volume 設 1，完全由 gainNode 控制
-        } else {
-            audioEl.volume = volume; // fallback
-        }
-        audioEl.play().catch(() => {});
-    }
-
-    // 淡入播放（結算音樂用）
-    function fadeIn(audioEl, targetVolume = 0.08, durationMs = 1200) {
-        if (!audioEl) return;
-        SFX.getCtx();
-
-        const gainNode = _wire(audioEl);
-        if (gainNode) {
-            gainNode.gain.value = 0;
-            audioEl.volume = 1;
-            audioEl.play().catch(() => {});
-            const steps = durationMs / 80;
-            const step = targetVolume / steps;
-            let cur = 0;
-            const timer = setInterval(() => {
-                cur = Math.min(targetVolume, cur + step);
-                gainNode.gain.value = cur;
-                if (cur >= targetVolume) clearInterval(timer);
-            }, 80);
-        } else {
-            // fallback：原生 volume 淡入
-            audioEl.volume = 0;
-            audioEl.play().catch(() => {});
-            const steps = durationMs / 80;
-            const step = targetVolume / steps;
-            let cur = 0;
-            const timer = setInterval(() => {
-                cur = Math.min(targetVolume, cur + step);
-                audioEl.volume = cur;
-                if (cur >= targetVolume) clearInterval(timer);
-            }, 80);
-        }
-    }
-
-    return { play, fadeIn };
+    return { card, cardAI, invalid, mazu, gift, draw, success, win, lose };
 
 })();
 
