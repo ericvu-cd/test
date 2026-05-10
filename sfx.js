@@ -515,42 +515,7 @@ const SFX = (() => {
 
 })();
 
-// =============================================
-// 🎶 BGM 管理器（純原生音量版）
-//
-// 放棄 createMediaElementSource 接線方案——
-// 在播放中途接線會導致電腦 Chrome「響一下就消失」的切換雜訊。
-// 改用純 audio.volume，手機/電腦給不同預設值，簡單穩定。
-// =============================================
-const BGM = (() => {
 
-    const _isMobile  = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    const BGM_VOLUME = _isMobile ? 0.18 : 0.25;
-
-    function play(audioEl, volume) {
-        if (!audioEl) return;
-        audioEl.volume = (volume !== undefined) ? volume : BGM_VOLUME;
-        audioEl.play().catch(() => {});
-    }
-
-    function fadeIn(audioEl, targetVolume, durationMs = 1200) {
-        if (!audioEl) return;
-        const vol = (targetVolume !== undefined) ? targetVolume : BGM_VOLUME;
-        audioEl.volume = 0;
-        audioEl.play().catch(() => {});
-        const steps = durationMs / 80;
-        const step  = vol / steps;
-        let cur = 0;
-        const timer = setInterval(() => {
-            cur = Math.min(vol, cur + step);
-            audioEl.volume = cur;
-            if (cur >= vol) clearInterval(timer);
-        }, 80);
-    }
-
-    return { play, fadeIn };
-
-})();
 
 
 

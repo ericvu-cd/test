@@ -1,7 +1,6 @@
 let gameDifficulty = 0.7;
 let speakingAI = null;
-// 從 sessionStorage 讀取上局的音效設定，預設開啟
-let sfxEnabled = sessionStorage.getItem("sfxEnabled") !== "false";
+let sfxEnabled = true;
 let showSummaryMode = true; // 預設開啟結算頁面
 let roundReport = [];       // 每回合出牌結果紀錄
 let gameLog = [];            // 玩家出牌歷史（供分享圖卡用）
@@ -74,7 +73,7 @@ function openStory() {
     overlay.style.opacity = "1"; // 確保不透明
 	
 	infoBGM.currentTime = 0; // 從頭播放
-    BGM.play(infoBGM);
+    infoBGM.play().catch(e => console.log("音樂播放受阻，需使用者互動過才能播放:", e));
 	
     startStoryTimer();
 
@@ -156,7 +155,7 @@ function openInfo() {
     overlay.style.opacity = "1";
 	
 	infoBGM.currentTime = 0; // 從頭播放
-    BGM.play(infoBGM);
+    infoBGM.play().catch(e => console.log("音樂播放受阻，需使用者互動過才能播放:", e));
 	
     startInfoTimer();
 
@@ -502,16 +501,14 @@ function toggleMusic() {
     const music = document.getElementById("bgm");
     const btn = document.getElementById("music-control");
     if (music.paused) {
-        BGM.play(music);
+        music.play();
         sfxEnabled = true;
-        sessionStorage.setItem("sfxEnabled", "true");
         btn.innerText = "🎵";
         btn.style.filter = "sepia(1) saturate(3) hue-rotate(175deg) brightness(1.4)";
         btn.style.opacity = "1";
     } else {
         music.pause();
         sfxEnabled = false;
-        sessionStorage.setItem("sfxEnabled", "false");
         btn.innerText = "🔇";
         btn.style.filter = "";
         btn.style.opacity = "0.4";
@@ -708,22 +705,16 @@ function initGame() {
 	document.getElementById("report-control").style.display = "flex";
     document.getElementById("log-btn").style.display = "flex";
     const music = document.getElementById("bgm");
-    const btn = document.getElementById("music-control");
-
-    if (sfxEnabled) {
-        // 上局是開的，繼續播放（透過 BGM 模組接進 Web Audio，與音效同路由）
-        BGM.play(music);
-        music.loop = true;
+    music.play().then(() => {
+        music.volume = 0.03;
+        const btn = document.getElementById("music-control");
         btn.style.filter = "sepia(1) saturate(3) hue-rotate(175deg) brightness(1.4)";
-        btn.innerText = "🎵";
-        btn.style.opacity = "1";
-    } else {
-        // 上局是關的，保持靜音
-        music.pause();
+    }).catch(err => {
+        console.log("播放受阻");
+        const btn = document.getElementById("music-control");
         btn.innerText = "🔇";
-        btn.style.filter = "";
         btn.style.opacity = "0.4";
-    }
+    });
 
     // 直接切換畫面並開始遊戲
     document.getElementById('player-hand').addEventListener('scroll', updateHandArrows);
