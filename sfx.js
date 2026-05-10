@@ -509,9 +509,4 @@ const SFX = (() => {
 
 })();
 
-// =============================================
-// 🔄 向下相容：讓 main.js 的舊呼叫也能運作
-// =============================================
-function playPopSfx()     { SFX.card(); }
-function playMazuSfx()    { SFX.mazu(); }
-function playSuccessSfx() { SFX.success(); }
+

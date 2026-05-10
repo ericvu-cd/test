@@ -452,8 +452,7 @@ function renderTable() {
     });
 }
 
-// 舊音效函式已移至 sfx.js，由 SFX 模組統一管理
-// 向下相容包裝也在 sfx.js 底部定義（playPopSfx / playMazuSfx / playSuccessSfx）
+
 
 let logPlainText = []; // 純文字 log，供複製分析用
 
