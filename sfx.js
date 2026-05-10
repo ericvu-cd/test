@@ -516,94 +516,41 @@ const SFX = (() => {
 })();
 
 // =============================================
-// 🎶 BGM 管理器（懶接線版）
+// 🎶 BGM 管理器（純原生音量版）
 //
-// 策略：
-//   1. 呼叫 play/fadeIn 時，先用原生 audio.volume 播放（電腦手機都能聽到）
-//   2. 等 AudioContext 確認進入 running 狀態後，才補接 createMediaElementSource
-//   3. 接線成功後把原生 volume 設 1，改由 GainNode 控制音量
-//   → 手機上兩者同路由，不會因媒體/鈴聲音量不同而失衡
-//   → 電腦上 ctx suspended 期間靠原生播放，resume 後無縫切換
+// 放棄 createMediaElementSource 接線方案——
+// 在播放中途接線會導致電腦 Chrome「響一下就消失」的切換雜訊。
+// 改用純 audio.volume，手機/電腦給不同預設值，簡單穩定。
 // =============================================
 const BGM = (() => {
 
-    const _wired   = new WeakMap();
-    const _pending = new Map();
+    const _isMobile  = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    const BGM_VOLUME = _isMobile ? 0.18 : 0.25;
 
-    // 手機 BGM 要更低，讓音效（masterGain 已放大）能蓋過
-    const _isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    const BGM_VOLUME = _isMobile ? 0.05 : 0.25;
-
-    // ctx 進入 running 後，把所有等待中的元素補接線
-    function _onCtxRunning() {
-        const ctx = SFX.getCtx();
-        _pending.forEach((volume, audioEl) => {
-            if (_wired.has(audioEl)) return; // 已接線就跳過
-            try {
-                const src      = ctx.createMediaElementSource(audioEl);
-                const gainNode = ctx.createGain();
-                gainNode.gain.value = volume;
-                src.connect(gainNode);
-                gainNode.connect(ctx.destination);
-                _wired.set(audioEl, gainNode);
-                audioEl.volume = 1; // 原生 volume 交出控制權
-            } catch(e) { /* 不支援就維持原生 volume */ }
-        });
-        _pending.clear();
-    }
-
-    // 輪詢等待 ctx running（最多等 10 秒）
-    function _waitForCtx() {
-        let attempts = 0;
-        const check = setInterval(() => {
-            const ctx = SFX.getCtx();
-            if (ctx.state === "running") {
-                clearInterval(check);
-                _onCtxRunning();
-            }
-            if (++attempts > 100) clearInterval(check); // 10 秒上限
-        }, 100);
-    }
-
-    // 播放：先原生，登記等待接線
     function play(audioEl, volume) {
         if (!audioEl) return;
-        const vol = (volume !== undefined) ? volume : BGM_VOLUME;
-        audioEl.volume = vol;
+        audioEl.volume = (volume !== undefined) ? volume : BGM_VOLUME;
         audioEl.play().catch(() => {});
-        _pending.set(audioEl, vol);
-        _waitForCtx();
     }
 
-    // 淡入播放（結算音樂用）：先原生淡入，接線後由 GainNode 接管
     function fadeIn(audioEl, targetVolume, durationMs = 1200) {
         if (!audioEl) return;
         const vol = (targetVolume !== undefined) ? targetVolume : BGM_VOLUME;
         audioEl.volume = 0;
         audioEl.play().catch(() => {});
-
-        // 原生淡入
         const steps = durationMs / 80;
         const step  = vol / steps;
         let cur = 0;
         const timer = setInterval(() => {
             cur = Math.min(vol, cur + step);
-            // 如果已接線，改由 GainNode 控制，停掉原生淡入
-            if (_wired.has(audioEl)) {
-                audioEl.volume = 1;
-                clearInterval(timer);
-                return;
-            }
             audioEl.volume = cur;
             if (cur >= vol) clearInterval(timer);
         }, 80);
-
-        _pending.set(audioEl, vol);
-        _waitForCtx();
     }
 
     return { play, fadeIn };
 
 })();
+
 
 
