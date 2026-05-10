@@ -12,6 +12,9 @@
 
 const SFX = (() => {
 
+    // ── 裝置偵測 ──────────────────────────────────
+    const _isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
     // ── 單例 AudioContext ──────────────────────────
     let _ctx = null;
     let _masterGain = null;
@@ -20,7 +23,8 @@ const SFX = (() => {
         if (!_ctx) {
             _ctx = new (window.AudioContext || window.webkitAudioContext)();
             _masterGain = _ctx.createGain();
-            _masterGain.gain.value = 0.85;
+            // 手機喇叭動態範圍窄，音效整體放大以免被 BGM 蓋過
+            _masterGain.gain.value = _isMobile ? 1.4 : 0.85;
             _masterGain.connect(_ctx.destination);
         }
         // 瀏覽器自動暫停後恢復（iOS/Chrome 需要使用者互動）
@@ -123,20 +127,20 @@ const SFX = (() => {
             o.type = "triangle";
             o.frequency.setValueAtTime(180, ctx.currentTime);
             o.frequency.exponentialRampToValueAtTime(45, ctx.currentTime + 0.09);
-            og.gain.setValueAtTime(0.55, ctx.currentTime);
+            og.gain.setValueAtTime(0.85, ctx.currentTime);
             og.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.10);
             o.connect(og); og.connect(dest);
             o.start(); o.stop(ctx.currentTime + 0.12);
 
             // 氣泡感（高頻短噪）
-            noise(0.04, 0.18, 0.001, dest, 0, 3500);
+            noise(0.04, 0.35, 0.001, dest, 0, 3500);
 
             // 尾音（低沉共鳴，像水中回音）
             const o2 = ctx.createOscillator();
             const og2 = ctx.createGain();
             o2.type = "sine";
             o2.frequency.setValueAtTime(90, ctx.currentTime + 0.05);
-            og2.gain.setValueAtTime(0.12, ctx.currentTime + 0.05);
+            og2.gain.setValueAtTime(0.22, ctx.currentTime + 0.05);
             og2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
             o2.connect(og2); og2.connect(dest);
             o2.start(ctx.currentTime + 0.05);
@@ -160,13 +164,13 @@ const SFX = (() => {
             o.type = "triangle";
             o.frequency.setValueAtTime(130, ctx.currentTime);
             o.frequency.exponentialRampToValueAtTime(38, ctx.currentTime + 0.07);
-            og.gain.setValueAtTime(0.38, ctx.currentTime);
+            og.gain.setValueAtTime(0.65, ctx.currentTime);
             og.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.08);
             o.connect(og); og.connect(dest);
             o.start(); o.stop(ctx.currentTime + 0.10);
 
             // 微弱水聲尾巴
-            noise(0.06, 0.08, 0.001, dest, 0.01, 1800);
+            noise(0.06, 0.20, 0.001, dest, 0.01, 1800);
 
         } catch(e) { console.warn("SFX.cardAI error:", e); }
     }
@@ -523,8 +527,12 @@ const SFX = (() => {
 // =============================================
 const BGM = (() => {
 
-    const _wired   = new WeakMap(); // audioEl → GainNode（已接線）
-    const _pending = new Map();     // audioEl → targetVolume（等待接線，需 forEach 所以用 Map）
+    const _wired   = new WeakMap();
+    const _pending = new Map();
+
+    // 手機 BGM 要更低，讓音效（masterGain 已放大）能蓋過
+    const _isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    const BGM_VOLUME = _isMobile ? 0.04 : 0.08;
 
     // ctx 進入 running 後，把所有等待中的元素補接線
     function _onCtxRunning() {
@@ -558,26 +566,28 @@ const BGM = (() => {
     }
 
     // 播放：先原生，登記等待接線
-    function play(audioEl, volume = 0.08) {
+    function play(audioEl, volume) {
         if (!audioEl) return;
-        audioEl.volume = volume; // 先原生播放，電腦手機都有聲
+        const vol = (volume !== undefined) ? volume : BGM_VOLUME;
+        audioEl.volume = vol;
         audioEl.play().catch(() => {});
-        _pending.set(audioEl, volume);
+        _pending.set(audioEl, vol);
         _waitForCtx();
     }
 
     // 淡入播放（結算音樂用）：先原生淡入，接線後由 GainNode 接管
-    function fadeIn(audioEl, targetVolume = 0.08, durationMs = 1200) {
+    function fadeIn(audioEl, targetVolume, durationMs = 1200) {
         if (!audioEl) return;
+        const vol = (targetVolume !== undefined) ? targetVolume : BGM_VOLUME;
         audioEl.volume = 0;
         audioEl.play().catch(() => {});
 
         // 原生淡入
         const steps = durationMs / 80;
-        const step  = targetVolume / steps;
+        const step  = vol / steps;
         let cur = 0;
         const timer = setInterval(() => {
-            cur = Math.min(targetVolume, cur + step);
+            cur = Math.min(vol, cur + step);
             // 如果已接線，改由 GainNode 控制，停掉原生淡入
             if (_wired.has(audioEl)) {
                 audioEl.volume = 1;
@@ -585,10 +595,10 @@ const BGM = (() => {
                 return;
             }
             audioEl.volume = cur;
-            if (cur >= targetVolume) clearInterval(timer);
+            if (cur >= vol) clearInterval(timer);
         }, 80);
 
-        _pending.set(audioEl, targetVolume);
+        _pending.set(audioEl, vol);
         _waitForCtx();
     }
 
