@@ -24,7 +24,7 @@ const SFX = (() => {
             _ctx = new (window.AudioContext || window.webkitAudioContext)();
             _masterGain = _ctx.createGain();
             // 手機喇叭動態範圍窄，音效整體放大以免被 BGM 蓋過
-            _masterGain.gain.value = _isMobile ? 1.8 : 0.85;
+            _masterGain.gain.value = _isMobile ? 1.4 : 0.85;
             _masterGain.connect(_ctx.destination);
         }
         // 瀏覽器自動暫停後恢復（iOS/Chrome 需要使用者互動）
@@ -333,7 +333,7 @@ const SFX = (() => {
             o.type = "sine";
             o.frequency.setValueAtTime(200, ctx.currentTime);
             o.frequency.exponentialRampToValueAtTime(440, ctx.currentTime + 0.25);
-            og.gain.setValueAtTime(0.3, ctx.currentTime);
+            og.gain.setValueAtTime(0.0, ctx.currentTime);
             og.gain.linearRampToValueAtTime(0.22, ctx.currentTime + 0.08);
             og.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
             o.connect(og); og.connect(dest);
@@ -532,7 +532,7 @@ const BGM = (() => {
 
     // 手機 BGM 要更低，讓音效（masterGain 已放大）能蓋過
     const _isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    const BGM_VOLUME = _isMobile ? 0.1 : 0.3;
+    const BGM_VOLUME = _isMobile ? 0.05 : 0.25;
 
     // ctx 進入 running 後，把所有等待中的元素補接線
     function _onCtxRunning() {

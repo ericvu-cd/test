@@ -74,7 +74,7 @@ function openStory() {
     overlay.style.opacity = "1"; // 確保不透明
 	
 	infoBGM.currentTime = 0; // 從頭播放
-    BGM.play(infoBGM, 0.08);
+    BGM.play(infoBGM);
 	
     startStoryTimer();
 
@@ -156,7 +156,7 @@ function openInfo() {
     overlay.style.opacity = "1";
 	
 	infoBGM.currentTime = 0; // 從頭播放
-    BGM.play(infoBGM, 0.08);
+    BGM.play(infoBGM);
 	
     startInfoTimer();
 
@@ -502,7 +502,7 @@ function toggleMusic() {
     const music = document.getElementById("bgm");
     const btn = document.getElementById("music-control");
     if (music.paused) {
-        BGM.play(music, 0.08);
+        BGM.play(music);
         sfxEnabled = true;
         sessionStorage.setItem("sfxEnabled", "true");
         btn.innerText = "🎵";
@@ -712,7 +712,7 @@ function initGame() {
 
     if (sfxEnabled) {
         // 上局是開的，繼續播放（透過 BGM 模組接進 Web Audio，與音效同路由）
-        BGM.play(music, 0.08);
+        BGM.play(music);
         music.loop = true;
         btn.style.filter = "sepia(1) saturate(3) hue-rotate(175deg) brightness(1.4)";
         btn.innerText = "🎵";

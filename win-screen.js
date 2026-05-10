@@ -33,15 +33,9 @@ function showWinScreen(winner) {
 
     const winBgm = new Audio("MZ.mp3");
     winBgm.loop = true;
-    winBgm.volume = 0;
     if (musicWasOn) {
-        winBgm.play().catch(() => {});
-        let vol = 0;
-        const fadeInBgm = setInterval(() => {
-            vol = Math.min(1, vol + 0.04);
-            winBgm.volume = vol;
-            if (vol >= 1) clearInterval(fadeInBgm);
-        }, 80);
+        // 透過 BGM 模組接進 Web Audio，與音效同路由，避免手機音量不一致
+        BGM.fadeIn(winBgm, undefined, 1200);
     }
 
     // ── 全螢幕遮罩（純黑底，完全遮蔽遊戲畫面）────
