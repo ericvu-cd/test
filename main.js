@@ -1,6 +1,7 @@
 let gameDifficulty = 0.7;
 let speakingAI = null;
-let sfxEnabled = true;
+// 從 localStorage 讀取上局的音效設定，預設開啟
+let sfxEnabled = localStorage.getItem("sfxEnabled") !== "false";
 let showSummaryMode = true; // 預設開啟結算頁面
 let roundReport = [];       // 每回合出牌結果紀錄
 let gameLog = [];            // 玩家出牌歷史（供分享圖卡用）
@@ -451,55 +452,8 @@ function renderTable() {
     });
 }
 
-function playPopSfx() { 
-if (!sfxEnabled) return;
-try {
-        const ctx = new (window.AudioContext || window.webkitAudioContext)();
-        
-        // 1. 低頻震盪器 - 模擬撞擊的沉悶感
-        const osc = ctx.createOscillator();
-        const gainOsc = ctx.createGain();
-        
-        // 2. 雜訊緩衝區 - 模擬紙張摩擦的「刷」聲
-        const bufferSize = ctx.sampleRate * 0.05; // 只需要極短的 0.05 秒
-        const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-        const data = buffer.getChannelData(0);
-        for (let i = 0; i < bufferSize; i++) {
-            data[i] = Math.random() * 2 - 1; // 白雜訊
-        }
-        const noise = ctx.createBufferSource();
-        noise.buffer = buffer;
-        const gainNoise = ctx.createGain();
-
-        // --- 設定低頻撞擊 (Oscillator) ---
-        osc.type = 'triangle'; // 使用三角波，比正弦波紮實一點
-        osc.frequency.setValueAtTime(150, ctx.currentTime); // 起始頻率較低
-        osc.frequency.exponentialRampToValueAtTime(40, ctx.currentTime + 0.08);
-        
-        gainOsc.gain.setValueAtTime(0.6, ctx.currentTime);
-        gainOsc.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.08);
-
-        // --- 設定摩擦雜訊 (Noise) ---
-        gainNoise.gain.setValueAtTime(0.3, ctx.currentTime);
-        gainNoise.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.05);
-
-        // --- 連接並啟動 ---
-        osc.connect(gainOsc);
-        gainOsc.connect(ctx.destination);
-        
-        noise.connect(gainNoise);
-        gainNoise.connect(ctx.destination);
-
-        osc.start();
-        noise.start();
-        
-        osc.stop(ctx.currentTime + 0.1);
-        noise.stop(ctx.currentTime + 0.1);
-        
-    } catch(e) {}
-	}
-function playMazuSfx() { if (!sfxEnabled) return; try { const ctx = new (window.AudioContext || window.webkitAudioContext)(); const osc = ctx.createOscillator(); const gain = ctx.createGain(); osc.type = 'sine'; osc.connect(gain); gain.connect(ctx.destination); osc.frequency.setValueAtTime(880, ctx.currentTime); osc.frequency.exponentialRampToValueAtTime(1760, ctx.currentTime + 0.4); gain.gain.setValueAtTime(0.3, ctx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.6); osc.start(); osc.stop(ctx.currentTime + 0.6); } catch(e) {} }
-function playSuccessSfx() { if (!sfxEnabled) return; try { const ctx = new (window.AudioContext || window.webkitAudioContext)(); const osc = ctx.createOscillator(); const gain = ctx.createGain(); osc.type = 'triangle'; osc.connect(gain); gain.connect(ctx.destination); osc.frequency.setValueAtTime(523.25, ctx.currentTime); osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.1); gain.gain.setValueAtTime(0.2, ctx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3); osc.start(); osc.stop(ctx.currentTime + 0.3); } catch(e) {} }
+// 舊音效函式已移至 sfx.js，由 SFX 模組統一管理
+// 向下相容包裝也在 sfx.js 底部定義（playPopSfx / playMazuSfx / playSuccessSfx）
 
 let logPlainText = []; // 純文字 log，供複製分析用
 
@@ -551,12 +505,14 @@ function toggleMusic() {
     if (music.paused) {
         music.play();
         sfxEnabled = true;
+        localStorage.setItem("sfxEnabled", "true");
         btn.innerText = "🎵";
         btn.style.filter = "sepia(1) saturate(3) hue-rotate(175deg) brightness(1.4)";
         btn.style.opacity = "1";
     } else {
         music.pause();
         sfxEnabled = false;
+        localStorage.setItem("sfxEnabled", "false");
         btn.innerText = "🔇";
         btn.style.filter = "";
         btn.style.opacity = "0.4";
@@ -753,16 +709,29 @@ function initGame() {
 	document.getElementById("report-control").style.display = "flex";
     document.getElementById("log-btn").style.display = "flex";
     const music = document.getElementById("bgm");
-    music.play().then(() => {
-        music.volume = 0.03;
-        const btn = document.getElementById("music-control");
-        btn.style.filter = "sepia(1) saturate(3) hue-rotate(175deg) brightness(1.4)";
-    }).catch(err => {
-        console.log("播放受阻");
-        const btn = document.getElementById("music-control");
+    const btn = document.getElementById("music-control");
+
+    if (sfxEnabled) {
+        // 上局是開的，繼續播放
+        music.play().then(() => {
+            music.volume = 0.03;
+            btn.style.filter = "sepia(1) saturate(3) hue-rotate(175deg) brightness(1.4)";
+            btn.innerText = "🎵";
+            btn.style.opacity = "1";
+        }).catch(() => {
+            // 播放受阻（瀏覽器政策），顯示靜音狀態
+            sfxEnabled = false;
+            localStorage.setItem("sfxEnabled", "false");
+            btn.innerText = "🔇";
+            btn.style.opacity = "0.4";
+        });
+    } else {
+        // 上局是關的，保持靜音
+        music.pause();
         btn.innerText = "🔇";
+        btn.style.filter = "";
         btn.style.opacity = "0.4";
-    });
+    }
 
     // 直接切換畫面並開始遊戲
     document.getElementById('player-hand').addEventListener('scroll', updateHandArrows);
@@ -931,7 +900,11 @@ function autoStep() {
             }
         }
         // 延遲一秒後顯示勝利畫面
-        showCountdownBubble(4, () => showWinScreen(winner));
+        const isPlayerWin = winner === players[0];
+        showCountdownBubble(4, () => {
+            isPlayerWin ? SFX.win() : SFX.lose();
+            showWinScreen(winner);
+        });
         return;
     }
 	
@@ -950,6 +923,7 @@ function autoStep() {
     updateCallerHighlight(); 
 
     if (callerIdx === 0) {
+        SFX.draw(); // 玩家抽到召喚牌
         addLog(`【你】抽到召喚：${currentS.t.replace(/\n/g, " ")}`, "cmd");
         document.getElementById("summon-display").innerText = (currentS.isMazu ? "【神明指示】\n" : "【你的召喚】\n") + currentS.t;
         phase = currentS.isMazu ? "PLAYER_MAZU" : "PLAYER_TURN";
@@ -982,7 +956,7 @@ function autoStep() {
             document.getElementById("summon-display").classList.add("mazu-glow");
             const caustics = document.getElementById("ocean-caustics");
             if (caustics) caustics.classList.add("mazu-beams");
-            playMazuSfx();
+            SFX.mazu();
             if (callerIdx === 0) unlockUI(); // 玩家是媽祖召喚者，解鎖讓選牌
             else handleMazuAI(caller);
         } else {
@@ -1036,7 +1010,7 @@ function handleMazuAI(caller) {
         // 2. 停頓 2 秒後，執行送牌動作與接收者說話
         setTimeout(() => {
             target.hand.push(card);
-            playPopSfx();
+            SFX.gift();
             addLog(`✨ ${caller.n} 分享了一張【${card.n}】給 ${target.n}！`, "success");
             
             // 3. 如果接收者是 AI，接著說話
@@ -1098,7 +1072,7 @@ function confirmMazuGift(cardIdx, target) {
     showMazuGiftEffect("你", target.n, card, targetEl, playerEl);
 
     target.hand.push(card);
-    playPopSfx();
+    SFX.gift();
     addLog(`✨ 你分享了【${card.n}】給 ${target.n}！`, "success");
 
     if (target.isAI) {
@@ -1178,7 +1152,7 @@ async function playerAction(idx) {
     } else if (phase === "PLAYER_TURN") {
         const fish = players[0].hand[idx];
         players[0].hand.splice(idx, 1);
-        playPopSfx();
+        SFX.card();
         table.push({ pIdx: 0, card: fish });
         gameLog.push({ fishName: fish.n, light: fish.l, success: null }); // success 在結算後填入
         phase = "AI_FOLLOWING";
@@ -1212,7 +1186,7 @@ function aiMove(pI, cI) {
 	
     const f = p.hand.splice(cI, 1)[0];
 
-    playPopSfx();
+    SFX.cardAI();
     table.push({ pIdx: pI, card: f });
 
     // 出牌飛行動畫：動畫跑完後才讓卡出現在 ocean
@@ -1357,7 +1331,6 @@ function showResult() {
             });
 
             if (isSuccess) {
-                playSuccessSfx();
                 addLog(`${player.n} 成功送出【${t.card.n}】`, "success");
                 // 更新玩家出牌紀錄的 success 狀態
                 if (t.pIdx === 0) {
@@ -1385,7 +1358,11 @@ function showResult() {
             !pendingReturns.some(r => r.player === p)
         );
         if (realWin) {
-            showCountdownBubble(4, () => showWinScreen(realWin));
+            const isPlayerWin = realWin === players[0];
+            showCountdownBubble(4, () => {
+                isPlayerWin ? SFX.win() : SFX.lose();
+                showWinScreen(realWin);
+            });
             return;
         }
 
@@ -1436,9 +1413,11 @@ function showCountdownBubble(seconds, callback) {
 
 function finishRound() {
     let win = players.find(p => p.hand.length === 0);
-    if (win) { 
-        showWinScreen(win); 
-        return; 
+    if (win) {
+        const isPlayerWin = win === players[0];
+        isPlayerWin ? SFX.win() : SFX.lose();
+        showWinScreen(win);
+        return;
     }
     proceedToNextRound();
 }
@@ -1481,7 +1460,10 @@ function showRoundSummary() {
         proceedToNextRound(); // 或 finishRound()，視您的架構而定
         return;
     }
-	
+
+    // 結算視窗出現前一刻才播放成功音效
+    if (roundReport.some(r => r.isSuccess)) SFX.success();
+
     const overlay = document.createElement("div");
     overlay.id = "round-summary-overlay";
     overlay.style = `
