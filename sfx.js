@@ -24,7 +24,7 @@ const SFX = (() => {
             _ctx = new (window.AudioContext || window.webkitAudioContext)();
             _masterGain = _ctx.createGain();
             // 手機喇叭動態範圍窄，音效整體放大以免被 BGM 蓋過
-            _masterGain.gain.value = _isMobile ? 1.4 : 0.85;
+            _masterGain.gain.value = _isMobile ? 1.75 : 0.35;
             _masterGain.connect(_ctx.destination);
         }
         // 瀏覽器自動暫停後恢復（iOS/Chrome 需要使用者互動）
