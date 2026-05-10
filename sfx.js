@@ -18,7 +18,7 @@ const SFX = (() => {
         if (!_ctx) {
             _ctx = new (window.AudioContext || window.webkitAudioContext)();
             _masterGain = _ctx.createGain();
-            _masterGain.gain.value = 5;
+            _masterGain.gain.value = 4;
             _masterGain.connect(_ctx.destination);
         }
         // 瀏覽器自動暫停後恢復（iOS/Chrome 需要使用者互動）
@@ -121,7 +121,7 @@ const SFX = (() => {
             o.type = "triangle";
             o.frequency.setValueAtTime(180, ctx.currentTime);
             o.frequency.exponentialRampToValueAtTime(45, ctx.currentTime + 0.09);
-            og.gain.setValueAtTime(0.95, ctx.currentTime);
+            og.gain.setValueAtTime(1.55, ctx.currentTime);
             og.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.10);
             o.connect(og); og.connect(dest);
             o.start(); o.stop(ctx.currentTime + 0.12);
@@ -134,7 +134,7 @@ const SFX = (() => {
             const og2 = ctx.createGain();
             o2.type = "sine";
             o2.frequency.setValueAtTime(90, ctx.currentTime + 0.05);
-            og2.gain.setValueAtTime(0.32, ctx.currentTime + 0.05);
+            og2.gain.setValueAtTime(0.52, ctx.currentTime + 0.05);
             og2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
             o2.connect(og2); og2.connect(dest);
             o2.start(ctx.currentTime + 0.05);
@@ -158,7 +158,7 @@ const SFX = (() => {
             o.type = "triangle";
             o.frequency.setValueAtTime(130, ctx.currentTime);
             o.frequency.exponentialRampToValueAtTime(38, ctx.currentTime + 0.07);
-            og.gain.setValueAtTime(0.78, ctx.currentTime);
+            og.gain.setValueAtTime(1.28, ctx.currentTime);
             og.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.08);
             o.connect(og); og.connect(dest);
             o.start(); o.stop(ctx.currentTime + 0.10);
@@ -186,7 +186,7 @@ const SFX = (() => {
                 o.type = "sawtooth";
                 o.frequency.setValueAtTime(320, ctx.currentTime + delay);
                 o.frequency.exponentialRampToValueAtTime(160, ctx.currentTime + delay + 0.10);
-                og.gain.setValueAtTime(0.30, ctx.currentTime + delay);
+                og.gain.setValueAtTime(0.50, ctx.currentTime + delay);
                 og.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.12);
                 o.connect(og); og.connect(dest);
                 o.start(ctx.currentTime + delay);
@@ -327,8 +327,8 @@ const SFX = (() => {
             o.type = "sine";
             o.frequency.setValueAtTime(200, ctx.currentTime);
             o.frequency.exponentialRampToValueAtTime(440, ctx.currentTime + 0.25);
-            og.gain.setValueAtTime(0.0, ctx.currentTime);
-            og.gain.linearRampToValueAtTime(0.22, ctx.currentTime + 0.08);
+            og.gain.setValueAtTime(0.3, ctx.currentTime);
+            og.gain.linearRampToValueAtTime(0.32, ctx.currentTime + 0.08);
             og.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
             o.connect(og); og.connect(dest);
             o.start(); o.stop(ctx.currentTime + 0.38);
