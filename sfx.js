@@ -6,6 +6,8 @@
 //   2. 主 GainNode — 統一音量控制，可淡入淡出
 //   3. 音效佇列 — 防止重疊爆音
 //   4. 海洋主題 — 每個音效都有水聲、氣泡、共鳴感
+//   5. BGM 也接進 Web Audio API — 手機上與音效走同一音訊路由，
+//      避免 <audio> 媒體音量 vs Web Audio 鈴聲音量不一致的問題
 // =============================================
 
 const SFX = (() => {
@@ -18,7 +20,7 @@ const SFX = (() => {
         if (!_ctx) {
             _ctx = new (window.AudioContext || window.webkitAudioContext)();
             _masterGain = _ctx.createGain();
-            _masterGain.gain.value = 4;
+            _masterGain.gain.value = 0.85;
             _masterGain.connect(_ctx.destination);
         }
         // 瀏覽器自動暫停後恢復（iOS/Chrome 需要使用者互動）
@@ -121,7 +123,7 @@ const SFX = (() => {
             o.type = "triangle";
             o.frequency.setValueAtTime(180, ctx.currentTime);
             o.frequency.exponentialRampToValueAtTime(45, ctx.currentTime + 0.09);
-            og.gain.setValueAtTime(1.55, ctx.currentTime);
+            og.gain.setValueAtTime(0.55, ctx.currentTime);
             og.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.10);
             o.connect(og); og.connect(dest);
             o.start(); o.stop(ctx.currentTime + 0.12);
@@ -134,7 +136,7 @@ const SFX = (() => {
             const og2 = ctx.createGain();
             o2.type = "sine";
             o2.frequency.setValueAtTime(90, ctx.currentTime + 0.05);
-            og2.gain.setValueAtTime(0.52, ctx.currentTime + 0.05);
+            og2.gain.setValueAtTime(0.12, ctx.currentTime + 0.05);
             og2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
             o2.connect(og2); og2.connect(dest);
             o2.start(ctx.currentTime + 0.05);
@@ -158,7 +160,7 @@ const SFX = (() => {
             o.type = "triangle";
             o.frequency.setValueAtTime(130, ctx.currentTime);
             o.frequency.exponentialRampToValueAtTime(38, ctx.currentTime + 0.07);
-            og.gain.setValueAtTime(1.28, ctx.currentTime);
+            og.gain.setValueAtTime(0.38, ctx.currentTime);
             og.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.08);
             o.connect(og); og.connect(dest);
             o.start(); o.stop(ctx.currentTime + 0.10);
@@ -186,7 +188,7 @@ const SFX = (() => {
                 o.type = "sawtooth";
                 o.frequency.setValueAtTime(320, ctx.currentTime + delay);
                 o.frequency.exponentialRampToValueAtTime(160, ctx.currentTime + delay + 0.10);
-                og.gain.setValueAtTime(0.50, ctx.currentTime + delay);
+                og.gain.setValueAtTime(0.20, ctx.currentTime + delay);
                 og.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.12);
                 o.connect(og); og.connect(dest);
                 o.start(ctx.currentTime + delay);
@@ -230,7 +232,7 @@ const SFX = (() => {
                 const og = ctx.createGain();
                 o.type = "sine";
                 o.frequency.value = freq;
-                og.gain.setValueAtTime(0.38, ctx.currentTime + delay);
+                og.gain.setValueAtTime(0.28, ctx.currentTime + delay);
                 og.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + dur);
                 o.connect(og);
                 og.connect(dryGain);
@@ -243,7 +245,7 @@ const SFX = (() => {
                 const og2 = ctx.createGain();
                 o2.type = "triangle";
                 o2.frequency.value = freq * 2.76; // 鐘的自然泛音比
-                og2.gain.setValueAtTime(0.20, ctx.currentTime + delay);
+                og2.gain.setValueAtTime(0.10, ctx.currentTime + delay);
                 og2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + dur * 0.6);
                 o2.connect(og2);
                 og2.connect(dryGain);
@@ -283,7 +285,7 @@ const SFX = (() => {
                 const og = ctx.createGain();
                 o.type = "sine";
                 o.frequency.value = freq;
-                og.gain.setValueAtTime(0.40, ctx.currentTime + delay);
+                og.gain.setValueAtTime(0.20, ctx.currentTime + delay);
                 og.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.28);
                 o.connect(og);
                 og.connect(dryg);
@@ -300,7 +302,7 @@ const SFX = (() => {
                 const og = ctx.createGain();
                 o.type = "sine";
                 o.frequency.value = freq;
-                og.gain.setValueAtTime(0.20, ctx.currentTime + delay);
+                og.gain.setValueAtTime(0.10, ctx.currentTime + delay);
                 og.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.18);
                 o.connect(og);
                 og.connect(reverb);
@@ -327,8 +329,8 @@ const SFX = (() => {
             o.type = "sine";
             o.frequency.setValueAtTime(200, ctx.currentTime);
             o.frequency.exponentialRampToValueAtTime(440, ctx.currentTime + 0.25);
-            og.gain.setValueAtTime(0.3, ctx.currentTime);
-            og.gain.linearRampToValueAtTime(0.32, ctx.currentTime + 0.08);
+            og.gain.setValueAtTime(0.0, ctx.currentTime);
+            og.gain.linearRampToValueAtTime(0.22, ctx.currentTime + 0.08);
             og.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
             o.connect(og); og.connect(dest);
             o.start(); o.stop(ctx.currentTime + 0.38);
@@ -372,7 +374,7 @@ const SFX = (() => {
                 const og = ctx.createGain();
                 o.type = "sine";
                 o.frequency.value = freq;
-                og.gain.setValueAtTime(0.46, ctx.currentTime + delay);
+                og.gain.setValueAtTime(0.26, ctx.currentTime + delay);
                 og.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.40);
                 o.connect(og);
                 og.connect(dryg);
@@ -386,7 +388,7 @@ const SFX = (() => {
             const hig = ctx.createGain();
             hi.type = "triangle";
             hi.frequency.value = 1760;
-            hig.gain.setValueAtTime(0.18, ctx.currentTime + 0.20);
+            hig.gain.setValueAtTime(0.08, ctx.currentTime + 0.20);
             hig.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.45);
             hi.connect(hig); hig.connect(reverb);
             hi.start(ctx.currentTime + 0.20);
@@ -437,7 +439,7 @@ const SFX = (() => {
                     const og3 = ctx.createGain();
                     o3.type = "sine";
                     o3.frequency.value = freq * 1.5; // 完全五度
-                    og3.gain.setValueAtTime(0.26, ctx.currentTime + delay);
+                    og3.gain.setValueAtTime(0.16, ctx.currentTime + delay);
                     og3.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 1.2);
                     o3.connect(og3); og3.connect(reverb);
                     o3.start(ctx.currentTime + delay);
@@ -480,7 +482,7 @@ const SFX = (() => {
                 const og = ctx.createGain();
                 o.type = "sine";
                 o.frequency.value = freq;
-                og.gain.setValueAtTime(0.32, ctx.currentTime + delay);
+                og.gain.setValueAtTime(0.22, ctx.currentTime + delay);
                 og.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.5);
                 o.connect(og);
                 og.connect(dryg);
@@ -495,7 +497,7 @@ const SFX = (() => {
             bass.type = "sine";
             bass.frequency.setValueAtTime(110, ctx.currentTime + 0.5);
             bass.frequency.exponentialRampToValueAtTime(60, ctx.currentTime + 1.8);
-            bassg.gain.setValueAtTime(0.28, ctx.currentTime + 0.5);
+            bassg.gain.setValueAtTime(0.18, ctx.currentTime + 0.5);
             bassg.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 2.0);
             bass.connect(bassg); bassg.connect(reverb);
             bass.start(ctx.currentTime + 0.5);
@@ -505,7 +507,92 @@ const SFX = (() => {
     }
 
     // ── 對外 API ──────────────────────────────────
-    return { card, cardAI, invalid, mazu, gift, draw, success, win, lose };
+    return { card, cardAI, invalid, mazu, gift, draw, success, win, lose, getCtx };
+
+})();
+
+// =============================================
+// 🎶 BGM 管理器（懶接線版）
+//
+// 策略：
+//   1. 呼叫 play/fadeIn 時，先用原生 audio.volume 播放（電腦手機都能聽到）
+//   2. 等 AudioContext 確認進入 running 狀態後，才補接 createMediaElementSource
+//   3. 接線成功後把原生 volume 設 1，改由 GainNode 控制音量
+//   → 手機上兩者同路由，不會因媒體/鈴聲音量不同而失衡
+//   → 電腦上 ctx suspended 期間靠原生播放，resume 後無縫切換
+// =============================================
+const BGM = (() => {
+
+    const _wired   = new WeakMap(); // audioEl → GainNode（已接線）
+    const _pending = new Map();     // audioEl → targetVolume（等待接線，需 forEach 所以用 Map）
+
+    // ctx 進入 running 後，把所有等待中的元素補接線
+    function _onCtxRunning() {
+        const ctx = SFX.getCtx();
+        _pending.forEach((volume, audioEl) => {
+            if (_wired.has(audioEl)) return; // 已接線就跳過
+            try {
+                const src      = ctx.createMediaElementSource(audioEl);
+                const gainNode = ctx.createGain();
+                gainNode.gain.value = volume;
+                src.connect(gainNode);
+                gainNode.connect(ctx.destination);
+                _wired.set(audioEl, gainNode);
+                audioEl.volume = 1; // 原生 volume 交出控制權
+            } catch(e) { /* 不支援就維持原生 volume */ }
+        });
+        _pending.clear();
+    }
+
+    // 輪詢等待 ctx running（最多等 10 秒）
+    function _waitForCtx() {
+        let attempts = 0;
+        const check = setInterval(() => {
+            const ctx = SFX.getCtx();
+            if (ctx.state === "running") {
+                clearInterval(check);
+                _onCtxRunning();
+            }
+            if (++attempts > 100) clearInterval(check); // 10 秒上限
+        }, 100);
+    }
+
+    // 播放：先原生，登記等待接線
+    function play(audioEl, volume = 0.08) {
+        if (!audioEl) return;
+        audioEl.volume = volume; // 先原生播放，電腦手機都有聲
+        audioEl.play().catch(() => {});
+        _pending.set(audioEl, volume);
+        _waitForCtx();
+    }
+
+    // 淡入播放（結算音樂用）：先原生淡入，接線後由 GainNode 接管
+    function fadeIn(audioEl, targetVolume = 0.08, durationMs = 1200) {
+        if (!audioEl) return;
+        audioEl.volume = 0;
+        audioEl.play().catch(() => {});
+
+        // 原生淡入
+        const steps = durationMs / 80;
+        const step  = targetVolume / steps;
+        let cur = 0;
+        const timer = setInterval(() => {
+            cur = Math.min(targetVolume, cur + step);
+            // 如果已接線，改由 GainNode 控制，停掉原生淡入
+            if (_wired.has(audioEl)) {
+                audioEl.volume = 1;
+                clearInterval(timer);
+                return;
+            }
+            audioEl.volume = cur;
+            if (cur >= targetVolume) clearInterval(timer);
+        }, 80);
+
+        _pending.set(audioEl, targetVolume);
+        _waitForCtx();
+    }
+
+    return { play, fadeIn };
 
 })();
 
