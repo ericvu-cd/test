@@ -18,7 +18,7 @@ const SFX = (() => {
         if (!_ctx) {
             _ctx = new (window.AudioContext || window.webkitAudioContext)();
             _masterGain = _ctx.createGain();
-            _masterGain.gain.value = 4;
+            _masterGain.gain.value = 5;
             _masterGain.connect(_ctx.destination);
         }
         // 瀏覽器自動暫停後恢復（iOS/Chrome 需要使用者互動）
