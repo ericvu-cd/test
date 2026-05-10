@@ -121,7 +121,7 @@ const SFX = (() => {
             o.type = "triangle";
             o.frequency.setValueAtTime(180, ctx.currentTime);
             o.frequency.exponentialRampToValueAtTime(45, ctx.currentTime + 0.09);
-            og.gain.setValueAtTime(0.55, ctx.currentTime);
+            og.gain.setValueAtTime(0.95, ctx.currentTime);
             og.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.10);
             o.connect(og); og.connect(dest);
             o.start(); o.stop(ctx.currentTime + 0.12);
@@ -134,7 +134,7 @@ const SFX = (() => {
             const og2 = ctx.createGain();
             o2.type = "sine";
             o2.frequency.setValueAtTime(90, ctx.currentTime + 0.05);
-            og2.gain.setValueAtTime(0.12, ctx.currentTime + 0.05);
+            og2.gain.setValueAtTime(0.32, ctx.currentTime + 0.05);
             og2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
             o2.connect(og2); og2.connect(dest);
             o2.start(ctx.currentTime + 0.05);
@@ -158,7 +158,7 @@ const SFX = (() => {
             o.type = "triangle";
             o.frequency.setValueAtTime(130, ctx.currentTime);
             o.frequency.exponentialRampToValueAtTime(38, ctx.currentTime + 0.07);
-            og.gain.setValueAtTime(0.38, ctx.currentTime);
+            og.gain.setValueAtTime(0.78, ctx.currentTime);
             og.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.08);
             o.connect(og); og.connect(dest);
             o.start(); o.stop(ctx.currentTime + 0.10);
@@ -186,7 +186,7 @@ const SFX = (() => {
                 o.type = "sawtooth";
                 o.frequency.setValueAtTime(320, ctx.currentTime + delay);
                 o.frequency.exponentialRampToValueAtTime(160, ctx.currentTime + delay + 0.10);
-                og.gain.setValueAtTime(0.20, ctx.currentTime + delay);
+                og.gain.setValueAtTime(0.30, ctx.currentTime + delay);
                 og.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.12);
                 o.connect(og); og.connect(dest);
                 o.start(ctx.currentTime + delay);
@@ -230,7 +230,7 @@ const SFX = (() => {
                 const og = ctx.createGain();
                 o.type = "sine";
                 o.frequency.value = freq;
-                og.gain.setValueAtTime(0.28, ctx.currentTime + delay);
+                og.gain.setValueAtTime(0.38, ctx.currentTime + delay);
                 og.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + dur);
                 o.connect(og);
                 og.connect(dryGain);
@@ -243,7 +243,7 @@ const SFX = (() => {
                 const og2 = ctx.createGain();
                 o2.type = "triangle";
                 o2.frequency.value = freq * 2.76; // 鐘的自然泛音比
-                og2.gain.setValueAtTime(0.10, ctx.currentTime + delay);
+                og2.gain.setValueAtTime(0.20, ctx.currentTime + delay);
                 og2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + dur * 0.6);
                 o2.connect(og2);
                 og2.connect(dryGain);
@@ -283,7 +283,7 @@ const SFX = (() => {
                 const og = ctx.createGain();
                 o.type = "sine";
                 o.frequency.value = freq;
-                og.gain.setValueAtTime(0.20, ctx.currentTime + delay);
+                og.gain.setValueAtTime(0.40, ctx.currentTime + delay);
                 og.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.28);
                 o.connect(og);
                 og.connect(dryg);
@@ -300,7 +300,7 @@ const SFX = (() => {
                 const og = ctx.createGain();
                 o.type = "sine";
                 o.frequency.value = freq;
-                og.gain.setValueAtTime(0.10, ctx.currentTime + delay);
+                og.gain.setValueAtTime(0.20, ctx.currentTime + delay);
                 og.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.18);
                 o.connect(og);
                 og.connect(reverb);
@@ -372,7 +372,7 @@ const SFX = (() => {
                 const og = ctx.createGain();
                 o.type = "sine";
                 o.frequency.value = freq;
-                og.gain.setValueAtTime(0.26, ctx.currentTime + delay);
+                og.gain.setValueAtTime(0.46, ctx.currentTime + delay);
                 og.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.40);
                 o.connect(og);
                 og.connect(dryg);
@@ -386,7 +386,7 @@ const SFX = (() => {
             const hig = ctx.createGain();
             hi.type = "triangle";
             hi.frequency.value = 1760;
-            hig.gain.setValueAtTime(0.08, ctx.currentTime + 0.20);
+            hig.gain.setValueAtTime(0.18, ctx.currentTime + 0.20);
             hig.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.45);
             hi.connect(hig); hig.connect(reverb);
             hi.start(ctx.currentTime + 0.20);
@@ -437,7 +437,7 @@ const SFX = (() => {
                     const og3 = ctx.createGain();
                     o3.type = "sine";
                     o3.frequency.value = freq * 1.5; // 完全五度
-                    og3.gain.setValueAtTime(0.16, ctx.currentTime + delay);
+                    og3.gain.setValueAtTime(0.26, ctx.currentTime + delay);
                     og3.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 1.2);
                     o3.connect(og3); og3.connect(reverb);
                     o3.start(ctx.currentTime + delay);
@@ -480,7 +480,7 @@ const SFX = (() => {
                 const og = ctx.createGain();
                 o.type = "sine";
                 o.frequency.value = freq;
-                og.gain.setValueAtTime(0.22, ctx.currentTime + delay);
+                og.gain.setValueAtTime(0.32, ctx.currentTime + delay);
                 og.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.5);
                 o.connect(og);
                 og.connect(dryg);
@@ -495,7 +495,7 @@ const SFX = (() => {
             bass.type = "sine";
             bass.frequency.setValueAtTime(110, ctx.currentTime + 0.5);
             bass.frequency.exponentialRampToValueAtTime(60, ctx.currentTime + 1.8);
-            bassg.gain.setValueAtTime(0.18, ctx.currentTime + 0.5);
+            bassg.gain.setValueAtTime(0.28, ctx.currentTime + 0.5);
             bassg.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 2.0);
             bass.connect(bassg); bassg.connect(reverb);
             bass.start(ctx.currentTime + 0.5);
