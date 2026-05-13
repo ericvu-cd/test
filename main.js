@@ -1510,10 +1510,10 @@ function showRoundSummary() {
         <div style="${bg}border-radius:13px;padding:8px 9px;min-width:0;overflow:hidden;
                     animation:rsSlideUp .26s ${delay}s ease both;">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
-                <span style="font-size:11px;color:rgba(255,255,255,0.42);">${r.name}</span>
+                <span style="font-size:14px;color:rgba(255,255,255,0.42);">${r.name}</span>
                 ${badge}
             </div>
-            <div style="font-size:16px;font-weight:bold;color:${nameC};margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${r.fishName}</div>
+            <div style="font-size:18px;font-weight:bold;color:${nameC};margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${r.fishName}</div>
             ${buildAttrBars(r.feature, r.isSuccess)}
         </div>`;
     }).join('');
@@ -1528,7 +1528,7 @@ function showRoundSummary() {
         <div style="${sharedCard}padding:7px 11px;margin-bottom:10px;
                     animation:rsSlideUp .26s ${ecoDelay}s ease both;">
             <div style="font-size:12px;color:#60c8f0;font-weight:bold;margin-bottom:3px;">🌊 生態小知識</div>
-            <div style="font-size:12px;color:rgba(190,235,255,0.88);line-height:1.6;">${currentS.why}</div>
+            <div style="font-size:14px;color:rgba(190,235,255,0.88);line-height:1.6;">${currentS.why}</div>
         </div>` : '';
 
     // ── overlay ──
@@ -1572,8 +1572,8 @@ function showRoundSummary() {
 
         <div style="${sharedCard}padding:7px 11px;margin-bottom:8px;
                     animation:rsSlideUp .26s .04s ease both;">
-            <div style="font-size:10px;color:#60c8f0;letter-spacing:1.5px;margin-bottom:2px;">📜 本回召喚條件</div>
-            <div style="font-size:14px;color:#fff;font-weight:bold;line-height:1.4;">${currentS.t}</div>
+            <div style="font-size:10px;color:#60c8f0;letter-spacing:1.5px;margin-bottom:2px;">📜 本回召喚條件 📜</div>
+            <div style="font-size:15px;color:#fff;font-weight:bold;line-height:1.4;">${currentS.t}</div>
         </div>
 
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px;min-width:0;">
@@ -1584,12 +1584,12 @@ function showRoundSummary() {
 
         <button id="close-summary-btn" style="
             width:100%;padding:11px;border:none;border-radius:50px;
-            font-size:15px;font-weight:900;cursor:pointer;letter-spacing:0.5px;
+            font-size:18px;font-weight:900;cursor:pointer;letter-spacing:0.5px;
             background:linear-gradient(135deg,#f5c842,#e07828);
             color:#1a0800;
             box-shadow:0 4px 0 #8a4200, 0 6px 14px rgba(200,100,0,0.3);
             text-shadow:none;
-        ">⚓ 整理魚獲，繼續冒險</button>
+        ">整理魚獲，繼續冒險</button>
     `;
 
     overlay.appendChild(modal);
