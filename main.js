@@ -1453,114 +1453,142 @@ function showRoundSummary() {
 
     if (roundReport.some(r => r.isSuccess)) SFX.success();
 
-    // ── 屬性條 HTML 產生器 ──
+    // ── 屬性條產生器 ──
     function buildAttrBars(feature, isSuccess) {
         const attrs = feature.split(/\s*\|\s*/).map(s => s.trim()).filter(Boolean);
         if (!attrs.length) return '';
-        return attrs.map(attr => {
-            const barW = isSuccess ? '100%' : '22%';
-            const barC = isSuccess ? '#4cdf7a' : '#ff5555';
-            const textC = isSuccess ? '#6eff9a' : '#ff7777';
-            const mark  = isSuccess ? '✓' : '✗';
-            return `
-            <div style="display:flex;align-items:center;gap:8px;margin-top:6px;">
-                <span style="flex:1;height:5px;background:rgba(255,255,255,0.12);border-radius:3px;overflow:hidden;">
-                    <span style="display:block;width:${barW};height:100%;background:${barC};border-radius:3px;"></span>
+        const barW  = isSuccess ? '100%' : '22%';
+        const barC  = isSuccess ? '#3ecf6e' : '#e05555';
+        const textC = isSuccess ? '#7eeaa8' : '#f08080';
+        const mark  = isSuccess ? '✓' : '✗';
+        return attrs.map(attr => `
+            <div style="display:flex;align-items:center;gap:6px;margin-top:5px;">
+                <span style="flex:1;height:4px;background:rgba(255,255,255,0.1);border-radius:2px;overflow:hidden;">
+                    <span style="display:block;width:${barW};height:100%;background:${barC};border-radius:2px;"></span>
                 </span>
-                <span style="font-size:13px;color:${textC};white-space:nowrap;">${attr} ${mark}</span>
-            </div>`;
-        }).join('');
+                <span style="font-size:10px;color:${textC};white-space:nowrap;">${attr} ${mark}</span>
+            </div>`).join('');
     }
 
-    // ── 玩家結果卡 ──
+    // ── 玩家卡（2欄 grid）──
+    // 偶數：正常 1 欄，奇數最後一張跨欄
+    const total = roundReport.length;
     const cardsHtml = roundReport.map((r, i) => {
-        const delay = 0.12 + i * 0.09;
-        const bg    = r.isSuccess
-            ? 'background:linear-gradient(110deg,#0d3320,#0f4428);border:1px solid #2d7a48;'
-            : 'background:linear-gradient(110deg,#2a0d0d,#3a1010);border:1px solid #6b2d2d;';
-        const nameC  = r.isSuccess ? '#a8ffbf' : '#ffaaaa';
-        const badge  = r.isSuccess
-            ? `<span style="font-size:13px;animation:rsPulse 1.4s infinite;">⭐</span>`
-            : `<span style="font-size:11px;color:#ff6b6b;background:rgba(255,80,80,0.15);border:1px solid rgba(255,80,80,0.3);padding:2px 9px;border-radius:10px;">退牌</span>`;
+        const delay   = 0.10 + i * 0.08;
+        const isLast  = i === total - 1;
+        const isOdd   = total % 2 === 1;
+        const span    = (isLast && isOdd) ? 'grid-column:1/-1;' : '';
+        const bg      = r.isSuccess
+            ? 'background:linear-gradient(135deg,#0a2e1a,#0d3d22);border:1.5px solid #3a9e5f;'
+            : 'background:linear-gradient(135deg,#2a0f0f,#361212);border:1.5px solid #8b3030;';
+        const nameC   = r.isSuccess ? '#90f0b8' : '#f4a0a0';
+        const badge   = r.isSuccess
+            ? `<span style="font-size:14px;animation:rsPulse 1.4s infinite;display:inline-block;">⭐</span>`
+            : `<span style="font-size:10px;color:#f07070;background:rgba(200,50,50,0.2);border:1px solid rgba(200,50,50,0.4);padding:1px 7px;border-radius:8px;">退牌</span>`;
+
+        // 跨欄時橫向排列
+        if (isLast && isOdd) {
+            return `
+            <div style="${bg}${span}border-radius:13px;padding:10px 12px;
+                        animation:rsSlideUp .26s ${delay}s ease both;">
+                <div style="display:flex;align-items:center;gap:14px;">
+                    <div style="flex:0 0 auto;">
+                        <div style="display:flex;align-items:center;gap:7px;margin-bottom:4px;">
+                            <span style="font-size:11px;color:rgba(255,255,255,0.42);">${r.name}</span>
+                            ${badge}
+                        </div>
+                        <div style="font-size:16px;font-weight:bold;color:${nameC};">${r.fishName}</div>
+                    </div>
+                    <div style="flex:1;min-width:0;">
+                        ${buildAttrBars(r.feature, r.isSuccess)}
+                    </div>
+                </div>
+            </div>`;
+        }
+
         return `
-        <div style="${bg}border-radius:14px;padding:13px 14px;margin-bottom:9px;
-                    animation:rsSlideUp .28s ${delay}s ease both;">
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:2px;">
-                <span style="font-size:26px;line-height:1;">${r.isSuccess ? '✅' : '❌'}</span>
-                <span style="font-size:13px;color:rgba(255,255,255,0.45);">${r.name}</span>
-                <span style="font-size:16px;font-weight:bold;color:${nameC};">${r.fishName}</span>
-                <span style="margin-left:auto;">${badge}</span>
+        <div style="${bg}border-radius:13px;padding:10px 11px;
+                    animation:rsSlideUp .26s ${delay}s ease both;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+                <span style="font-size:11px;color:rgba(255,255,255,0.42);">${r.name}</span>
+                ${badge}
             </div>
+            <div style="font-size:16px;font-weight:bold;color:${nameC};margin-bottom:2px;">${r.fishName}</div>
             ${buildAttrBars(r.feature, r.isSuccess)}
         </div>`;
     }).join('');
 
-    // ── 生態知識卡 ──
-    const ecoHtml = (currentS.why) ? `
-        <div style="background:linear-gradient(110deg,rgba(0,80,120,0.55),rgba(0,50,90,0.55));
-                    border:1px solid rgba(100,200,255,0.25);border-radius:14px;
-                    padding:13px 15px;margin-bottom:16px;
-                    animation:rsSlideUp .28s ${0.12 + roundReport.length * 0.09 + 0.08}s ease both;">
-            <div style="font-size:13px;color:#7dd8ff;font-weight:bold;margin-bottom:7px;">🌊 生態小知識</div>
-            <div style="font-size:13px;color:rgba(200,240,255,0.88);line-height:1.75;">${currentS.why}</div>
+    // ── 共用卡片樣式（召喚條件 & 生態知識）──
+    const sharedCard = `background:linear-gradient(135deg,rgba(0,70,110,0.7),rgba(0,40,80,0.7));
+                        border:1.5px solid rgba(60,170,255,0.28);border-radius:13px;`;
+
+    // ── 生態知識 ──
+    const ecoDelay = 0.10 + total * 0.08 + 0.06;
+    const ecoHtml  = currentS.why ? `
+        <div style="${sharedCard}padding:9px 13px;margin-bottom:13px;
+                    animation:rsSlideUp .26s ${ecoDelay}s ease both;">
+            <div style="font-size:12px;color:#60c8f0;font-weight:bold;margin-bottom:4px;">🌊 生態小知識</div>
+            <div style="font-size:12px;color:rgba(190,235,255,0.88);line-height:1.7;">${currentS.why}</div>
         </div>` : '';
 
-    // ── 組合 modal ──
+    // ── overlay ──
     const overlay = document.createElement("div");
     overlay.id = "round-summary-overlay";
     overlay.style.cssText = `
         position:fixed;top:0;left:0;width:100%;height:100%;
-        background:rgba(0,0,0,0.78);display:flex;justify-content:center;
-        align-items:flex-start;padding:5vh 0;box-sizing:border-box;
-        z-index:4000;backdrop-filter:blur(5px);overflow-y:auto;
+        background:rgba(4,12,22,0.85);display:flex;justify-content:center;
+        align-items:center;box-sizing:border-box;
+        z-index:4000;backdrop-filter:blur(6px);
     `;
 
+    // ── modal ──
     const modal = document.createElement("div");
     modal.style.cssText = `
-        background:#0b1e30;border-radius:20px;
-        width:92%;max-width:400px;padding:20px 16px 22px;
-        box-sizing:border-box;
-        animation:rsSlideDown .38s ease-out both;
+        background:linear-gradient(170deg,#0d2137 0%,#081626 100%);
+        border-radius:20px;border:1px solid rgba(255,255,255,0.07);
+        width:92%;max-width:400px;
+        max-height:82vh;overflow-y:auto;
+        padding:16px 14px 18px;box-sizing:border-box;
+        animation:rsSlideDown .36s ease-out both;
     `;
 
     modal.innerHTML = `
         <style>
             @keyframes rsSlideDown {
-                from { transform:translateY(-32px); opacity:0; }
+                from { transform:translateY(-30px); opacity:0; }
                 to   { transform:translateY(0);     opacity:1; }
             }
             @keyframes rsSlideUp {
-                from { transform:translateY(14px); opacity:0; }
+                from { transform:translateY(13px); opacity:0; }
                 to   { transform:translateY(0);    opacity:1; }
             }
             @keyframes rsPulse {
-                0%,100% { opacity:1; } 50% { opacity:.45; }
+                0%,100% { opacity:1; } 50% { opacity:.4; }
             }
+            #round-summary-overlay ::-webkit-scrollbar { width:3px; }
+            #round-summary-overlay ::-webkit-scrollbar-track { background:transparent; }
+            #round-summary-overlay ::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.15);border-radius:2px; }
         </style>
 
-        <div style="text-align:center;margin-bottom:16px;">
-            <div style="font-size:11px;color:rgba(255,255,255,0.35);letter-spacing:3px;margin-bottom:4px;">
-                ROUND ${roundCount} RESULT
-            </div>
-            <div style="font-size:20px;font-weight:bold;color:#fff;">⚔️ 回合結算</div>
+        <div style="${sharedCard}padding:9px 13px;margin-bottom:10px;
+                    animation:rsSlideUp .26s .04s ease both;">
+            <div style="font-size:10px;color:#60c8f0;letter-spacing:1.5px;margin-bottom:3px;">📜 本回召喚條件</div>
+            <div style="font-size:14px;color:#fff;font-weight:bold;line-height:1.45;">${currentS.t}</div>
         </div>
 
-        <div style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,220,80,0.3);
-                    border-radius:12px;padding:11px 14px;margin-bottom:14px;
-                    animation:rsSlideUp .28s .05s ease both;">
-            <div style="font-size:11px;color:rgba(255,220,80,0.8);letter-spacing:1px;margin-bottom:5px;">📜 本回召喚條件</div>
-            <div style="font-size:14px;color:#fff;font-weight:bold;line-height:1.5;">${currentS.t}</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+            ${cardsHtml}
         </div>
 
-        ${cardsHtml}
         ${ecoHtml}
 
         <button id="close-summary-btn" style="
-            width:100%;padding:14px;border:none;border-radius:50px;
-            font-size:14px;font-weight:bold;cursor:pointer;letter-spacing:0.5px;
-            background:linear-gradient(135deg,#ffd060,#ff8c42);
-            color:#3a1a00;
-            box-shadow:0 4px 0 #9a4500, 0 6px 16px rgba(255,120,0,0.28);
+            width:100%;padding:13px;border:none;border-radius:50px;
+            font-size:15px;font-weight:900;cursor:pointer;letter-spacing:0.5px;
+            background:linear-gradient(135deg,#f5c842,#e07828);
+            color:#1a0800;
+            box-shadow:0 4px 0 #8a4200, 0 6px 14px rgba(200,100,0,0.3);
+            text-shadow:none;
         ">⚓ 整理魚獲，繼續冒險</button>
     `;
 
