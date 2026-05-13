@@ -955,7 +955,7 @@ body.game-started > *:not(#welcome-screen) {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(180,210,255,0.06);
+    background-color: #000;
     background-image: radial-gradient(rgba(180,210,255,0.2) 1px, transparent 1px);
     background-size: 10px 10px;
 }
@@ -1369,11 +1369,11 @@ body.game-started > *:not(#welcome-screen) {
 .drawer-card.light-2 .drawer-card-name { background: #fef3cd; color: #5d4037; }
 .drawer-card.light-3 .drawer-card-name { background: #ffd6da; color: #7b1c2a; }
 
-/* 魚圖：contain 顯示完整，背景補點點 */
+/* 魚圖：contain 顯示完整，黑底加點點 */
 .drawer-card-img {
     height: 64px;
     overflow: hidden;
-    background: rgba(180, 210, 255, 0.08);
+    background-color: #000;
     background-image: radial-gradient(rgba(180,210,255,0.18) 1px, transparent 1px);
     background-size: 10px 10px;
     display: flex;
