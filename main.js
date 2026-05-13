@@ -1866,13 +1866,10 @@ function showMazuGiftEffect(fromName, toName, card, targetEl, fromEl) {
 // =============================================
 
 let drawerOpen = false;
-let drawerTouchStartY = 0;
-let drawerTouchStartX = 0;
 
 function updateDrawerArrow(show) {
     const arrow = document.getElementById("drawer-up-arrow");
     if (arrow) arrow.style.display = show ? "block" : "none";
-    // 非玩家回合時確保抽屜關閉
     if (!show && drawerOpen) closeDrawer();
 }
 
@@ -1880,30 +1877,25 @@ function openDrawer() {
     if (drawerOpen) return;
     drawerOpen = true;
 
-    // 建立或取得抽屜
     let drawer = document.getElementById("hand-drawer");
     if (!drawer) {
         drawer = document.createElement("div");
         drawer.id = "hand-drawer";
-        document.getElementById("player-zone").appendChild(drawer);
+        document.body.appendChild(drawer); // fixed 定位，掛在 body
+
+        let dy0 = 0;
+        drawer.addEventListener("touchstart", (e) => {
+            dy0 = e.touches[0].clientY;
+        }, { passive: true });
+        drawer.addEventListener("touchend", (e) => {
+            if (e.changedTouches[0].clientY - dy0 > 50) closeDrawer();
+        }, { passive: true });
     }
 
-    // 綁定抽屜本身的下滑收起
-    drawer.ontouchstart = (e) => { drawerTouchStartY = e.touches[0].clientY; };
-    drawer.ontouchend = (e) => {
-        const dy = e.changedTouches[0].clientY - drawerTouchStartY;
-        if (dy > 50) closeDrawer();
-    };
-
     renderDrawer(drawer);
-
-    // 動畫：先設底部在外，再滑入
-    drawer.style.transform = "translateY(100%)";
     drawer.style.display = "block";
     requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-            drawer.style.transform = "translateY(0)";
-        });
+        drawer.style.transform = "translateY(0)";
     });
 }
 
@@ -1913,7 +1905,7 @@ function closeDrawer() {
     const drawer = document.getElementById("hand-drawer");
     if (!drawer) return;
     drawer.style.transform = "translateY(100%)";
-    setTimeout(() => { drawer.style.display = "none"; }, 320);
+    setTimeout(() => { if (!drawerOpen) drawer.style.display = "none"; }, 280);
 }
 
 function renderDrawer(drawer) {
@@ -1969,20 +1961,36 @@ function initDrawerGesture() {
     const zone = document.getElementById("player-zone");
     if (!zone) return;
 
-    let startY = 0;
-    let startX = 0;
+    let startY = 0, startX = 0;
+    let intentDecided = false, isVerticalSwipe = false;
 
     zone.addEventListener("touchstart", (e) => {
         startY = e.touches[0].clientY;
         startX = e.touches[0].clientX;
+        intentDecided = false;
+        isVerticalSwipe = false;
     }, { passive: true });
 
-    zone.addEventListener("touchend", (e) => {
-        // 抽屜已開時不重複觸發
+    zone.addEventListener("touchmove", (e) => {
         if (drawerOpen) return;
+        const dy = e.touches[0].clientY - startY;
+        const dx = Math.abs(e.touches[0].clientX - startX);
+
+        if (!intentDecided) {
+            if (Math.abs(dy) < 8 && dx < 8) return;
+            isVerticalSwipe = Math.abs(dy) > dx;
+            intentDecided = true;
+        }
+        // 確認往上垂直滑 → 阻止頁面捲動
+        if (isVerticalSwipe && dy < 0) {
+            e.preventDefault();
+        }
+    }, { passive: false });
+
+    zone.addEventListener("touchend", (e) => {
+        if (!intentDecided || !isVerticalSwipe || drawerOpen) return;
         const dy = e.changedTouches[0].clientY - startY;
         const dx = Math.abs(e.changedTouches[0].clientX - startX);
-        // 往上滑 > 40px 且不是水平滑動（排除左右滑手牌）
         if (dy < -40 && dx < 60) {
             const isMyTurn = phase === "PLAYER_TURN" || phase === "PLAYER_MAZU";
             if (isMyTurn) openDrawer();
@@ -1994,12 +2002,8 @@ function initDrawerGesture() {
 document.addEventListener("touchstart", (e) => {
     if (!drawerOpen) return;
     const drawer = document.getElementById("hand-drawer");
-    if (drawer && !drawer.contains(e.target)) {
-        closeDrawer();
-    }
+    if (drawer && !drawer.contains(e.target)) closeDrawer();
 }, { passive: true });
-
-// 頁面載入完後初始化預載
 
 function toggleReportMode() {
     showSummaryMode = !showSummaryMode;
