@@ -18,7 +18,7 @@ function preloadImages(prefix, count) {
 
 // DOMContentLoaded 即刻預載（比 load 早，不等 BGM/大圖載完）
 document.addEventListener('DOMContentLoaded', () => {
-    preloadImages('P', 6);  // 預載故事 P1-P6
+    preloadImages('P', 9);  // 預載故事 P1-P9
     preloadImages('F', 18); // 預載說明 F1-F18
     preloadFishImages();     // 預載所有魚圖片
     initOceanCaustics();     // 初始化海洋光束
@@ -43,7 +43,7 @@ function setDifficulty(d, btn) {
 // --- 故事與說明功能 ---
 let storyIdx = 1;
 let storyTimer = null;
-const totalStories = 6;
+const totalStories = 9;
 // 新增說明專用的背景音樂
 const infoBGM = new Audio('MZ.mp3'); 
 infoBGM.loop = true; // 設定循環播放
