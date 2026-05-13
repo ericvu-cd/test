@@ -1,6 +1,6 @@
 let gameDifficulty = 0.7;
 let speakingAI = null;
-let sfxEnabled = true;
+let sfxEnabled = sessionStorage.getItem("sfxEnabled") !== "false";
 let showSummaryMode = true; // 預設開啟結算頁面
 let roundReport = [];       // 每回合出牌結果紀錄
 let gameLog = [];            // 玩家出牌歷史（供分享圖卡用）
@@ -705,16 +705,23 @@ function initGame() {
 	document.getElementById("report-control").style.display = "flex";
     document.getElementById("log-btn").style.display = "flex";
     const music = document.getElementById("bgm");
-    music.play().then(() => {
-        music.volume = 0.03;
-        const btn = document.getElementById("music-control");
-        btn.style.filter = "sepia(1) saturate(3) hue-rotate(175deg) brightness(1.4)";
-    }).catch(err => {
-        console.log("播放受阻");
-        const btn = document.getElementById("music-control");
+    const btn = document.getElementById("music-control");
+    if (sfxEnabled) {
+        music.play().then(() => {
+            music.volume = 0.03;
+            btn.style.filter = "sepia(1) saturate(3) hue-rotate(175deg) brightness(1.4)";
+            btn.innerText = "🎵";
+            btn.style.opacity = "1";
+        }).catch(() => {
+            btn.innerText = "🔇";
+            btn.style.opacity = "0.4";
+        });
+    } else {
+        music.pause();
         btn.innerText = "🔇";
+        btn.style.filter = "";
         btn.style.opacity = "0.4";
-    });
+    }
 
     // 直接切換畫面並開始遊戲
     document.getElementById('player-hand').addEventListener('scroll', updateHandArrows);
@@ -1438,70 +1445,123 @@ function playPendingReturns(callback) {
 
 // 新增：彈出視窗函式
 function showRoundSummary() {
-		
-	if (!showSummaryMode) {
-        proceedToNextRound(); // 或 finishRound()，視您的架構而定
+
+    if (!showSummaryMode) {
+        proceedToNextRound();
         return;
     }
 
-    // 結算視窗出現前一刻才播放成功音效
     if (roundReport.some(r => r.isSuccess)) SFX.success();
 
+    // ── 屬性條 HTML 產生器 ──
+    function buildAttrBars(feature, isSuccess) {
+        const attrs = feature.split(/\s*\|\s*/).map(s => s.trim()).filter(Boolean);
+        if (!attrs.length) return '';
+        return attrs.map(attr => {
+            const barW = isSuccess ? '100%' : '22%';
+            const barC = isSuccess ? '#4cdf7a' : '#ff5555';
+            const textC = isSuccess ? '#6eff9a' : '#ff7777';
+            const mark  = isSuccess ? '✓' : '✗';
+            return `
+            <div style="display:flex;align-items:center;gap:8px;margin-top:6px;">
+                <span style="flex:1;height:5px;background:rgba(255,255,255,0.12);border-radius:3px;overflow:hidden;">
+                    <span style="display:block;width:${barW};height:100%;background:${barC};border-radius:3px;"></span>
+                </span>
+                <span style="font-size:13px;color:${textC};white-space:nowrap;">${attr} ${mark}</span>
+            </div>`;
+        }).join('');
+    }
+
+    // ── 玩家結果卡 ──
+    const cardsHtml = roundReport.map((r, i) => {
+        const delay = 0.12 + i * 0.09;
+        const bg    = r.isSuccess
+            ? 'background:linear-gradient(110deg,#0d3320,#0f4428);border:1px solid #2d7a48;'
+            : 'background:linear-gradient(110deg,#2a0d0d,#3a1010);border:1px solid #6b2d2d;';
+        const nameC  = r.isSuccess ? '#a8ffbf' : '#ffaaaa';
+        const badge  = r.isSuccess
+            ? `<span style="font-size:13px;animation:rsPulse 1.4s infinite;">⭐</span>`
+            : `<span style="font-size:11px;color:#ff6b6b;background:rgba(255,80,80,0.15);border:1px solid rgba(255,80,80,0.3);padding:2px 9px;border-radius:10px;">退牌</span>`;
+        return `
+        <div style="${bg}border-radius:14px;padding:13px 14px;margin-bottom:9px;
+                    animation:rsSlideUp .28s ${delay}s ease both;">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:2px;">
+                <span style="font-size:26px;line-height:1;">${r.isSuccess ? '✅' : '❌'}</span>
+                <span style="font-size:13px;color:rgba(255,255,255,0.45);">${r.name}</span>
+                <span style="font-size:16px;font-weight:bold;color:${nameC};">${r.fishName}</span>
+                <span style="margin-left:auto;">${badge}</span>
+            </div>
+            ${buildAttrBars(r.feature, r.isSuccess)}
+        </div>`;
+    }).join('');
+
+    // ── 生態知識卡 ──
+    const ecoHtml = (currentS.why) ? `
+        <div style="background:linear-gradient(110deg,rgba(0,80,120,0.55),rgba(0,50,90,0.55));
+                    border:1px solid rgba(100,200,255,0.25);border-radius:14px;
+                    padding:13px 15px;margin-bottom:16px;
+                    animation:rsSlideUp .28s ${0.12 + roundReport.length * 0.09 + 0.08}s ease both;">
+            <div style="font-size:13px;color:#7dd8ff;font-weight:bold;margin-bottom:7px;">🌊 生態小知識</div>
+            <div style="font-size:13px;color:rgba(200,240,255,0.88);line-height:1.75;">${currentS.why}</div>
+        </div>` : '';
+
+    // ── 組合 modal ──
     const overlay = document.createElement("div");
     overlay.id = "round-summary-overlay";
-    overlay.style = `
-        position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-        background: rgba(0,0,0,0.7); display: flex; justify-content: center; 
-        align-items: center; z-index: 4000; backdrop-filter: blur(4px);
+    overlay.style.cssText = `
+        position:fixed;top:0;left:0;width:100%;height:100%;
+        background:rgba(0,0,0,0.78);display:flex;justify-content:center;
+        align-items:flex-start;padding:5vh 0;box-sizing:border-box;
+        z-index:4000;backdrop-filter:blur(5px);overflow-y:auto;
     `;
-
-    const reportHtml = roundReport.map(r => `
-        <div style="display: flex; align-items: center; padding: 10px 0; border-bottom: 1px solid #eee; text-align: left;">
-            <div style="font-size: 1.2rem; margin-right: 15px; width: 25px;">
-                ${r.isSuccess ? '<span style="color: #2ecc71;">✔️</span>' : '<span style="color: #e74c3c;">❌</span>'}
-            </div>
-            <div style="flex-grow: 1;">
-                <span style="font-weight: bold; color: #333;">${r.name}</span>：
-                <span>${r.fishName}</span>
-                <span style="
-                    margin-left: 8px; 
-                    padding: 2px 8px; 
-                    background: ${r.isSuccess ? '#d7ded9' : '#d7ded9'}; 
-                    color: ${r.isSuccess ? '#247173' : '#c62828'}; 
-                    border-radius: 4px; 
-                    font-size: 0.85rem;
-                    border: 1px solid ${r.isSuccess ? '#247173' : '#247173'};
-                ">
-                    ${r.feature}
-                </span>
-            </div>
-        </div>
-    `).join('');
 
     const modal = document.createElement("div");
     modal.style.cssText = `
-        background: white; padding: 25px; border-radius: 20px; 
-        width: 90%; max-width: 450px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        background:#0b1e30;border-radius:20px;
+        width:92%;max-width:400px;padding:20px 16px 22px;
+        box-sizing:border-box;
+        animation:rsSlideDown .38s ease-out both;
     `;
-    modal.classList.add("summary-pop-anim");
-	
 
     modal.innerHTML = `
-        <h2 style="color: #00796b; margin-top: 0; font-size: 1.1rem;">回合成果結算</h2>
-        
-        <div style="background: #f1f8e9; padding: 10px; border-radius: 10px; margin-bottom: 15px; text-align: left;">
-            <div style="font-weight: bold; color: #388e3c; font-size: 0.9rem;">📜 本回召喚要求：</div>
-            <div style="font-size: 1rem; color: #333; margin-top: 4px;">${currentS.t}</div>
+        <style>
+            @keyframes rsSlideDown {
+                from { transform:translateY(-32px); opacity:0; }
+                to   { transform:translateY(0);     opacity:1; }
+            }
+            @keyframes rsSlideUp {
+                from { transform:translateY(14px); opacity:0; }
+                to   { transform:translateY(0);    opacity:1; }
+            }
+            @keyframes rsPulse {
+                0%,100% { opacity:1; } 50% { opacity:.45; }
+            }
+        </style>
+
+        <div style="text-align:center;margin-bottom:16px;">
+            <div style="font-size:11px;color:rgba(255,255,255,0.35);letter-spacing:3px;margin-bottom:4px;">
+                ROUND ${roundCount} RESULT
+            </div>
+            <div style="font-size:20px;font-weight:bold;color:#fff;">⚔️ 回合結算</div>
         </div>
 
-        <div style="margin-bottom: 20px;">
-            ${reportHtml}
+        <div style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,220,80,0.3);
+                    border-radius:12px;padding:11px 14px;margin-bottom:14px;
+                    animation:rsSlideUp .28s .05s ease both;">
+            <div style="font-size:11px;color:rgba(255,220,80,0.8);letter-spacing:1px;margin-bottom:5px;">📜 本回召喚條件</div>
+            <div style="font-size:14px;color:#fff;font-weight:bold;line-height:1.5;">${currentS.t}</div>
         </div>
+
+        ${cardsHtml}
+        ${ecoHtml}
 
         <button id="close-summary-btn" style="
-            width: 100%; padding: 10px; background: #FFDFBA; border: none; 
-            border-radius: 50px; font-weight: bold; color: #d35400; cursor: pointer;
-        ">整理魚獲，繼續冒險</button>
+            width:100%;padding:14px;border:none;border-radius:50px;
+            font-size:14px;font-weight:bold;cursor:pointer;letter-spacing:0.5px;
+            background:linear-gradient(135deg,#ffd060,#ff8c42);
+            color:#3a1a00;
+            box-shadow:0 4px 0 #9a4500, 0 6px 16px rgba(255,120,0,0.28);
+        ">⚓ 整理魚獲，繼續冒險</button>
     `;
 
     overlay.appendChild(modal);
@@ -1509,7 +1569,7 @@ function showRoundSummary() {
 
     document.getElementById("close-summary-btn").onclick = () => {
         overlay.remove();
-        lockUI(); // 退牌動畫期間鎖定
+        lockUI();
         playPendingReturns(() => proceedToNextRound());
     };
 }
