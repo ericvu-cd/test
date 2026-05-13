@@ -1462,11 +1462,11 @@ function showRoundSummary() {
         const textC = isSuccess ? '#7eeaa8' : '#f08080';
         const mark  = isSuccess ? '✓' : '✗';
         return attrs.map(attr => `
-            <div style="display:flex;align-items:center;gap:6px;margin-top:5px;">
-                <span style="flex:1;height:4px;background:rgba(255,255,255,0.1);border-radius:2px;overflow:hidden;">
+            <div style="display:flex;align-items:center;gap:6px;margin-top:3px;min-width:0;">
+                <span style="flex:1;min-width:0;height:4px;background:rgba(255,255,255,0.1);border-radius:2px;overflow:hidden;flex-shrink:0;">
                     <span style="display:block;width:${barW};height:100%;background:${barC};border-radius:2px;"></span>
                 </span>
-                <span style="font-size:10px;color:${textC};white-space:nowrap;">${attr} ${mark}</span>
+                <span style="font-size:10px;color:${textC};word-break:break-all;flex-shrink:1;text-align:right;">${attr} ${mark}</span>
             </div>`).join('');
     }
 
@@ -1489,7 +1489,7 @@ function showRoundSummary() {
         // 跨欄時橫向排列
         if (isLast && isOdd) {
             return `
-            <div style="${bg}${span}border-radius:13px;padding:10px 12px;
+            <div style="${bg}${span}border-radius:13px;padding:8px 10px;min-width:0;overflow:hidden;
                         animation:rsSlideUp .26s ${delay}s ease both;">
                 <div style="display:flex;align-items:center;gap:14px;">
                     <div style="flex:0 0 auto;">
@@ -1507,13 +1507,13 @@ function showRoundSummary() {
         }
 
         return `
-        <div style="${bg}border-radius:13px;padding:10px 11px;
+        <div style="${bg}border-radius:13px;padding:8px 9px;min-width:0;overflow:hidden;
                     animation:rsSlideUp .26s ${delay}s ease both;">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
                 <span style="font-size:11px;color:rgba(255,255,255,0.42);">${r.name}</span>
                 ${badge}
             </div>
-            <div style="font-size:16px;font-weight:bold;color:${nameC};margin-bottom:2px;">${r.fishName}</div>
+            <div style="font-size:16px;font-weight:bold;color:${nameC};margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${r.fishName}</div>
             ${buildAttrBars(r.feature, r.isSuccess)}
         </div>`;
     }).join('');
@@ -1525,10 +1525,10 @@ function showRoundSummary() {
     // ── 生態知識 ──
     const ecoDelay = 0.10 + total * 0.08 + 0.06;
     const ecoHtml  = currentS.why ? `
-        <div style="${sharedCard}padding:9px 13px;margin-bottom:13px;
+        <div style="${sharedCard}padding:7px 11px;margin-bottom:10px;
                     animation:rsSlideUp .26s ${ecoDelay}s ease both;">
-            <div style="font-size:12px;color:#60c8f0;font-weight:bold;margin-bottom:4px;">🌊 生態小知識</div>
-            <div style="font-size:12px;color:rgba(190,235,255,0.88);line-height:1.7;">${currentS.why}</div>
+            <div style="font-size:12px;color:#60c8f0;font-weight:bold;margin-bottom:3px;">🌊 生態小知識</div>
+            <div style="font-size:12px;color:rgba(190,235,255,0.88);line-height:1.6;">${currentS.why}</div>
         </div>` : '';
 
     // ── overlay ──
@@ -1548,7 +1548,7 @@ function showRoundSummary() {
         border-radius:20px;border:1px solid rgba(255,255,255,0.07);
         width:92%;max-width:400px;
         max-height:82vh;overflow-y:auto;
-        padding:16px 14px 18px;box-sizing:border-box;
+        padding:12px 11px 14px;box-sizing:border-box;
         animation:rsSlideDown .36s ease-out both;
     `;
 
@@ -1570,20 +1570,20 @@ function showRoundSummary() {
             #round-summary-overlay ::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.15);border-radius:2px; }
         </style>
 
-        <div style="${sharedCard}padding:9px 13px;margin-bottom:10px;
+        <div style="${sharedCard}padding:7px 11px;margin-bottom:8px;
                     animation:rsSlideUp .26s .04s ease both;">
-            <div style="font-size:10px;color:#60c8f0;letter-spacing:1.5px;margin-bottom:3px;">📜 本回召喚條件</div>
-            <div style="font-size:14px;color:#fff;font-weight:bold;line-height:1.45;">${currentS.t}</div>
+            <div style="font-size:10px;color:#60c8f0;letter-spacing:1.5px;margin-bottom:2px;">📜 本回召喚條件</div>
+            <div style="font-size:14px;color:#fff;font-weight:bold;line-height:1.4;">${currentS.t}</div>
         </div>
 
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px;min-width:0;">
             ${cardsHtml}
         </div>
 
         ${ecoHtml}
 
         <button id="close-summary-btn" style="
-            width:100%;padding:13px;border:none;border-radius:50px;
+            width:100%;padding:11px;border:none;border-radius:50px;
             font-size:15px;font-weight:900;cursor:pointer;letter-spacing:0.5px;
             background:linear-gradient(135deg,#f5c842,#e07828);
             color:#1a0800;
