@@ -1973,6 +1973,8 @@ function initDrawerGesture() {
 
     zone.addEventListener("touchmove", (e) => {
         if (drawerOpen) return;
+        // win-screen 顯示中不干擾
+        if (document.getElementById("win-overlay")) return;
         const dy = e.touches[0].clientY - startY;
         const dx = Math.abs(e.touches[0].clientX - startX);
 
@@ -1989,6 +1991,7 @@ function initDrawerGesture() {
 
     zone.addEventListener("touchend", (e) => {
         if (!intentDecided || !isVerticalSwipe || drawerOpen) return;
+        if (document.getElementById("win-overlay")) return;
         const dy = e.changedTouches[0].clientY - startY;
         const dx = Math.abs(e.changedTouches[0].clientX - startX);
         if (dy < -40 && dx < 60) {
@@ -2001,6 +2004,7 @@ function initDrawerGesture() {
 // 點抽屜外背景關閉
 document.addEventListener("touchstart", (e) => {
     if (!drawerOpen) return;
+    if (document.getElementById("win-overlay")) { closeDrawer(); return; }
     const drawer = document.getElementById("hand-drawer");
     if (drawer && !drawer.contains(e.target)) closeDrawer();
 }, { passive: true });
