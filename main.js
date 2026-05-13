@@ -390,7 +390,7 @@ function renderUI() {
         const c = document.createElement("div");
         c.className = `card light-${f.l}`;
         const isValid = isNormalTask && currentS.c(f);
-        c.innerHTML = `<div class="card-n">${f.n}</div><div class="card-i">${getFishTags(f)}</div>`;
+        c.innerHTML = `<div class="card-n">${f.n}</div><div class="card-img"><img src="fishdb/${f.n}.png" alt="${f.n}" onerror="this.style.display='none'"></div>`;
         if (isValid) {
             const dot = document.createElement("span");
             dot.className = "valid-dot";
@@ -406,6 +406,9 @@ function renderUI() {
     const isMyTurn = phase === "PLAYER_TURN" || phase === "PLAYER_MAZU";
     document.getElementById("player-zone").classList.toggle("my-turn", isMyTurn);
     setTimeout(updateHandArrows, 50);
+
+    // 抽屜：玩家回合顯示上滑提示，非玩家回合隱藏
+    updateDrawerArrow(isMyTurn);
 }
 
 function updateHandArrows() {
@@ -725,6 +728,7 @@ function initGame() {
 
     // 直接切換畫面並開始遊戲
     document.getElementById('player-hand').addEventListener('scroll', updateHandArrows);
+    initDrawerGesture();
     setTimeout(() => {
         startGame();
     }, 3500); // 保留 3.5 秒的淡出過渡效果
@@ -1856,6 +1860,146 @@ function showMazuGiftEffect(fromName, toName, card, targetEl, fromEl) {
         }, 3000);
     }, 2000);
 }
+
+// =============================================
+// 🗂️ 手牌抽屜（Drawer）系統
+// =============================================
+
+let drawerOpen = false;
+let drawerTouchStartY = 0;
+let drawerTouchStartX = 0;
+
+function updateDrawerArrow(show) {
+    const arrow = document.getElementById("drawer-up-arrow");
+    if (arrow) arrow.style.display = show ? "block" : "none";
+    // 非玩家回合時確保抽屜關閉
+    if (!show && drawerOpen) closeDrawer();
+}
+
+function openDrawer() {
+    if (drawerOpen) return;
+    drawerOpen = true;
+
+    // 建立或取得抽屜
+    let drawer = document.getElementById("hand-drawer");
+    if (!drawer) {
+        drawer = document.createElement("div");
+        drawer.id = "hand-drawer";
+        document.getElementById("player-zone").appendChild(drawer);
+    }
+
+    // 綁定抽屜本身的下滑收起
+    drawer.ontouchstart = (e) => { drawerTouchStartY = e.touches[0].clientY; };
+    drawer.ontouchend = (e) => {
+        const dy = e.changedTouches[0].clientY - drawerTouchStartY;
+        if (dy > 50) closeDrawer();
+    };
+
+    renderDrawer(drawer);
+
+    // 動畫：先設底部在外，再滑入
+    drawer.style.transform = "translateY(100%)";
+    drawer.style.display = "block";
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+            drawer.style.transform = "translateY(0)";
+        });
+    });
+}
+
+function closeDrawer() {
+    if (!drawerOpen) return;
+    drawerOpen = false;
+    const drawer = document.getElementById("hand-drawer");
+    if (!drawer) return;
+    drawer.style.transform = "translateY(100%)";
+    setTimeout(() => { drawer.style.display = "none"; }, 320);
+}
+
+function renderDrawer(drawer) {
+    const isNormalTask = currentS && !currentS.isMazu && phase === "PLAYER_TURN" && callerIdx === 0;
+
+    drawer.innerHTML = `
+        <div class="drawer-handle-bar"></div>
+        <div class="drawer-hint">點卡直接出牌 ／ 下滑收起</div>
+        <div class="drawer-grid" id="drawer-grid"></div>
+    `;
+
+    const grid = drawer.querySelector("#drawer-grid");
+
+    players[0].hand.forEach((f, idx) => {
+        const isValid = isNormalTask && currentS.c(f);
+
+        const wrap = document.createElement("div");
+        wrap.className = "drawer-card-wrap";
+
+        const card = document.createElement("div");
+        card.className = `drawer-card light-${f.l}${isValid ? " drawer-valid" : ""}`;
+
+        card.innerHTML = `
+            <div class="drawer-card-name">${f.n}</div>
+            <div class="drawer-card-img">
+                <img src="fishdb/${f.n}.png" alt="${f.n}" onerror="this.style.display='none'">
+            </div>
+            <div class="drawer-card-tags">${getFishTags(f)}</div>
+        `;
+
+        if (isValid) {
+            const dot = document.createElement("span");
+            dot.className = "drawer-valid-dot";
+            wrap.appendChild(dot);
+        }
+
+        card.onclick = (e) => {
+            e.stopPropagation();
+            closeDrawer();
+            setTimeout(() => playerAction(idx), 50);
+        };
+
+        wrap.appendChild(card);
+        grid.appendChild(wrap);
+    });
+}
+
+// 初始化手牌區的上滑手勢偵測
+let drawerGestureInited = false;
+function initDrawerGesture() {
+    if (drawerGestureInited) return;
+    drawerGestureInited = true;
+    const zone = document.getElementById("player-zone");
+    if (!zone) return;
+
+    let startY = 0;
+    let startX = 0;
+
+    zone.addEventListener("touchstart", (e) => {
+        startY = e.touches[0].clientY;
+        startX = e.touches[0].clientX;
+    }, { passive: true });
+
+    zone.addEventListener("touchend", (e) => {
+        // 抽屜已開時不重複觸發
+        if (drawerOpen) return;
+        const dy = e.changedTouches[0].clientY - startY;
+        const dx = Math.abs(e.changedTouches[0].clientX - startX);
+        // 往上滑 > 40px 且不是水平滑動（排除左右滑手牌）
+        if (dy < -40 && dx < 60) {
+            const isMyTurn = phase === "PLAYER_TURN" || phase === "PLAYER_MAZU";
+            if (isMyTurn) openDrawer();
+        }
+    }, { passive: true });
+}
+
+// 點抽屜外背景關閉
+document.addEventListener("touchstart", (e) => {
+    if (!drawerOpen) return;
+    const drawer = document.getElementById("hand-drawer");
+    if (drawer && !drawer.contains(e.target)) {
+        closeDrawer();
+    }
+}, { passive: true });
+
+// 頁面載入完後初始化預載
 
 function toggleReportMode() {
     showSummaryMode = !showSummaryMode;
