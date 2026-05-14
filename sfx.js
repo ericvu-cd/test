@@ -89,21 +89,6 @@ const SFX = (() => {
         return { src, gain: g };
     }
 
-    // 殘響（簡易 convolver，用隨機脈衝模擬）
-    function createReverb(decaySec = 1.2) {
-        const ctx = getCtx();
-        const conv = ctx.createConvolver();
-        const len = Math.ceil(ctx.sampleRate * decaySec);
-        const irBuf = ctx.createBuffer(2, len, ctx.sampleRate);
-        for (let ch = 0; ch < 2; ch++) {
-            const d = irBuf.getChannelData(ch);
-            for (let i = 0; i < len; i++) {
-                d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2.5);
-            }
-        }
-        conv.buffer = irBuf;
-        return conv;
-    }
 
     // ── 是否啟用 ──────────────────────────────────
     // 沿用 main.js 的 sfxEnabled 變數
@@ -211,13 +196,6 @@ const SFX = (() => {
         try {
             const ctx = getCtx();
 
-            // 殘響節點
-            const reverb = createReverb(2.0);
-            const reverbGain = ctx.createGain();
-            reverbGain.gain.value = 0.54;
-            reverb.connect(reverbGain);
-            reverbGain.connect(master());
-
             // 乾聲也接到 master
             const dryGain = ctx.createGain();
             dryGain.gain.value = 0.84;
@@ -240,7 +218,6 @@ const SFX = (() => {
                 og.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + dur);
                 o.connect(og);
                 og.connect(dryGain);
-                og.connect(reverb);
                 o.start(ctx.currentTime + delay);
                 o.stop(ctx.currentTime + delay + dur + 0.1);
 
@@ -271,12 +248,6 @@ const SFX = (() => {
         if (!enabled()) return;
         try {
             const ctx = getCtx();
-            const reverb = createReverb(0.8);
-            const rvg = ctx.createGain();
-            rvg.gain.value = 0.36;
-            reverb.connect(rvg);
-            rvg.connect(master());
-
             const dryg = ctx.createGain();
             dryg.gain.value = 0.72;
             dryg.connect(master());
@@ -293,7 +264,6 @@ const SFX = (() => {
                 og.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.28);
                 o.connect(og);
                 og.connect(dryg);
-                og.connect(reverb);
                 o.start(ctx.currentTime + delay);
                 o.stop(ctx.currentTime + delay + 0.32);
             });
@@ -309,7 +279,7 @@ const SFX = (() => {
                 og.gain.setValueAtTime(0.12, ctx.currentTime + delay);
                 og.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.18);
                 o.connect(og);
-                og.connect(reverb);
+                og.connect(dryg);
                 o.start(ctx.currentTime + delay);
                 o.stop(ctx.currentTime + delay + 0.22);
             });
@@ -358,12 +328,6 @@ const SFX = (() => {
         if (!enabled()) return;
         try {
             const ctx = getCtx();
-            const reverb = createReverb(1.0);
-            const rvg = ctx.createGain();
-            rvg.gain.value = 0.42;
-            reverb.connect(rvg);
-            rvg.connect(master());
-
             const dryg = ctx.createGain();
             dryg.gain.value = 0.78;
             dryg.connect(master());
@@ -382,7 +346,6 @@ const SFX = (() => {
                 og.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.40);
                 o.connect(og);
                 og.connect(dryg);
-                og.connect(reverb);
                 o.start(ctx.currentTime + delay);
                 o.stop(ctx.currentTime + delay + 0.44);
             });
@@ -394,7 +357,7 @@ const SFX = (() => {
             hi.frequency.value = 1760;
             hig.gain.setValueAtTime(0.10, ctx.currentTime + 0.20);
             hig.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.45);
-            hi.connect(hig); hig.connect(reverb);
+            hi.connect(hig); hig.connect(dryg);
             hi.start(ctx.currentTime + 0.20);
             hi.stop(ctx.currentTime + 0.48);
 
@@ -409,12 +372,6 @@ const SFX = (() => {
         if (!enabled()) return;
         try {
             const ctx = getCtx();
-            const reverb = createReverb(2.5);
-            const rvg = ctx.createGain();
-            rvg.gain.value = 0.48;
-            reverb.connect(rvg);
-            rvg.connect(master());
-
             const dryg = ctx.createGain();
             dryg.gain.value = 0.84;
             dryg.connect(master());
@@ -433,7 +390,6 @@ const SFX = (() => {
                 og.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + (isFinal ? 1.5 : 0.22));
                 o.connect(og);
                 og.connect(dryg);
-                og.connect(reverb);
                 o.start(ctx.currentTime + delay);
                 o.stop(ctx.currentTime + delay + (isFinal ? 1.8 : 0.28));
 
@@ -442,10 +398,10 @@ const SFX = (() => {
                     const o3 = ctx.createOscillator();
                     const og3 = ctx.createGain();
                     o3.type = "sine";
-                    o3.frequency.value = freq * 1.5; // 完全五度
+                    o3.frequency.value = freq * 1.5;
                     og3.gain.setValueAtTime(0.19, ctx.currentTime + delay);
                     og3.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 1.2);
-                    o3.connect(og3); og3.connect(reverb);
+                    o3.connect(og3); og3.connect(dryg);
                     o3.start(ctx.currentTime + delay);
                     o3.stop(ctx.currentTime + delay + 1.4);
                 }
@@ -468,12 +424,6 @@ const SFX = (() => {
         if (!enabled()) return;
         try {
             const ctx = getCtx();
-            const reverb = createReverb(1.8);
-            const rvg = ctx.createGain();
-            rvg.gain.value = 0.48;
-            reverb.connect(rvg);
-            rvg.connect(master());
-
             const dryg = ctx.createGain();
             dryg.gain.value = 0.72;
             dryg.connect(master());
@@ -490,7 +440,6 @@ const SFX = (() => {
                 og.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.5);
                 o.connect(og);
                 og.connect(dryg);
-                og.connect(reverb);
                 o.start(ctx.currentTime + delay);
                 o.stop(ctx.currentTime + delay + 0.6);
             });
@@ -503,7 +452,7 @@ const SFX = (() => {
             bass.frequency.exponentialRampToValueAtTime(60, ctx.currentTime + 1.8);
             bassg.gain.setValueAtTime(0.22, ctx.currentTime + 0.5);
             bassg.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 2.0);
-            bass.connect(bassg); bassg.connect(reverb);
+            bass.connect(bassg); bassg.connect(dryg);
             bass.start(ctx.currentTime + 0.5);
             bass.stop(ctx.currentTime + 2.2);
 

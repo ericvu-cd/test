@@ -17,10 +17,321 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>友魚勇者之路-單人版</title>
     <link rel="stylesheet" href="style.css">
+
+    <!-- ══ 開場 CSS（內聯，強制覆蓋一切）══ -->
+    <style>
+      #intro-screen {
+        position: fixed !important;
+        top: 0 !important; left: 0 !important;
+        width: 100% !important; height: 100% !important;
+        z-index: 99999 !important;
+        background: #000 !important;
+        overflow: hidden !important;
+        cursor: pointer;
+        font-family: Georgia, serif;
+      }
+      #intro-lb-top, #intro-lb-bot {
+        position: absolute; left: 0; right: 0;
+        height: 8vh; background: #000;
+        z-index: 10; pointer-events: none;
+      }
+      #intro-lb-top { top: 0; }
+      #intro-lb-bot { bottom: 0; }
+      #intro-vig {
+        position: absolute; inset: 0; z-index: 9; pointer-events: none;
+        background: radial-gradient(ellipse at center,
+          transparent 42%, rgba(0,0,0,.80) 100%);
+      }
+      /* 過場黑幕：電影感慢降 */
+      #intro-blk {
+        position: absolute; inset: 0; background: #000;
+        z-index: 8; opacity: 0; pointer-events: none;
+        transition: opacity .9s cubic-bezier(.4,0,.2,1);
+      }
+      /* 橫向掃光線（過場用） */
+      #intro-scan {
+        position: absolute; inset: 0; z-index: 11; pointer-events: none;
+        background: linear-gradient(to bottom,
+          transparent 0%, rgba(255,255,255,.03) 48%,
+          rgba(255,255,255,.07) 50%, rgba(255,255,255,.03) 52%, transparent 100%);
+        opacity: 0;
+        transform: translateY(-100%);
+        transition: none;
+      }
+      #intro-scan.sweep {
+        animation: iSweep .85s cubic-bezier(.4,0,.6,1) forwards;
+      }
+      @keyframes iSweep {
+        0%   { opacity:0; transform:translateY(-100%); }
+        30%  { opacity:1; }
+        100% { opacity:0; transform:translateY(200%); }
+      }
+      /* 標題幕 */
+      #intro-ts {
+        position: absolute; inset: 0;
+        display: flex; flex-direction: column;
+        align-items: center; justify-content: center;
+        z-index: 5;
+      }
+      #intro-title {
+        font-size: clamp(2rem, 7vw, 5rem);
+        font-weight: 900; letter-spacing: .22em;
+        color: #dff0ff;
+        text-shadow:
+          0 0 22px rgba(100,200,255,.95),
+          0 0 55px rgba(80,170,255,.55),
+          0 0 110px rgba(60,140,255,.28);
+        white-space: nowrap; min-height: 1.4em;
+        position: absolute;
+        top: 50%; transform: translateY(-50%);
+      }
+      #intro-title::after {
+        content: '|';
+        color: rgba(140,215,255,.9);
+        animation: iCur .68s step-end infinite;
+        margin-left: 3px;
+      }
+      #intro-title.done::after { display: none; }
+      @keyframes iCur { 0%,100%{opacity:1} 50%{opacity:0} }
+      #intro-title.done {
+        animation: iPulse 2.8s ease-in-out infinite;
+      }
+      @keyframes iPulse {
+        0%,100%{ text-shadow:0 0 22px rgba(100,200,255,.95),0 0 55px rgba(80,170,255,.55); }
+        50%{ text-shadow:0 0 35px rgba(100,200,255,1),0 0 90px rgba(80,170,255,.85),0 0 150px rgba(60,140,255,.45); }
+      }
+      /* 提示：固定在底部，灰色 */
+      #intro-hint {
+        position: absolute;
+        bottom: calc(8vh + 22px);
+        left: 50%; transform: translateX(-50%);
+        font-size: clamp(.7rem, 1.8vw, .88rem);
+        letter-spacing: .3em; white-space: nowrap;
+        color: rgba(160,160,160,0);
+        transition: color 1.2s ease;
+        animation: iHint 2.2s ease-in-out infinite;
+        z-index: 20;
+      }
+      #intro-hint.show { color: rgba(150,150,150,.65); }
+      @keyframes iHint { 0%,100%{opacity:.2} 50%{opacity:.85} }
+      /* 漫畫幕 */
+      #intro-cs {
+        position: absolute; inset: 0; z-index: 4; display: none;
+      }
+      .iimg {
+        position: absolute; inset: 0; width: 100%; height: 100%;
+        object-fit: cover;
+        filter: saturate(.87) brightness(.9);
+        opacity: 0; transform: scale(1.09);
+        will-change: transform, opacity;
+      }
+      .iimg.breath {
+        animation: iBreath var(--bd, 10.3s) ease-in-out forwards;
+      }
+      @keyframes iBreath {
+        0%   { transform: scale(1.09); }
+        100% { transform: scale(1.00); }
+      }
+      /* 頁碼 */
+      #intro-pgnum {
+        position: absolute; bottom: calc(8vh + 14px); right: 20px;
+        z-index: 12; color: rgba(255,255,255,.28);
+        font-size: .65rem; letter-spacing: .1em;
+        font-family: monospace; pointer-events: none;
+      }
+      /* SKIP：極淡，幾乎隱形 */
+      #intro-skip {
+        position: fixed;
+        bottom: calc(8vh + 14px); right: 18px;
+        z-index: 999999;
+        background: rgba(0,0,0,.18);
+        border: 1px solid rgba(255,255,255,.10);
+        border-radius: 22px;
+        color: rgba(255,255,255,.22);
+        font-size: .7rem; letter-spacing: .08em;
+        padding: 5px 14px; cursor: pointer;
+        backdrop-filter: blur(3px);
+        display: none;
+        transition: color .3s, border-color .3s, background .3s;
+      }
+      #intro-skip:hover {
+        color: rgba(255,255,255,.55);
+        border-color: rgba(255,255,255,.28);
+        background: rgba(0,0,0,.35);
+      }
+      /* 結束淡出：慢速電影感 */
+      #intro-screen.closing {
+        animation: iClose 1.4s ease forwards;
+        pointer-events: none;
+      }
+      @keyframes iClose { to { opacity: 0; } }
+    </style>
 </head>
 <body>
 
-	<div id="welcome-screen">
+  <!-- ══ 開場畫面 ══ -->
+  <div id="intro-screen">
+    <div id="intro-vig"></div>
+    <div id="intro-lb-top"></div>
+    <div id="intro-lb-bot"></div>
+    <div id="intro-blk"></div>
+    <div id="intro-scan"></div>
+
+    <div id="intro-ts">
+      <div id="intro-title"></div>
+    </div>
+
+    <div id="intro-cs">
+      <img id="iimg-a" class="iimg" src="" alt="">
+      <img id="iimg-b" class="iimg" src="" alt="">
+      <div id="intro-pgnum"></div>
+    </div>
+
+    <!-- 提示：固定底部，獨立於標題幕之外 -->
+    <div id="intro-hint">點擊畫面開場</div>
+
+    <button id="intro-skip" onclick="introSkip()">跳過</button>
+  </div>
+
+  <!-- ══ 開場邏輯（緊接 DOM 後立即執行）══ -->
+  <script>
+  (function(){
+    var IMGS=['P1.jpg','P2.jpg','P3.jpg','P4.jpg','P5.jpg','P6.jpg','P7.jpg','P8.jpg','P9.jpg'];
+    var STAY=10300, FADE_OUT=900, BLACK=500, FADE_IN=900;
+    var alive=true, slotA=true, bgmEl=null, volTmr=null;
+    var imgA,imgB,blkOvl,scanEl;
+
+    function fadeVol(to,ms){
+      if(!bgmEl)return;
+      var from=bgmEl.volume,steps=40,dt=ms/steps,s=0;
+      clearInterval(volTmr);
+      volTmr=setInterval(function(){
+        s++;
+        bgmEl.volume=Math.min(1,Math.max(0,from+(to-from)*(s/steps)));
+        if(s>=steps)clearInterval(volTmr);
+      },dt);
+    }
+
+    var TITLE='友魚勇者之路', ti=0;
+    var titleEl=document.getElementById('intro-title');
+    var hintEl=document.getElementById('intro-hint');
+    function type(){
+      if(ti<=TITLE.length){
+        titleEl.textContent=TITLE.slice(0,ti++);
+        setTimeout(type,115);
+      } else {
+        titleEl.classList.add('done');
+        setTimeout(function(){ hintEl.classList.add('show'); },550);
+      }
+    }
+    setTimeout(type,700);
+
+    var introScr=document.getElementById('intro-screen');
+    introScr.addEventListener('click',startComic,{once:true});
+
+    function startComic(){
+      bgmEl=document.getElementById('bgm');
+      if(bgmEl){
+        bgmEl.src='MZ.mp3';
+        bgmEl.loop=true;
+        bgmEl.volume=0;
+        bgmEl.play().catch(function(){});
+        fadeVol(1,2200);
+      }
+      var ts=document.getElementById('intro-ts');
+      ts.style.transition='opacity .55s';
+      ts.style.opacity='0';
+      setTimeout(function(){ ts.style.display='none'; },560);
+
+      var cs=document.getElementById('intro-cs');
+      cs.style.display='block';
+      document.getElementById('intro-skip').style.display='block';
+
+      imgA=document.getElementById('iimg-a');
+      imgB=document.getElementById('iimg-b');
+      blkOvl=document.getElementById('intro-blk');
+      scanEl=document.getElementById('intro-scan');
+      // 隱藏標題幕提示
+      var hint=document.getElementById('intro-hint');
+      if(hint) hint.style.display='none';
+      showImg(0);
+    }
+
+    function showImg(n){
+      if(!alive)return;
+      document.getElementById('intro-pgnum').textContent='● '+(n+1)+' / '+IMGS.length;
+      var inc=slotA?imgA:imgB;
+      var out=slotA?imgB:imgA;
+
+      // 電影感：黑幕緩緩升起
+      blkOvl.style.opacity='1';
+
+      // 掃光重置
+      scanEl.classList.remove('sweep');
+      void scanEl.offsetWidth;
+
+      inc.src=IMGS[n];
+      inc.classList.remove('breath');
+      inc.removeAttribute('style');
+      inc.style.opacity='0';
+      inc.style.transform='scale(1.09)';
+      inc.style.transition='opacity 0s';
+
+      setTimeout(function(){
+        // 黑幕緩降
+        blkOvl.style.opacity='0';
+        // 掃光（延遲一點，讓圖先出來）
+        setTimeout(function(){ scanEl.classList.add('sweep'); }, 300);
+        // 新圖慢淡入
+        inc.style.transition='opacity '+FADE_IN+'ms cubic-bezier(.4,0,.2,1)';
+        inc.style.opacity='1';
+        inc.style.setProperty('--bd', STAY+'ms');
+        void inc.offsetWidth;
+        inc.classList.add('breath');
+        // 舊圖緩淡出
+        out.style.transition='opacity '+FADE_OUT+'ms ease';
+        out.style.opacity='0';
+        slotA=!slotA;
+
+        if(n<IMGS.length-1){
+          setTimeout(function(){ if(alive)showImg(n+1); }, STAY);
+        } else {
+          setTimeout(function(){
+            if(!alive)return;
+            fadeVol(0.5,1800);
+            endIntro(false);
+          }, STAY);
+        }
+      }, FADE_OUT+BLACK);
+    }
+
+    function endIntro(fast){
+      alive=false;
+      if(fast){ fadeVol(0.5,600); }
+      var scr=document.getElementById('intro-screen');
+      scr.classList.add('closing');
+      setTimeout(function(){
+        scr.remove();
+        var w=document.getElementById('welcome-screen');
+        if(w){
+          w.style.display='flex';
+          w.style.opacity='0';
+          w.style.transition='opacity .85s ease';
+          setTimeout(function(){ w.style.opacity='1'; },30);
+        }
+      }, fast?700:1000);
+    }
+
+    window.introSkip=function(){
+      if(!alive)return;
+      alive=false;
+      introScr.removeEventListener('click',startComic);
+      endIntro(true);
+    };
+  })();
+  </script>
+
+	<div id="welcome-screen" style="display:none;">
 		<div class="welcome-container">
 
 			<div class="game-title">
@@ -49,7 +360,6 @@
 
 		</div>
 
-		<!-- 背景光點 -->
 		<div class="mbubble"></div>
 		<div class="mbubble"></div>
 		<div class="mbubble"></div>
@@ -137,7 +447,6 @@
 		<div id="summon-focus-box">🔍 尋找勇者...<br>等待中...</div>
 	</div>
 	<script>
-		// 攔截右鍵/長按瀏覽器選單
 		document.addEventListener('contextmenu', e => e.preventDefault());
 	</script>
 

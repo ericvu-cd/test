@@ -332,6 +332,8 @@ function showWinScreen(winner) {
         winBgm.pause();
         if (gameBgm) gameBgm.play().catch(()=>{});
         clearInterval(particleTimer);
+        // 重載前記住音效開關狀態，下一局繼承（關掉分頁後 sessionStorage 自動清除）
+        sessionStorage.setItem("sfxEnabled", sfxEnabled ? "true" : "false");
         location.reload();
     };
 
