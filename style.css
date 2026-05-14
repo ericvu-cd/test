@@ -221,9 +221,9 @@ body.game-started > *:not(#welcome-screen) {
 
 /* 輪到誰的動畫特效 */
 @keyframes aiPulseGlow {
-    0%   { transform: scale(1);   box-shadow: 0 0 6px 1px currentColor; filter: brightness(1); }
-    50%  { transform: scale(1.8); box-shadow: 0 0 18px 4px currentColor; filter: brightness(1.1); }
-    100% { transform: scale(1);   box-shadow: 0 0 6px 1px currentColor; filter: brightness(1); }
+    0%   { transform: scale(1);   box-shadow: 0 0 6px 1px currentColor; }
+    50%  { transform: scale(1.8); box-shadow: 0 0 18px 4px currentColor; }
+    100% { transform: scale(1);   box-shadow: 0 0 6px 1px currentColor; }
 }
 .box.is-caller .avatar-img {
     animation: aiPulseGlow 5s ease-in-out infinite;
@@ -242,16 +242,11 @@ body.game-started > *:not(#welcome-screen) {
 
 /* ===== 玩家回合強化提示（my-turn：玩家需要出牌）===== */
 @keyframes myTurnPulse {
-    0%, 100% { opacity: 0.5; }
+    0%, 100% { opacity: 0.4; }
     50%       { opacity: 1;   }
 }
-@keyframes myTurnBorderFlash {
-    0%, 100% { border-top-color: rgba(255, 179, 71, 0.4); }
-    50%       { border-top-color: rgba(255, 220, 80, 1); }
-}
 #player-zone.my-turn {
-    border-top: 3px solid rgba(255, 179, 71, 0.5);
-    animation: myTurnBorderFlash 1.5s ease-in-out infinite;
+    border-top: 3px solid rgba(255, 210, 60, 0.85);
     background: linear-gradient(
         to top,
         rgba(255, 200, 60, 0.15) 0%,
@@ -259,15 +254,15 @@ body.game-started > *:not(#welcome-screen) {
         transparent 100%
     ) !important;
 }
-/* 光暈用偽元素做，不影響父層 repaint */
+/* 光暈：靜態 box-shadow + opacity 閃爍，不用 blur */
 #player-zone.my-turn::after {
     content: "";
     position: absolute;
-    top: -6px; left: 0; right: 0;
-    height: 6px;
-    background: rgba(255, 200, 60, 0.55);
-    filter: blur(6px);
-    border-radius: 50%;
+    top: -4px; left: 0; right: 0;
+    height: 4px;
+    background: rgba(255, 210, 60, 0.7);
+    border-radius: 0;
+    box-shadow: 0 0 10px 3px rgba(255, 200, 60, 0.45);
     animation: myTurnPulse 1.5s ease-in-out infinite;
     pointer-events: none;
 }
@@ -276,14 +271,14 @@ body.game-started > *:not(#welcome-screen) {
 
 .mazu-glow {
     background: rgba(60, 30, 0, 0.75) !important;
-    box-shadow: 0 0 35px #f5b942, inset 0 0 20px rgba(245,185,66,0.15) !important;
+    box-shadow: 0 0 40px #f5b942, inset 0 0 20px rgba(245,185,66,0.15) !important;
     border: 2px solid #f5b942 !important;
     color: #fde9a2 !important;
     animation: mazuPulse 2s ease-in-out infinite;
 }
 @keyframes mazuPulse {
-    0%, 100% { box-shadow: 0 0 25px #f5b942, inset 0 0 15px rgba(245,185,66,0.15); }
-    50%       { box-shadow: 0 0 50px #ffd966, inset 0 0 30px rgba(255,217,102,0.35); }
+    0%, 100% { opacity: 0.85; }
+    50%       { opacity: 1;    }
 }
 
 /* 媽祖贈牌：選擇對象遮罩 */
@@ -508,11 +503,15 @@ body.game-started > *:not(#welcome-screen) {
 #ocean-caustics.mazu-beams .caustic-beam:nth-child(1) { width: 80px; }
 #ocean-caustics.mazu-beams .caustic-beam:nth-child(3) { width: 100px; }
 #ocean-caustics.mazu-beams .caustic-beam:nth-child(5) { width: 75px; }
-.caustic-beam:nth-child(1) { left: 8%;  animation: beamSway 7s  2.0s ease-in-out infinite; }
-.caustic-beam:nth-child(2) { left: 22%; animation: beamSway 9s  0.5s ease-in-out infinite; width: 40px; opacity: 0.7; }
+/* 預設：只有第3條（正中間）保持動態，其餘靜止 */
+.caustic-beam:nth-child(1) { left: 8%;  animation: beamSway 7s  2.0s ease-in-out infinite; animation-play-state: paused; }
+.caustic-beam:nth-child(2) { left: 22%; animation: beamSway 9s  0.5s ease-in-out infinite; width: 40px; opacity: 0.7; animation-play-state: paused; }
 .caustic-beam:nth-child(3) { left: 42%; animation: beamSway 11s 1.2s ease-in-out infinite; }
-.caustic-beam:nth-child(4) { left: 63%; animation: beamSway 8s  3.5s ease-in-out infinite; width: 35px; opacity: 0.6; }
-.caustic-beam:nth-child(5) { left: 80%; animation: beamSway 10s 0.0s ease-in-out infinite; }
+.caustic-beam:nth-child(4) { left: 63%; animation: beamSway 8s  3.5s ease-in-out infinite; width: 35px; opacity: 0.6; animation-play-state: paused; }
+.caustic-beam:nth-child(5) { left: 80%; animation: beamSway 10s 0.0s ease-in-out infinite; animation-play-state: paused; }
+/* 玩家回合或媽祖時：全部恢復 */
+#ocean-caustics.beams-active .caustic-beam,
+#ocean-caustics.mazu-beams  .caustic-beam { animation-play-state: running; }
 
 @keyframes beamSway {
     0%   { transform: rotate(-8deg) scaleX(1.0); opacity: 0.5; }

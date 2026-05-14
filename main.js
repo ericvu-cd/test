@@ -518,7 +518,14 @@ function toggleMusic() {
     }
 }
 
+const BUBBLE_MAX = 10;      // 同時最多幾顆
+const BUBBLE_INTERVAL = 900; // 每 900ms 嘗試生一顆
+let _bubbleTimer = null;
+
 function createBubble() {
+    const container = document.getElementById("bubbles");
+    if (!container) return;
+    if (container.children.length >= BUBBLE_MAX) return; // 超過上限就跳過
     const b = document.createElement("div");
     b.className = "bubble";
     const size = 4 + Math.random() * 18;
@@ -530,10 +537,18 @@ function createBubble() {
     // 每顆泡泡獨立的左右飄移方向與距離（-8px ~ +8px）
     const drift = (Math.random() * 16 - 8).toFixed(1);
     b.style.setProperty("--drift-x", drift + "px");
-    document.getElementById("bubbles").appendChild(b);
+    container.appendChild(b);
     setTimeout(() => b.remove(), duration * 1000);
 }
-setInterval(createBubble, 300);
+
+function startBubbles() {
+    if (_bubbleTimer) return;
+    _bubbleTimer = setInterval(createBubble, BUBBLE_INTERVAL);
+}
+
+function stopBubbles() {
+    if (_bubbleTimer) { clearInterval(_bubbleTimer); _bubbleTimer = null; }
+}
 
 // =============================================
 // 🐟 魚體調色盤（每種魚有亮色/中色/暗色三層）
@@ -682,22 +697,40 @@ function createFish(forceSprint = false) {
     setTimeout(() => wrapper.remove(), speed * 1000 + 500);
 }
 
-// 普通魚：每 2.5 秒一條
-setInterval(createFish, 2500);
+// 普通魚：遊戲開始後才啟動，4.5 秒一條，最多同時 6 條
+const FISH_MAX = 6;
+const FISH_INTERVAL = 4500;
+let _fishTimer = null;
+let _sprintTimer = null;
 
-// 衝刺魚：每 12-20 秒強制產生一條近景快魚
+function startFish() {
+    if (_fishTimer) return;
+    _fishTimer = setInterval(() => {
+        const layer = document.getElementById("fish-layer");
+        if (layer && layer.children.length < FISH_MAX) createFish();
+    }, FISH_INTERVAL);
+    scheduleSprintFish();
+}
+
+function stopFish() {
+    if (_fishTimer)  { clearInterval(_fishTimer);  _fishTimer  = null; }
+    if (_sprintTimer){ clearTimeout(_sprintTimer); _sprintTimer = null; }
+}
+
+// 衝刺魚：每 15-25 秒強制產生一條近景快魚
 function scheduleSprintFish() {
-    const delay = 12000 + Math.random() * 8000;
-    setTimeout(() => {
-        createFish(true);
+    const delay = 15000 + Math.random() * 10000;
+    _sprintTimer = setTimeout(() => {
+        const layer = document.getElementById("fish-layer");
+        if (layer && layer.children.length < FISH_MAX) createFish(true);
         scheduleSprintFish();
     }, delay);
 }
 
-scheduleSprintFish();
-
 function initGame() {
 	initOceanCaustics();
+	startFish();    // ← 遊戲開始才啟動魚
+	startBubbles(); // ← 遊戲開始才啟動氣泡
 	document.body.classList.add('game-started');
     // ✅ 改用加入 class 的方式觸發淡出
     const welcomeScreen = document.getElementById("welcome-screen");
@@ -835,6 +868,12 @@ function updateCallerHighlight() {
             else el.classList.remove("is-caller");
         }
     });
+    // 玩家回合（含媽祖）才全開光束，其他時間只留第3條
+    const caustics = document.getElementById("ocean-caustics");
+    if (caustics) {
+        const isPlayerActive = phase === "PLAYER_TURN" || phase === "PLAYER_MAZU";
+        caustics.classList.toggle("beams-active", isPlayerActive);
+    }
 }
 
 let summonFocusTimer = null;

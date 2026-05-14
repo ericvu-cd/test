@@ -19,6 +19,8 @@ function startTutorial() {
     }
 
     document.body.classList.add("game-started");
+    if (typeof startFish    === "function") startFish();
+    if (typeof startBubbles === "function") startBubbles();
 	
 	document.getElementById("summon-display").style.display = "none";
     document.getElementById("deck-info").style.display = "none";
@@ -182,6 +184,10 @@ function runTutorialStep() {
 
 		// 移除教學點擊監聽器
 		document.body.removeEventListener("click", tutorialClickHandler);
+
+		// 停止魚與氣泡（回主畫面不需要）
+		if (typeof stopFish    === "function") stopFish();
+		if (typeof stopBubbles === "function") stopBubbles();
 
 		// ⭐ 恢復主畫面
 		const welcome = document.getElementById("welcome-screen");
