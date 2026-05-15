@@ -204,13 +204,7 @@
 
   <!-- ══ 開場邏輯 ══ -->
   <script>
-  // 若從勝利畫面重啟，直接跳開場
-  if(sessionStorage.getItem('skipIntro')==='1'){
-    sessionStorage.removeItem('skipIntro');
-    document.getElementById('intro-screen').style.display='none';
-    var _w=document.getElementById('welcome-screen');
-    if(_w){ _w.style.display='flex'; _w.style.opacity='1'; }
-  } else {
+  if(sessionStorage.getItem('skipIntro')!=='1'){
   (function(){
     var IMGS=['P1.jpg','P2.jpg','P3.jpg','P4.jpg','P5.jpg','P6.jpg','P7.jpg','P8.jpg','P9.jpg'];
     // 每張12秒，其中前6秒是出場動畫，後6秒靜止供閱讀
@@ -401,6 +395,16 @@
 		<div class="mbubble"></div>
 
 	</div>
+
+  <script>
+  if(sessionStorage.getItem('skipIntro')==='1'){
+    sessionStorage.removeItem('skipIntro');
+    document.getElementById('intro-screen').remove();
+    var _w=document.getElementById('welcome-screen');
+    _w.style.display='flex';
+    _w.style.animation='welcomeFadeIn 1.5s ease-in-out forwards';
+  }
+  </script>
 
     <audio id="bgm" loop preload="auto">
         <source src="Below_the_Surface.mp3" type="audio/mpeg">

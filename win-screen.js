@@ -333,7 +333,7 @@ function showWinScreen(winner) {
         if (gameBgm) gameBgm.play().catch(()=>{});
         clearInterval(particleTimer);
         sessionStorage.setItem("sfxEnabled", sfxEnabled ? "true" : "false");
-        sessionStorage.setItem("skipIntro", "1"); // ⭐ 跳過開場動畫
+        sessionStorage.setItem("skipIntro", "1");
         location.reload();
     };
 
