@@ -424,7 +424,11 @@
             0 0 48px rgba(3,169,244,0.65);
         margin-bottom:4px;
     }
-    .ws-subtitle { font-size:1.05rem; color:rgba(210,240,255,0.88); letter-spacing:.28em; text-shadow:0 0 10px rgba(100,200,255,0.4); }
+    .ws-subtitle {
+        font-size:1.05rem; letter-spacing:.28em;
+        color:rgba(215,242,255,0.92);
+        text-shadow:0 0 10px rgba(100,200,255,0.45);
+    }
     .ws-deco-line {
         display:flex; align-items:center; justify-content:center;
         gap:10px; margin-top:10px;
@@ -434,59 +438,63 @@
         background:linear-gradient(90deg,transparent,rgba(140,200,255,0.32),transparent);
     }
 
-    /* 設定卡片 — 高透明，字夠亮 */
+    /* 設定卡片 — 極高透明，靠毛玻璃 */
     .ws-card {
         width:100%;
-        background:rgba(4,12,30,0.38);
-        border:1px solid rgba(140,200,255,0.22);
+        box-sizing:border-box;
+        background:rgba(8,20,45,0.22);
+        border:1px solid rgba(160,210,255,0.18);
         border-radius:18px;
-        padding:20px 18px 18px;
-        backdrop-filter:blur(10px);
-        -webkit-backdrop-filter:blur(10px);
+        padding:18px 16px 16px;
+        backdrop-filter:blur(14px);
+        -webkit-backdrop-filter:blur(14px);
         margin-bottom:14px;
-        display:flex; flex-direction:column; gap:16px;
+        display:flex; flex-direction:column; gap:15px;
+        overflow:hidden;
     }
     .ws-field-label {
-        font-size:1rem; letter-spacing:.18em;
-        color:rgba(220,240,255,0.95); margin-bottom:7px;
+        font-size:1.1rem; letter-spacing:.16em;
+        color:#ffffff; margin-bottom:6px;
         font-weight:700;
-        text-shadow:0 0 8px rgba(100,200,255,0.5);
+        text-shadow:0 0 12px rgba(120,210,255,0.7), 0 1px 3px rgba(0,0,0,0.6);
     }
 
-    /* 名稱輸入 */
+    /* 名稱輸入 — 不超出卡片 */
     .ws-name-input {
         width:100%;
-        background:rgba(255,255,255,0.06);
-        border:1px solid rgba(140,200,255,0.3);
+        box-sizing:border-box;
+        background:rgba(255,255,255,0.07);
+        border:1px solid rgba(160,210,255,0.28);
         border-radius:10px;
-        padding:11px 13px;
-        color:#e8f6ff; font-size:1.05rem;
+        padding:11px 12px;
+        color:#ffffff; font-size:1.1rem;
         font-family:"Microsoft JhengHei",sans-serif;
         outline:none; transition:border-color .2s;
         -webkit-user-select:text; user-select:text;
+        text-shadow:0 1px 4px rgba(0,0,0,0.5);
     }
-    .ws-name-input::placeholder { color:rgba(160,210,255,0.45); }
-    .ws-name-input:focus { border-color:rgba(120,210,255,0.65); }
+    .ws-name-input::placeholder { color:rgba(180,220,255,0.4); }
+    .ws-name-input:focus { border-color:rgba(140,220,255,0.6); }
 
     /* 難度 */
     .ws-diff-row { display:flex; gap:7px; }
     .ws-diff-btn {
         flex:1; padding:10px 0; border-radius:10px;
-        border:1px solid rgba(160,210,255,0.3);
-        background:rgba(255,255,255,0.06);
-        color:rgba(220,240,255,0.9);
-        font-size:1rem; cursor:pointer;
+        border:1px solid rgba(160,210,255,0.25);
+        background:rgba(255,255,255,0.05);
+        color:#ffffff;
+        font-size:1.1rem; cursor:pointer;
         transition:all .18s;
         font-family:"Microsoft JhengHei",sans-serif;
         -webkit-tap-highlight-color:transparent;
-        text-shadow:0 0 6px rgba(100,200,255,0.3);
+        text-shadow:0 0 8px rgba(120,200,255,0.5), 0 1px 3px rgba(0,0,0,0.5);
     }
     .ws-diff-btn:active { transform:scale(0.95); }
     .ws-diff-btn.ws-active {
-        background:rgba(255,183,77,0.15);
-        border-color:rgba(255,200,100,0.65);
-        color:#ffe49a; font-weight:700;
-        text-shadow:0 0 8px rgba(255,180,60,0.6);
+        background:rgba(255,183,77,0.12);
+        border-color:rgba(255,200,100,0.6);
+        color:#ffe89e; font-weight:700;
+        text-shadow:0 0 10px rgba(255,180,60,0.7), 0 1px 3px rgba(0,0,0,0.5);
     }
 
     /* 音效開關 */
@@ -495,42 +503,43 @@
         justify-content:space-between; padding:2px 0;
     }
     .ws-sound-label {
-        font-size:1rem; color:rgba(220,240,255,0.95);
+        font-size:1.1rem; color:#ffffff;
         font-family:"Microsoft JhengHei",sans-serif;
         display:flex; align-items:center; gap:7px;
         font-weight:700;
-        text-shadow:0 0 8px rgba(100,200,255,0.4);
+        text-shadow:0 0 12px rgba(120,210,255,0.7), 0 1px 3px rgba(0,0,0,0.6);
     }
     .ws-toggle {
         width:44px; height:24px; border-radius:12px;
-        border:1px solid rgba(100,180,255,0.22);
-        background:rgba(255,255,255,0.07);
+        border:1px solid rgba(160,200,255,0.25);
+        background:rgba(255,255,255,0.08);
         position:relative; cursor:pointer;
         transition:background .22s, border-color .22s;
         flex-shrink:0; -webkit-tap-highlight-color:transparent;
     }
     .ws-toggle.ws-on {
-        background:rgba(255,183,77,0.38);
-        border-color:rgba(255,183,77,0.65);
+        background:rgba(255,183,77,0.35);
+        border-color:rgba(255,183,77,0.6);
     }
     .ws-toggle::after {
         content:''; position:absolute; top:3px; left:3px;
         width:17px; height:17px; border-radius:50%;
-        background:rgba(160,210,255,0.65);
+        background:rgba(200,230,255,0.7);
         transition:transform .22s, background .22s;
     }
     .ws-toggle.ws-on::after { transform:translateX(20px); background:#ffcf6e; }
 
     /* 主按鈕 */
     #ws-start-btn {
-        width:100%; padding:18px; border-radius:50px; border:none;
+        width:100%; padding:16px; border-radius:50px; border:none;
         background:linear-gradient(135deg,#ffb74d,#ff7043);
-        color:white; font-size:1.56rem; font-weight:900;
-        letter-spacing:.1em; cursor:pointer;
-        font-family:"Microsoft JhengHei","Noto Serif TC",serif;
-        box-shadow:0 5px 15px rgba(0,0,0,0.3),0 0 20px rgba(255,183,77,0.55);
+        color:white; font-size:1.1rem; font-weight:700;
+        letter-spacing:.12em; cursor:pointer;
+        font-family:"Microsoft JhengHei",sans-serif;
+        box-shadow:0 5px 15px rgba(0,0,0,0.3),0 0 20px rgba(255,183,77,0.5);
         transition:transform .15s; position:relative; overflow:hidden;
         -webkit-tap-highlight-color:transparent;
+        text-shadow:0 1px 4px rgba(0,0,0,0.3);
     }
     #ws-start-btn::after {
         content:''; position:absolute;
@@ -545,19 +554,19 @@
     /* 次要按鈕 */
     .ws-sub-row { display:flex; gap:10px; width:100%; }
     .ws-sub-btn {
-        flex:1; padding:12px 4px; font-size:1.14rem;
+        flex:1; padding:12px 4px; font-size:1.1rem;
         border-radius:30px;
-        border:1.5px solid rgba(255,255,255,0.5);
-        background:rgba(255,255,255,0.12);
-        color:rgba(255,255,255,0.95); cursor:pointer;
+        border:1px solid rgba(255,255,255,0.3);
+        background:rgba(255,255,255,0.07);
+        color:#ffffff; cursor:pointer;
         font-family:"Microsoft JhengHei",sans-serif;
         font-weight:700;
         transition:all .18s;
-        backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
+        backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
         -webkit-tap-highlight-color:transparent;
-        text-shadow:0 1px 6px rgba(0,0,0,0.5);
+        text-shadow:0 0 10px rgba(120,210,255,0.5), 0 1px 4px rgba(0,0,0,0.5);
     }
-    .ws-sub-btn:active { transform:scale(0.95); background:rgba(255,255,255,0.2); }
+    .ws-sub-btn:active { transform:scale(0.95); background:rgba(255,255,255,0.14); }
     </style>
 </head>
 <body>
