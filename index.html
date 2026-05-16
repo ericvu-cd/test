@@ -343,6 +343,210 @@
       }
       @keyframes iClose { to { opacity: 0; } }
     </style>
+
+    <!-- ══ 歡迎頁樣式 ══ -->
+    <style>
+    #welcome-screen {
+        position: absolute;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        z-index: 1000;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background:
+            linear-gradient(rgba(0,0,0,0.15), rgba(0,0,0,0.42)),
+            url('bgi.png') no-repeat center center;
+        background-size: cover;
+        opacity: 0;
+        animation: welcomeFadeIn 1.5s ease-in-out forwards;
+        transition: opacity 1.2s ease-in-out, visibility 1.2s;
+        overflow: hidden;
+    }
+    @keyframes welcomeFadeIn { from{opacity:0} to{opacity:1} }
+    #welcome-screen.fade-out  { opacity:0; visibility:hidden; }
+    #welcome-screen.hidden    { opacity:0; visibility:hidden; pointer-events:none; }
+
+    /* 光柱 */
+    #ws-rays { position:absolute; inset:0; pointer-events:none; overflow:hidden; z-index:1; }
+    .ws-ray  {
+        position:absolute; top:-6%;
+        background:linear-gradient(180deg,rgba(160,210,255,0.15) 0%,transparent 100%);
+        transform-origin:top center;
+        animation:wsRayPulse 8s ease-in-out infinite;
+    }
+    .ws-ray:nth-child(1){ left:18%; width:28px; height:55%; transform:rotate(-22deg); animation-delay:0s; }
+    .ws-ray:nth-child(2){ left:38%; width:52px; height:62%; transform:rotate(-8deg);  animation-delay:-2.8s; opacity:.75; }
+    .ws-ray:nth-child(3){ left:57%; width:36px; height:58%; transform:rotate(6deg);   animation-delay:-5s; }
+    .ws-ray:nth-child(4){ left:76%; width:22px; height:48%; transform:rotate(20deg);  animation-delay:-1.8s; }
+    @keyframes wsRayPulse { 0%,100%{opacity:.5} 50%{opacity:1} }
+
+    /* 暗角 */
+    #ws-vignette {
+        position:absolute; inset:0; pointer-events:none; z-index:2;
+        background:
+            radial-gradient(ellipse at center, transparent 35%, rgba(4,10,28,0.6) 100%),
+            linear-gradient(to top, rgba(4,10,28,0.75) 0%, transparent 32%);
+    }
+
+    /* 泡泡 */
+    .ws-mbubble {
+        position:absolute; border-radius:50%;
+        border:1px solid rgba(160,220,255,0.35);
+        background:transparent;
+        animation:wsBubRise linear infinite;
+        pointer-events:none; z-index:2;
+    }
+    @keyframes wsBubRise {
+        0%  { transform:translateY(0);      opacity:.5; }
+        100%{ transform:translateY(-110vh); opacity:0;  }
+    }
+
+    /* 容器 */
+    .ws-container {
+        position:relative; z-index:5;
+        width:88%; max-width:360px;
+        display:flex; flex-direction:column; align-items:center;
+    }
+
+    /* 標題 */
+    .ws-title-block { text-align:center; margin-bottom:20px; }
+    .ws-game-title {
+        font-size:clamp(2rem,8vw,2.8rem);
+        font-weight:900; color:white; letter-spacing:.1em;
+        text-shadow:
+            0 0 10px rgba(255,255,255,0.85),
+            0 0 22px rgba(79,195,247,0.85),
+            0 0 48px rgba(3,169,244,0.65);
+        margin-bottom:4px;
+    }
+    .ws-subtitle { font-size:.82rem; color:rgba(180,225,255,0.55); letter-spacing:.28em; }
+    .ws-deco-line {
+        display:flex; align-items:center; justify-content:center;
+        gap:10px; margin-top:10px;
+    }
+    .ws-deco-line::before,.ws-deco-line::after {
+        content:''; height:1px; width:50px;
+        background:linear-gradient(90deg,transparent,rgba(140,200,255,0.32),transparent);
+    }
+
+    /* 設定卡片 */
+    .ws-card {
+        width:100%;
+        background:rgba(4,12,30,0.70);
+        border:1px solid rgba(100,180,255,0.17);
+        border-radius:18px;
+        padding:20px 18px 18px;
+        backdrop-filter:blur(5px);
+        -webkit-backdrop-filter:blur(5px);
+        margin-bottom:14px;
+        display:flex; flex-direction:column; gap:16px;
+    }
+    .ws-field-label {
+        font-size:.68rem; letter-spacing:.2em;
+        color:rgba(120,190,255,0.52); margin-bottom:7px;
+    }
+
+    /* 名稱輸入 */
+    .ws-name-input {
+        width:100%;
+        background:rgba(255,255,255,0.055);
+        border:1px solid rgba(100,180,255,0.22);
+        border-radius:10px;
+        padding:10px 13px;
+        color:#c8eeff; font-size:.95rem;
+        font-family:"Microsoft JhengHei",sans-serif;
+        outline:none; transition:border-color .2s;
+        -webkit-user-select:text; user-select:text;
+    }
+    .ws-name-input::placeholder { color:rgba(140,190,255,0.3); }
+    .ws-name-input:focus { border-color:rgba(100,200,255,0.55); }
+
+    /* 難度 */
+    .ws-diff-row { display:flex; gap:7px; }
+    .ws-diff-btn {
+        flex:1; padding:9px 0; border-radius:10px;
+        border:1px solid rgba(100,180,255,0.18);
+        background:rgba(255,255,255,0.04);
+        color:rgba(160,215,255,0.58);
+        font-size:.82rem; cursor:pointer;
+        transition:all .18s;
+        font-family:"Microsoft JhengHei",sans-serif;
+        -webkit-tap-highlight-color:transparent;
+    }
+    .ws-diff-btn:active { transform:scale(0.95); }
+    .ws-diff-btn.ws-active {
+        background:rgba(255,183,77,0.18);
+        border-color:rgba(255,183,77,0.58);
+        color:#ffd082; font-weight:700;
+    }
+
+    /* 音效開關 */
+    .ws-sound-wrap {
+        display:flex; align-items:center;
+        justify-content:space-between; padding:2px 0;
+    }
+    .ws-sound-label {
+        font-size:.85rem; color:rgba(160,215,255,0.72);
+        font-family:"Microsoft JhengHei",sans-serif;
+        display:flex; align-items:center; gap:7px;
+    }
+    .ws-toggle {
+        width:44px; height:24px; border-radius:12px;
+        border:1px solid rgba(100,180,255,0.22);
+        background:rgba(255,255,255,0.07);
+        position:relative; cursor:pointer;
+        transition:background .22s, border-color .22s;
+        flex-shrink:0; -webkit-tap-highlight-color:transparent;
+    }
+    .ws-toggle.ws-on {
+        background:rgba(255,183,77,0.38);
+        border-color:rgba(255,183,77,0.65);
+    }
+    .ws-toggle::after {
+        content:''; position:absolute; top:3px; left:3px;
+        width:17px; height:17px; border-radius:50%;
+        background:rgba(160,210,255,0.65);
+        transition:transform .22s, background .22s;
+    }
+    .ws-toggle.ws-on::after { transform:translateX(20px); background:#ffcf6e; }
+
+    /* 主按鈕 */
+    #ws-start-btn {
+        width:100%; padding:16px; border-radius:50px; border:none;
+        background:linear-gradient(135deg,#ffb74d,#ff7043);
+        color:white; font-size:1.3rem; font-weight:900;
+        letter-spacing:.1em; cursor:pointer;
+        font-family:"Microsoft JhengHei","Noto Serif TC",serif;
+        box-shadow:0 5px 15px rgba(0,0,0,0.3),0 0 20px rgba(255,183,77,0.55);
+        transition:transform .15s; position:relative; overflow:hidden;
+        -webkit-tap-highlight-color:transparent;
+    }
+    #ws-start-btn::after {
+        content:''; position:absolute;
+        top:-50%; left:-65%; width:38%; height:200%;
+        background:rgba(255,255,255,0.14);
+        transform:rotate(30deg);
+        animation:wsShimmer 3.5s ease-in-out infinite;
+    }
+    @keyframes wsShimmer { 0%,55%{left:-65%} 78%{left:135%} 100%{left:135%} }
+    #ws-start-btn:active { transform:scale(0.96); }
+
+    /* 次要按鈕 */
+    .ws-sub-row { display:flex; gap:10px; width:100%; }
+    .ws-sub-btn {
+        flex:1; padding:11px 4px; font-size:.95rem;
+        border-radius:30px;
+        border:2px solid rgba(255,255,255,0.45);
+        background:rgba(255,255,255,0.28);
+        color:white; cursor:pointer;
+        font-family:"Microsoft JhengHei",sans-serif;
+        transition:all .18s;
+        backdrop-filter:blur(3px); -webkit-backdrop-filter:blur(3px);
+        -webkit-tap-highlight-color:transparent;
+    }
+    .ws-sub-btn:active { transform:scale(0.95); background:rgba(255,255,255,0.38); }
+    </style>
 </head>
 <body>
 
@@ -697,38 +901,74 @@
   </script>
 
 	<div id="welcome-screen" style="display:none;">
-		<div class="welcome-container">
 
-			<div class="game-title">
-				友魚勇者之路
-				<div class="subtitle">單人挑戰</div>
-			</div>
-			
-			<div class="difficulty-select">
-				<div class="diff-title">🎯 選擇難度</div>
-				<div class="diff-options">
-					<button class="sub-btnd" onclick="setDifficulty(0.4, this)">新手</button>
-					<button class="sub-btnd active" onclick="setDifficulty(0.7, this)">標準</button>
-					<button class="sub-btnd" onclick="setDifficulty(0.9, this)">專業</button>
+		<!-- 光柱 -->
+		<div id="ws-rays">
+			<div class="ws-ray"></div>
+			<div class="ws-ray"></div>
+			<div class="ws-ray"></div>
+			<div class="ws-ray"></div>
+		</div>
+		<!-- 暗角 -->
+		<div id="ws-vignette"></div>
+		<!-- 泡泡（JS 生成） -->
+		<div id="ws-bubbles"></div>
+
+		<div class="ws-container">
+
+			<!-- 標題 -->
+			<div class="ws-title-block">
+				<div class="ws-game-title">友魚勇者之路</div>
+				<div class="ws-subtitle">單人挑戰</div>
+				<div class="ws-deco-line">
+					<span style="font-size:1rem;opacity:.65;">🐟</span>
 				</div>
 			</div>
 
-			<div class="menu-buttons">
-				<button id="real-start-btn" onclick="initGame()">啟航冒險</button>
+			<!-- 設定卡片 -->
+			<div class="ws-card">
 
-				<div class="sub-menu">
-					<button class="sub-btn" onclick="openStory()">📖 故事</button>
-					<button class="sub-btn" onclick="openInfo()">📘 說明</button>
-					<button class="sub-btn" onclick="startTutorial()">新手教學</button>
+				<!-- 勇者名稱 -->
+				<div>
+					<div class="ws-field-label">勇者名稱</div>
+					<input class="ws-name-input" id="ws-name-input"
+						type="text" placeholder="輸入你的名字…" maxlength="10">
+				</div>
+
+				<!-- 難度 -->
+				<div>
+					<div class="ws-field-label">難度選擇</div>
+					<div class="ws-diff-row">
+						<button class="ws-diff-btn"
+							onclick="wsSetDiff(0.4,this)">🐚 新手</button>
+						<button class="ws-diff-btn ws-active"
+							onclick="wsSetDiff(0.7,this)">🐠 標準</button>
+						<button class="ws-diff-btn"
+							onclick="wsSetDiff(0.9,this)">🦈 專業</button>
+					</div>
+				</div>
+
+				<!-- 音效・音樂 -->
+				<div class="ws-sound-wrap">
+					<span class="ws-sound-label">
+						<span id="ws-sound-icon">🔊</span>音效・音樂
+					</span>
+					<div class="ws-toggle ws-on" id="ws-sound-toggle"
+						onclick="wsToggleSound()"></div>
+				</div>
+
+			</div>
+
+			<!-- 按鈕區 -->
+			<div style="width:100%;display:flex;flex-direction:column;gap:10px;">
+				<button id="ws-start-btn" onclick="wsStartGame()">⚓ 啟航冒險</button>
+				<div class="ws-sub-row">
+					<button class="ws-sub-btn" onclick="openInfo()">📘 說明</button>
+					<button class="ws-sub-btn" onclick="startTutorial()">新手教學</button>
 				</div>
 			</div>
 
 		</div>
-
-		<div class="mbubble"></div>
-		<div class="mbubble"></div>
-		<div class="mbubble"></div>
-
 	</div>
 
   <script>
@@ -814,6 +1054,90 @@
     <script src="main.js"></script>
 	<script src="tutorial.js"></script>
 	<script src="win-screen.js"></script>
+
+	<script>
+	/* ══ 歡迎頁邏輯 ══════════════════════════════════════ */
+	(function(){
+
+		/* 泡泡 */
+		var _bubTimer = null;
+		function _mkBub(){
+			var wrap = document.getElementById('ws-bubbles');
+			if(!wrap) return;
+			var b = document.createElement('div');
+			b.className = 'ws-mbubble';
+			var s = 5 + Math.random()*12;
+			b.style.cssText =
+				'width:'+s+'px;height:'+s+'px;' +
+				'left:'+(Math.random()*88+5)+'%;' +
+				'bottom:-'+s+'px;' +
+				'animation-duration:'+(8+Math.random()*10)+'s;' +
+				'animation-delay:'+(Math.random()*4)+'s;';
+			wrap.appendChild(b);
+			setTimeout(function(){ b.remove(); }, 22000);
+		}
+		function _startBub(){
+			if(_bubTimer) return;
+			for(var i=0;i<8;i++) _mkBub();
+			_bubTimer = setInterval(_mkBub, 1800);
+		}
+		function _stopBub(){
+			if(_bubTimer){ clearInterval(_bubTimer); _bubTimer=null; }
+		}
+
+		/* 監聽 welcome-screen display 變化，自動啟停泡泡 */
+		var _wsEl = document.getElementById('welcome-screen');
+		if(_wsEl){
+			new MutationObserver(function(){
+				if(_wsEl.style.display !== 'none'){ _startBub(); }
+				else { _stopBub(); }
+			}).observe(_wsEl, { attributes:true, attributeFilter:['style'] });
+		}
+
+		/* 難度 */
+		window.wsSetDiff = function(val, btn){
+			if(typeof gameDifficulty !== 'undefined') gameDifficulty = val;
+			document.querySelectorAll('.ws-diff-btn')
+				.forEach(function(b){ b.classList.remove('ws-active'); });
+			btn.classList.add('ws-active');
+		};
+
+		/* 音效・音樂開關 */
+		window.wsToggleSound = function(){
+			var toggle = document.getElementById('ws-sound-toggle');
+			var icon   = document.getElementById('ws-sound-icon');
+			var isOn   = toggle.classList.toggle('ws-on');
+			if(typeof sfxEnabled !== 'undefined') sfxEnabled = isOn;
+			sessionStorage.setItem('sfxEnabled', isOn ? 'true' : 'false');
+			icon.textContent = isOn ? '🔊' : '🔇';
+			var bgm = document.getElementById('bgm');
+			if(bgm){
+				if(isOn){ bgm.play().catch(function(){}); }
+				else    { bgm.pause(); }
+			}
+		};
+		/* 初始化：讀取 sessionStorage */
+		(function(){
+			var stored = sessionStorage.getItem('sfxEnabled');
+			if(stored === 'false'){
+				if(typeof sfxEnabled !== 'undefined') sfxEnabled = false;
+				var t = document.getElementById('ws-sound-toggle');
+				var i = document.getElementById('ws-sound-icon');
+				if(t) t.classList.remove('ws-on');
+				if(i) i.textContent = '🔇';
+			}
+		})();
+
+		/* 啟航冒險 */
+		window.wsStartGame = function(){
+			var nameEl = document.getElementById('ws-name-input');
+			window.playerName = (nameEl && nameEl.value.trim()) ? nameEl.value.trim() : '勇者';
+			_stopBub();
+			if(typeof initGame === 'function') initGame();
+		};
+
+	})();
+	</script>
 	
 	<div id="chat-layer"></div>
 	<div id="tutorial-tooltip"></div>
