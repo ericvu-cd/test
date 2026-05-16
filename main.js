@@ -773,7 +773,7 @@ function startGame() {
     
     // 2. 初始化玩家與隨機選出的 AI
     players = [
-        { n: "你", hand: [], isAI: false }
+        { n: (window.playerName && window.playerName.trim()) ? window.playerName.trim() : "你", hand: [], isAI: false }
     ];
 
     // 3. 將選出的 AI 加入 players 陣列
@@ -957,7 +957,7 @@ function autoStep() {
 
     if (callerIdx === 0) {
         SFX.draw(); // 玩家抽到召喚牌
-        addLog(`【你】抽到召喚：${currentS.t.replace(/\n/g, " ")}`, "cmd");
+        addLog(`【${players[0].n}】抽到召喚：${currentS.t.replace(/\n/g, " ")}`, "cmd");
         document.getElementById("summon-display").innerText = (currentS.isMazu ? "【神明指示】\n" : "【你的召喚】\n") + currentS.t;
         phase = currentS.isMazu ? "PLAYER_MAZU" : "PLAYER_TURN";
         renderUI();
@@ -1106,7 +1106,7 @@ function confirmMazuGift(cardIdx, target) {
 
     target.hand.push(card);
     SFX.gift();
-    addLog(`✨ 你分享了【${card.n}】給 ${target.n}！`, "success");
+    addLog(`✨ ${players[0].n}分享了【${card.n}】給 ${target.n}！`, "success");
 
     if (target.isAI) {
         aiTalkMazuReceive(target, players[0], card);

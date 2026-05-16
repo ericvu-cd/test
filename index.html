@@ -420,7 +420,7 @@
             0 0 48px rgba(3,169,244,0.65);
         margin-bottom:4px;
     }
-    .ws-subtitle { font-size:.82rem; color:rgba(180,225,255,0.55); letter-spacing:.28em; }
+    .ws-subtitle { font-size:.88rem; color:rgba(200,235,255,0.75); letter-spacing:.28em; }
     .ws-deco-line {
         display:flex; align-items:center; justify-content:center;
         gap:10px; margin-top:10px;
@@ -433,18 +433,19 @@
     /* 設定卡片 */
     .ws-card {
         width:100%;
-        background:rgba(4,12,30,0.70);
-        border:1px solid rgba(100,180,255,0.17);
+        background:rgba(4,12,30,0.88);
+        border:1px solid rgba(100,180,255,0.28);
         border-radius:18px;
         padding:20px 18px 18px;
-        backdrop-filter:blur(5px);
-        -webkit-backdrop-filter:blur(5px);
+        backdrop-filter:blur(8px);
+        -webkit-backdrop-filter:blur(8px);
         margin-bottom:14px;
         display:flex; flex-direction:column; gap:16px;
     }
     .ws-field-label {
-        font-size:.68rem; letter-spacing:.2em;
-        color:rgba(120,190,255,0.52); margin-bottom:7px;
+        font-size:.82rem; letter-spacing:.18em;
+        color:rgba(180,225,255,0.85); margin-bottom:7px;
+        font-weight:700;
     }
 
     /* 名稱輸入 */
@@ -466,10 +467,10 @@
     .ws-diff-row { display:flex; gap:7px; }
     .ws-diff-btn {
         flex:1; padding:9px 0; border-radius:10px;
-        border:1px solid rgba(100,180,255,0.18);
-        background:rgba(255,255,255,0.04);
-        color:rgba(160,215,255,0.58);
-        font-size:.82rem; cursor:pointer;
+        border:1px solid rgba(100,180,255,0.28);
+        background:rgba(255,255,255,0.08);
+        color:rgba(200,230,255,0.85);
+        font-size:.88rem; cursor:pointer;
         transition:all .18s;
         font-family:"Microsoft JhengHei",sans-serif;
         -webkit-tap-highlight-color:transparent;
@@ -487,9 +488,10 @@
         justify-content:space-between; padding:2px 0;
     }
     .ws-sound-label {
-        font-size:.85rem; color:rgba(160,215,255,0.72);
+        font-size:.95rem; color:rgba(200,230,255,0.9);
         font-family:"Microsoft JhengHei",sans-serif;
         display:flex; align-items:center; gap:7px;
+        font-weight:600;
     }
     .ws-toggle {
         width:44px; height:24px; border-radius:12px;
@@ -535,15 +537,17 @@
     /* 次要按鈕 */
     .ws-sub-row { display:flex; gap:10px; width:100%; }
     .ws-sub-btn {
-        flex:1; padding:11px 4px; font-size:.95rem;
+        flex:1; padding:11px 4px; font-size:1rem;
         border-radius:30px;
-        border:2px solid rgba(255,255,255,0.45);
-        background:rgba(255,255,255,0.28);
+        border:2px solid rgba(255,255,255,0.6);
+        background:rgba(255,255,255,0.32);
         color:white; cursor:pointer;
         font-family:"Microsoft JhengHei",sans-serif;
+        font-weight:700;
         transition:all .18s;
-        backdrop-filter:blur(3px); -webkit-backdrop-filter:blur(3px);
+        backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px);
         -webkit-tap-highlight-color:transparent;
+        text-shadow:0 1px 4px rgba(0,0,0,0.4);
     }
     .ws-sub-btn:active { transform:scale(0.95); background:rgba(255,255,255,0.38); }
     </style>
@@ -643,8 +647,10 @@
       setTimeout(function(){ ts.style.display='none'; },560);
 
       document.getElementById('intro-cs').style.display='block';
-      document.getElementById('intro-skip').style.display='block';
       document.getElementById('intro-hint').style.display='none';
+      setTimeout(function(){
+        document.getElementById('intro-skip').style.display='block';
+      }, 2000);
 
       imgA=document.getElementById('iimg-a');
       imgB=document.getElementById('iimg-b');
@@ -928,11 +934,11 @@
 			<!-- 設定卡片 -->
 			<div class="ws-card">
 
-				<!-- 勇者名稱 -->
+				<!-- 勇者暱稱 -->
 				<div>
-					<div class="ws-field-label">勇者名稱</div>
+					<div class="ws-field-label">勇者暱稱</div>
 					<input class="ws-name-input" id="ws-name-input"
-						type="text" placeholder="輸入你的名字…" maxlength="10">
+						type="text" placeholder="輸入你的暱稱…" maxlength="12">
 				</div>
 
 				<!-- 難度 -->

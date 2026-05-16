@@ -252,7 +252,7 @@ function showWinScreen(winner) {
             text-align:center;text-shadow:0 0 30px rgba(120,255,160,.75),0 2px 10px rgba(0,0,0,.9);
             animation:winFadeUp .7s .3s both;margin-bottom:12px;line-height:1.2;
         `;
-        title.textContent = "✦ 友魚勇者 任務達成 ✦";
+        title.textContent = `✦ ${winner.n} 任務達成 ✦`;
         content.appendChild(title);
 
         const sub = document.createElement("div");
@@ -514,7 +514,7 @@ async function shareGameCard(isPlayer, winner) {
     if (isPlayer) {
         // 勝利：三行敘事
         const lines = [
-            `在【${diffLabel}】難度的考驗下`,
+            `${winner.n} 在【${diffLabel}】難度的考驗下`,
             `與大海交手了 ${rounds} 個回合`,
             `守護了海洋的平衡`
         ];
@@ -555,8 +555,8 @@ async function shareGameCard(isPlayer, winner) {
 
         const file = new File([blob], "友魚勇者之路.png", { type: "image/png" });
         const shareText = isPlayer
-            ? `我在《友魚勇者之路》守護了海洋！難度【${diffLabel}】，共 ${rounds} 回合的激戰 🎉🌊`
-            : `《友魚勇者之路》這次沒守住…下次再來 🌊`;
+            ? `${winner.n} 在《友魚勇者之路》守護了海洋！難度【${diffLabel}】，共 ${rounds} 回合的激戰 🎉🌊`
+            : `${winner.n} 在《友魚勇者之路》這次沒守住…下次再來 🌊`;
 
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
             // 手機：系統分享選單（Line / IG 均出現）
