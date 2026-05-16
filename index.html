@@ -171,8 +171,154 @@
         border-color: rgba(255,255,255,.22);
         background: rgba(0,0,0,.28);
       }
-      /* 結束淡出 */
-      #intro-screen.closing {
+      /* ── 特效層 ── */
+
+      /* M 暗角呼吸 */
+      #fx-vignette {
+        position:absolute; inset:0; z-index:15; pointer-events:none;
+        background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0) 100%);
+        transition: background 0.5s ease;
+      }
+      #fx-vignette.breathe {
+        animation: fxVig 3s ease-in-out infinite;
+      }
+      @keyframes fxVig {
+        0%,100%{ background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,.55) 100%); }
+        50%    { background: radial-gradient(ellipse at center, transparent 35%, rgba(0,0,0,.82) 100%); }
+      }
+
+      /* F 鏡頭震動 */
+      @keyframes fxShake {
+        0%  { transform:translate(0,0) rotate(0deg); }
+        15% { transform:translate(-4px,3px) rotate(-.3deg); }
+        30% { transform:translate(5px,-2px) rotate(.2deg); }
+        45% { transform:translate(-3px,4px) rotate(-.2deg); }
+        60% { transform:translate(4px,-3px) rotate(.3deg); }
+        75% { transform:translate(-2px,2px) rotate(0deg); }
+        100%{ transform:translate(0,0) rotate(0deg); }
+      }
+      #intro-cs.shake {
+        animation: fxShake .55s cubic-bezier(.36,.07,.19,.97) forwards;
+      }
+
+      /* A 粒子 */
+      #fx-particles {
+        position:absolute; inset:0; z-index:16; pointer-events:none; overflow:hidden;
+      }
+      .fx-p {
+        position:absolute;
+        border-radius:50%;
+        opacity:0;
+        animation: fxPFloat var(--pd,4s) ease-in-out var(--delay,0s) forwards;
+      }
+      @keyframes fxPFloat {
+        0%   { opacity:0; transform:translateY(0) scale(1); }
+        20%  { opacity:.9; }
+        100% { opacity:0; transform:translateY(var(--py,-120px)) scale(.4); }
+      }
+
+      /* B 光暈脈衝 */
+      #fx-halo {
+        position:absolute; z-index:16; pointer-events:none;
+        border-radius:50%;
+        background: radial-gradient(circle, rgba(255,220,100,.35) 0%, transparent 70%);
+        opacity:0;
+      }
+      #fx-halo.pulse {
+        animation: fxHalo 2.5s ease-in-out infinite;
+      }
+      @keyframes fxHalo {
+        0%,100%{ opacity:.3; transform:scale(1);   }
+        50%    { opacity:.7; transform:scale(1.18); }
+      }
+
+      /* E 掃描線 */
+      #fx-scan {
+        position:absolute; inset:0; z-index:16; pointer-events:none;
+        background: repeating-linear-gradient(
+          to bottom,
+          transparent 0px, transparent 3px,
+          rgba(80,200,255,.06) 3px, rgba(80,200,255,.06) 4px
+        );
+        opacity:0;
+      }
+      #fx-scan.sweep {
+        animation: fxScanIn .6s ease forwards;
+      }
+      @keyframes fxScanIn {
+        0%  { opacity:0; transform:translateX(-100%); }
+        100%{ opacity:1; transform:translateX(0); }
+      }
+
+      /* G 色彩偏移 */
+      #fx-glitch {
+        position:absolute; inset:0; z-index:17; pointer-events:none;
+        opacity:0; mix-blend-mode:screen;
+      }
+      #fx-glitch.go {
+        animation: fxGlitch .7s steps(1) forwards;
+      }
+      @keyframes fxGlitch {
+        0%  { opacity:0; }
+        10% { opacity:1; background:rgba(255,0,0,.08); transform:translate(-3px,0); }
+        25% { background:rgba(0,255,255,.08); transform:translate(3px,0); }
+        40% { background:rgba(255,0,0,.06); transform:translate(-2px,1px); }
+        55% { background:rgba(0,255,255,.06); transform:translate(2px,-1px); }
+        70% { background:rgba(255,0,0,.04); transform:translate(-1px,0); }
+        90% { opacity:.5; }
+        100%{ opacity:0; transform:translate(0,0); }
+      }
+
+      /* H 聚光燈 */
+      #fx-spotlight {
+        position:absolute; inset:0; z-index:15; pointer-events:none;
+        opacity:0;
+        background: radial-gradient(circle 28% at 50% 50%, transparent 0%, rgba(0,0,0,.52) 100%);
+        transition: opacity 1.5s ease;
+      }
+      #fx-spotlight.on { opacity:1; animation: fxSpot 6s ease-in-out infinite; }
+      @keyframes fxSpot {
+        0%,100%{ background: radial-gradient(circle 28% at 50% 42%, transparent 0%, rgba(0,0,0,.52) 100%); }
+        50%    { background: radial-gradient(circle 28% at 52% 55%, transparent 0%, rgba(0,0,0,.52) 100%); }
+      }
+
+      /* I 漣漪 */
+      #fx-ripple {
+        position:absolute; z-index:16; pointer-events:none;
+        border-radius:50%; border:2px solid rgba(100,200,255,.6);
+        opacity:0; transform:scale(0);
+      }
+      #fx-ripple.go {
+        animation: fxRipple 2s ease-out forwards;
+      }
+      #fx-ripple2 {
+        position:absolute; z-index:16; pointer-events:none;
+        border-radius:50%; border:2px solid rgba(100,200,255,.4);
+        opacity:0; transform:scale(0);
+      }
+      #fx-ripple2.go {
+        animation: fxRipple 2s ease-out .5s forwards;
+      }
+      @keyframes fxRipple {
+        0%  { opacity:.8; transform:scale(0); }
+        100%{ opacity:0;  transform:scale(1); }
+      }
+
+      /* K 天氣粒子（橙紅塵埃） */
+      #fx-weather {
+        position:absolute; inset:0; z-index:16; pointer-events:none; overflow:hidden;
+      }
+      .fx-w {
+        position:absolute; top:-5px;
+        border-radius:50%; opacity:0;
+        animation: fxWeather var(--wd,6s) linear var(--wdelay,0s) forwards;
+      }
+      @keyframes fxWeather {
+        0%  { opacity:0;   transform:translateY(0) translateX(0); }
+        10% { opacity:.75; }
+        90% { opacity:.5;  }
+        100%{ opacity:0;   transform:translateY(110vh) translateX(var(--wx,20px)); }
+      }
         animation: iClose 1.5s ease forwards;
         pointer-events: none;
       }
@@ -187,6 +333,17 @@
     <div id="intro-blk"></div>
     <div id="intro-scan"></div>
     <div id="intro-flash"></div>
+
+    <!-- 特效層 -->
+    <div id="fx-vignette"></div>
+    <div id="fx-particles"></div>
+    <div id="fx-weather"></div>
+    <div id="fx-halo"></div>
+    <div id="fx-spotlight"></div>
+    <div id="fx-scan"></div>
+    <div id="fx-glitch"></div>
+    <div id="fx-ripple"></div>
+    <div id="fx-ripple2"></div>
 
     <div id="intro-ts">
       <div id="intro-title"></div>
@@ -273,8 +430,160 @@
       showImg(0);
     }
 
+    /* ══ 特效引擎 ══ */
+    var fxTimers=[];
+    function fxClear(){
+      fxTimers.forEach(clearTimeout); fxTimers=[];
+      // 重置所有特效
+      document.getElementById('fx-vignette').className='';
+      document.getElementById('fx-particles').innerHTML='';
+      document.getElementById('fx-weather').innerHTML='';
+      var halo=document.getElementById('fx-halo');
+      halo.className=''; halo.style.cssText='';
+      document.getElementById('fx-spotlight').className='';
+      var sc=document.getElementById('fx-scan');
+      sc.className=''; void sc.offsetWidth;
+      var gl=document.getElementById('fx-glitch');
+      gl.className=''; void gl.offsetWidth;
+      var r1=document.getElementById('fx-ripple');
+      r1.className=''; r1.style.cssText='';
+      var r2=document.getElementById('fx-ripple2');
+      r2.className=''; r2.style.cssText='';
+    }
+
+    function fxAt(ms, fn){
+      fxTimers.push(setTimeout(fn, ms));
+    }
+
+    /* M 暗角呼吸 */
+    function fxM(){
+      document.getElementById('fx-vignette').classList.add('breathe');
+    }
+
+    /* F 鏡頭震動 */
+    function fxF(){
+      var cs=document.getElementById('intro-cs');
+      cs.classList.remove('shake'); void cs.offsetWidth;
+      cs.classList.add('shake');
+    }
+
+    /* A 粒子（color: 'gold'|'blue'|'warm'） */
+    function fxA(color){
+      var el=document.getElementById('fx-particles');
+      el.innerHTML='';
+      var colors={
+        gold:  ['rgba(255,220,80,.9)','rgba(255,180,40,.8)','rgba(255,255,150,.7)'],
+        blue:  ['rgba(100,200,255,.9)','rgba(150,230,255,.8)','rgba(80,170,255,.7)'],
+        warm:  ['rgba(255,160,60,.9)', 'rgba(255,200,80,.8)','rgba(255,120,40,.7)']
+      };
+      var cl=colors[color]||colors.blue;
+      for(var i=0;i<28;i++){
+        var p=document.createElement('div');
+        p.className='fx-p';
+        var sz=(Math.random()*4+2)+'px';
+        var px=Math.random()*100;
+        var py=-(80+Math.random()*140);
+        var pd=(2.5+Math.random()*2.5).toFixed(1)+'s';
+        var dl=(Math.random()*1.5).toFixed(2)+'s';
+        p.style.cssText='width:'+sz+';height:'+sz+
+          ';left:'+px+'%;bottom:'+(5+Math.random()*30)+'%;'+
+          'background:'+cl[Math.floor(Math.random()*cl.length)]+';'+
+          '--py:'+py+'px;--pd:'+pd+';--delay:'+dl+';'+
+          'box-shadow:0 0 4px '+cl[0]+';';
+        el.appendChild(p);
+      }
+    }
+
+    /* B 光暈脈衝（cx,cy 為百分比位置） */
+    function fxB(cx,cy){
+      var h=document.getElementById('fx-halo');
+      var sw=document.getElementById('intro-screen').offsetWidth;
+      var sh=document.getElementById('intro-screen').offsetHeight;
+      var sz=Math.min(sw,sh)*0.7;
+      h.style.cssText='width:'+sz+'px;height:'+sz+'px;'+
+        'left:'+(sw*cx/100-sz/2)+'px;top:'+(sh*cy/100-sz/2)+'px;';
+      h.classList.add('pulse');
+    }
+
+    /* E 掃描線 */
+    function fxE(){
+      var s=document.getElementById('fx-scan');
+      s.classList.remove('sweep'); void s.offsetWidth;
+      s.classList.add('sweep');
+    }
+
+    /* G 色彩偏移 */
+    function fxG(){
+      var g=document.getElementById('fx-glitch');
+      g.classList.remove('go'); void g.offsetWidth;
+      g.classList.add('go');
+    }
+
+    /* H 聚光燈 */
+    function fxH(){
+      document.getElementById('fx-spotlight').classList.add('on');
+    }
+
+    /* I 漣漪（cx,cy 百分比） */
+    function fxI(cx,cy){
+      var scr=document.getElementById('intro-screen');
+      var sw=scr.offsetWidth, sh=scr.offsetHeight;
+      var sz=Math.min(sw,sh)*0.8;
+      var lf=(sw*cx/100-sz/2)+'px';
+      var tp=(sh*cy/100-sz/2)+'px';
+      var r1=document.getElementById('fx-ripple');
+      var r2=document.getElementById('fx-ripple2');
+      r1.style.cssText='width:'+sz+'px;height:'+sz+'px;left:'+lf+';top:'+tp+';';
+      r2.style.cssText='width:'+sz+'px;height:'+sz+'px;left:'+lf+';top:'+tp+';';
+      r1.classList.remove('go'); void r1.offsetWidth; r1.classList.add('go');
+      r2.classList.remove('go'); void r2.offsetWidth; r2.classList.add('go');
+    }
+
+    /* K 天氣粒子（橙紅塵埃） */
+    function fxK(){
+      var el=document.getElementById('fx-weather');
+      el.innerHTML='';
+      for(var i=0;i<22;i++){
+        var p=document.createElement('div');
+        p.className='fx-w';
+        var sz=(Math.random()*3+1.5)+'px';
+        var lf=(Math.random()*100)+'%';
+        var wd=(5+Math.random()*4).toFixed(1)+'s';
+        var dl=(Math.random()*2).toFixed(2)+'s';
+        var wx=((Math.random()-0.5)*60).toFixed(0)+'px';
+        var col=Math.random()>.5?'rgba(255,160,60,.8)':'rgba(255,210,80,.7)';
+        p.style.cssText='width:'+sz+';height:'+sz+';left:'+lf+
+          ';background:'+col+';--wd:'+wd+';--wdelay:'+dl+';--wx:'+wx+';'+
+          'box-shadow:0 0 3px rgba(255,150,30,.6);';
+        el.appendChild(p);
+      }
+    }
+
+    /* ══ 每頁特效排程表 ══ */
+    var PAGE_FX = [
+      // P1: 6s M, 9s F
+      function(){ fxAt(6000,fxM); fxAt(9000,fxF); },
+      // P2: 6s A(gold)+B
+      function(){ fxAt(6000,function(){ fxA('gold'); fxB(50,30); }); },
+      // P3: 8s E, 9s G
+      function(){ fxAt(8000,fxE); fxAt(9000,fxG); },
+      // P4: 8s I, 9s A(blue)
+      function(){ fxAt(8000,function(){ fxI(50,65); }); fxAt(9000,function(){ fxA('blue'); }); },
+      // P5: 7s F, 9s B
+      function(){ fxAt(7000,fxF); fxAt(9000,function(){ fxB(50,45); }); },
+      // P6: 8s H, 10s M
+      function(){ fxAt(8000,fxH); fxAt(10000,fxM); },
+      // P7: 7s G, 9s F
+      function(){ fxAt(7000,fxG); fxAt(9000,fxF); },
+      // P8: 6s A(blue), 8s I
+      function(){ fxAt(6000,function(){ fxA('blue'); }); fxAt(8000,function(){ fxI(50,50); }); },
+      // P9: 6s K, 9s A(warm)
+      function(){ fxAt(6000,fxK); fxAt(9000,function(){ fxA('warm'); }); }
+    ];
+
     function showImg(n){
       if(!alive)return;
+      fxClear(); // 清除上一頁特效
       document.getElementById('intro-pgnum').textContent='● '+(n+1)+' / '+IMGS.length;
       var inc=slotA?imgA:imgB;
       var out=slotA?imgB:imgA;
@@ -310,6 +619,9 @@
         out.style.transition='opacity '+FADE_OUT+'ms ease';
         out.style.opacity='0';
         slotA=!slotA;
+
+        /* 觸發該頁特效排程 */
+        if(PAGE_FX[n]) PAGE_FX[n]();
 
         /* 掃光：圖淡入後0.3s觸發 */
         setTimeout(function(){
