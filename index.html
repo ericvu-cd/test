@@ -17,6 +17,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>友魚勇者之路-單人版</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@900&display=swap" rel="stylesheet">
 
     <!-- ══ 開場 CSS（內聯，強制覆蓋一切）══ -->
     <style>
@@ -28,7 +31,7 @@
         background: #000 !important;
         overflow: hidden !important;
         cursor: pointer;
-        font-family: Georgia, serif;
+        font-family: 'Noto Serif TC', Georgia, serif;
       }
       /* 暗角 vignette（無遮幅，全屏） */
       #intro-vig {
@@ -71,6 +74,7 @@
       #intro-title {
         font-size: clamp(2rem, 7vw, 5rem);
         font-weight: 900; letter-spacing: .22em;
+        font-family: 'Noto Serif TC', Georgia, serif;
         color: #dff0ff;
         text-shadow:
           0 0 22px rgba(100,200,255,.95),
@@ -420,7 +424,7 @@
             0 0 48px rgba(3,169,244,0.65);
         margin-bottom:4px;
     }
-    .ws-subtitle { font-size:.88rem; color:rgba(200,235,255,0.75); letter-spacing:.28em; }
+    .ws-subtitle { font-size:1.05rem; color:rgba(210,240,255,0.88); letter-spacing:.28em; text-shadow:0 0 10px rgba(100,200,255,0.4); }
     .ws-deco-line {
         display:flex; align-items:center; justify-content:center;
         gap:10px; margin-top:10px;
@@ -430,56 +434,59 @@
         background:linear-gradient(90deg,transparent,rgba(140,200,255,0.32),transparent);
     }
 
-    /* 設定卡片 */
+    /* 設定卡片 — 高透明，字夠亮 */
     .ws-card {
         width:100%;
-        background:rgba(4,12,30,0.88);
-        border:1px solid rgba(100,180,255,0.28);
+        background:rgba(4,12,30,0.38);
+        border:1px solid rgba(140,200,255,0.22);
         border-radius:18px;
         padding:20px 18px 18px;
-        backdrop-filter:blur(8px);
-        -webkit-backdrop-filter:blur(8px);
+        backdrop-filter:blur(10px);
+        -webkit-backdrop-filter:blur(10px);
         margin-bottom:14px;
         display:flex; flex-direction:column; gap:16px;
     }
     .ws-field-label {
-        font-size:.82rem; letter-spacing:.18em;
-        color:rgba(180,225,255,0.85); margin-bottom:7px;
+        font-size:1rem; letter-spacing:.18em;
+        color:rgba(220,240,255,0.95); margin-bottom:7px;
         font-weight:700;
+        text-shadow:0 0 8px rgba(100,200,255,0.5);
     }
 
     /* 名稱輸入 */
     .ws-name-input {
         width:100%;
-        background:rgba(255,255,255,0.055);
-        border:1px solid rgba(100,180,255,0.22);
+        background:rgba(255,255,255,0.06);
+        border:1px solid rgba(140,200,255,0.3);
         border-radius:10px;
-        padding:10px 13px;
-        color:#c8eeff; font-size:.95rem;
+        padding:11px 13px;
+        color:#e8f6ff; font-size:1.05rem;
         font-family:"Microsoft JhengHei",sans-serif;
         outline:none; transition:border-color .2s;
         -webkit-user-select:text; user-select:text;
     }
-    .ws-name-input::placeholder { color:rgba(140,190,255,0.3); }
-    .ws-name-input:focus { border-color:rgba(100,200,255,0.55); }
+    .ws-name-input::placeholder { color:rgba(160,210,255,0.45); }
+    .ws-name-input:focus { border-color:rgba(120,210,255,0.65); }
 
     /* 難度 */
     .ws-diff-row { display:flex; gap:7px; }
     .ws-diff-btn {
-        flex:1; padding:9px 0; border-radius:10px;
-        border:1px solid rgba(100,180,255,0.28);
-        background:rgba(255,255,255,0.08);
-        color:rgba(200,230,255,0.85);
-        font-size:.88rem; cursor:pointer;
+        flex:1; padding:10px 0; border-radius:10px;
+        border:1px solid rgba(160,210,255,0.3);
+        background:rgba(255,255,255,0.06);
+        color:rgba(220,240,255,0.9);
+        font-size:1rem; cursor:pointer;
         transition:all .18s;
         font-family:"Microsoft JhengHei",sans-serif;
         -webkit-tap-highlight-color:transparent;
+        text-shadow:0 0 6px rgba(100,200,255,0.3);
     }
     .ws-diff-btn:active { transform:scale(0.95); }
     .ws-diff-btn.ws-active {
-        background:rgba(255,183,77,0.18);
-        border-color:rgba(255,183,77,0.58);
-        color:#ffd082; font-weight:700;
+        background:rgba(255,183,77,0.15);
+        border-color:rgba(255,200,100,0.65);
+        color:#ffe49a; font-weight:700;
+        text-shadow:0 0 8px rgba(255,180,60,0.6);
     }
 
     /* 音效開關 */
@@ -488,10 +495,11 @@
         justify-content:space-between; padding:2px 0;
     }
     .ws-sound-label {
-        font-size:.95rem; color:rgba(200,230,255,0.9);
+        font-size:1rem; color:rgba(220,240,255,0.95);
         font-family:"Microsoft JhengHei",sans-serif;
         display:flex; align-items:center; gap:7px;
-        font-weight:600;
+        font-weight:700;
+        text-shadow:0 0 8px rgba(100,200,255,0.4);
     }
     .ws-toggle {
         width:44px; height:24px; border-radius:12px;
@@ -515,9 +523,9 @@
 
     /* 主按鈕 */
     #ws-start-btn {
-        width:100%; padding:16px; border-radius:50px; border:none;
+        width:100%; padding:18px; border-radius:50px; border:none;
         background:linear-gradient(135deg,#ffb74d,#ff7043);
-        color:white; font-size:1.3rem; font-weight:900;
+        color:white; font-size:1.56rem; font-weight:900;
         letter-spacing:.1em; cursor:pointer;
         font-family:"Microsoft JhengHei","Noto Serif TC",serif;
         box-shadow:0 5px 15px rgba(0,0,0,0.3),0 0 20px rgba(255,183,77,0.55);
@@ -537,19 +545,19 @@
     /* 次要按鈕 */
     .ws-sub-row { display:flex; gap:10px; width:100%; }
     .ws-sub-btn {
-        flex:1; padding:11px 4px; font-size:1rem;
+        flex:1; padding:12px 4px; font-size:1.14rem;
         border-radius:30px;
-        border:2px solid rgba(255,255,255,0.6);
-        background:rgba(255,255,255,0.32);
-        color:white; cursor:pointer;
+        border:1.5px solid rgba(255,255,255,0.5);
+        background:rgba(255,255,255,0.12);
+        color:rgba(255,255,255,0.95); cursor:pointer;
         font-family:"Microsoft JhengHei",sans-serif;
         font-weight:700;
         transition:all .18s;
-        backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px);
+        backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
         -webkit-tap-highlight-color:transparent;
-        text-shadow:0 1px 4px rgba(0,0,0,0.4);
+        text-shadow:0 1px 6px rgba(0,0,0,0.5);
     }
-    .ws-sub-btn:active { transform:scale(0.95); background:rgba(255,255,255,0.38); }
+    .ws-sub-btn:active { transform:scale(0.95); background:rgba(255,255,255,0.2); }
     </style>
 </head>
 <body>
