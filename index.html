@@ -111,8 +111,8 @@
         animation: iHint 3s ease-in-out infinite; /* 0.3x 速度，原1.9s→3s再擴大→6s感覺差距*/
         z-index: 20;
       }
-      #intro-hint.show { color: rgba(138,138,138,.62); }
-      @keyframes iHint { 0%,100%{opacity:.15} 50%{opacity:.9} }
+      #intro-hint.show { color: rgba(138,138,138,.82); }
+      @keyframes iHint { 0%{opacity:.15} 25%{opacity:1} 75%{opacity:.9} 100%{opacity:.15} }
       /* 漫畫幕：全屏無黑邊 */
       #intro-cs {
         position: absolute; inset: 0; z-index: 4; display: none;
@@ -156,20 +156,20 @@
         position: fixed;
         bottom: 16px; right: 18px;
         z-index: 999999;
-        background: rgba(0,0,0,.12);
-        border: 1px solid rgba(255,255,255,.08);
+        background: rgba(0,0,0,.25);
+        border: 1px solid rgba(255,255,255,.25);
         border-radius: 22px;
-        color: rgba(255,255,255,.18);
-        font-size: .68rem; letter-spacing: .08em;
-        padding: 5px 14px; cursor: pointer;
+        color: rgba(255,255,255,.75);
+        font-size: .76rem; letter-spacing: .1em;
+        padding: 6px 16px; cursor: pointer;
         backdrop-filter: blur(3px);
         display: none;
-        transition: color .4s, border-color .4s, background .4s;
+        transition: color .3s, border-color .3s, background .3s;
       }
       #intro-skip:hover {
-        color: rgba(255,255,255,.48);
-        border-color: rgba(255,255,255,.22);
-        background: rgba(0,0,0,.28);
+        color: #fff;
+        border-color: rgba(255,255,255,.6);
+        background: rgba(0,0,0,.45);
       }
       /* ── 特效層 ── */
 
@@ -237,17 +237,21 @@
         position:absolute; inset:0; z-index:16; pointer-events:none;
         background: repeating-linear-gradient(
           to bottom,
-          transparent 0px, transparent 3px,
-          rgba(80,200,255,.06) 3px, rgba(80,200,255,.06) 4px
+          transparent 0px, transparent 2px,
+          rgba(80,200,255,.12) 2px, rgba(80,200,255,.12) 3px
         );
         opacity:0;
       }
       #fx-scan.sweep {
-        animation: fxScanIn .6s ease forwards;
+        animation: fxScanIn .5s ease forwards, fxScanPulse 1.2s ease-in-out .5s infinite;
       }
       @keyframes fxScanIn {
         0%  { opacity:0; transform:translateX(-100%); }
         100%{ opacity:1; transform:translateX(0); }
+      }
+      @keyframes fxScanPulse {
+        0%,100%{ opacity:.6; }
+        50%    { opacity:1; }
       }
 
       /* G 色彩偏移 */
@@ -256,16 +260,18 @@
         opacity:0; mix-blend-mode:screen;
       }
       #fx-glitch.go {
-        animation: fxGlitch .7s steps(1) forwards;
+        animation: fxGlitch 1.2s steps(1) forwards;
       }
       @keyframes fxGlitch {
         0%  { opacity:0; }
-        10% { opacity:1; background:rgba(255,0,0,.08); transform:translate(-3px,0); }
-        25% { background:rgba(0,255,255,.08); transform:translate(3px,0); }
-        40% { background:rgba(255,0,0,.06); transform:translate(-2px,1px); }
-        55% { background:rgba(0,255,255,.06); transform:translate(2px,-1px); }
-        70% { background:rgba(255,0,0,.04); transform:translate(-1px,0); }
-        90% { opacity:.5; }
+        8%  { opacity:1; background:rgba(255,0,0,.18); transform:translate(-5px,0) scaleY(1.01); }
+        18% { background:rgba(0,255,255,.18); transform:translate(6px,0); }
+        28% { background:rgba(255,0,0,.14); transform:translate(-4px,2px) scaleY(.99); }
+        38% { background:rgba(0,255,255,.14); transform:translate(5px,-2px); }
+        50% { background:rgba(255,0,0,.10); transform:translate(-3px,0); }
+        62% { background:rgba(0,255,255,.10); transform:translate(3px,0); }
+        75% { background:rgba(255,0,0,.06); transform:translate(-1px,0); }
+        88% { opacity:.4; }
         100%{ opacity:0; transform:translate(0,0); }
       }
 
@@ -285,22 +291,35 @@
       /* I 漣漪 */
       #fx-ripple {
         position:absolute; z-index:16; pointer-events:none;
-        border-radius:50%; border:2px solid rgba(100,200,255,.6);
+        border-radius:50%;
+        border: 3px solid rgba(100,200,255,.85);
+        box-shadow: 0 0 12px rgba(100,200,255,.5), inset 0 0 12px rgba(100,200,255,.2);
         opacity:0; transform:scale(0);
       }
       #fx-ripple.go {
-        animation: fxRipple 2s ease-out forwards;
+        animation: fxRipple 2.2s ease-out forwards;
       }
       #fx-ripple2 {
         position:absolute; z-index:16; pointer-events:none;
-        border-radius:50%; border:2px solid rgba(100,200,255,.4);
+        border-radius:50%;
+        border: 2px solid rgba(100,200,255,.6);
+        box-shadow: 0 0 8px rgba(100,200,255,.3);
         opacity:0; transform:scale(0);
       }
       #fx-ripple2.go {
-        animation: fxRipple 2s ease-out .5s forwards;
+        animation: fxRipple 2.2s ease-out .55s forwards;
+      }
+      #fx-ripple3 {
+        position:absolute; z-index:16; pointer-events:none;
+        border-radius:50%;
+        border: 1px solid rgba(100,200,255,.4);
+        opacity:0; transform:scale(0);
+      }
+      #fx-ripple3.go {
+        animation: fxRipple 2.2s ease-out 1.1s forwards;
       }
       @keyframes fxRipple {
-        0%  { opacity:.8; transform:scale(0); }
+        0%  { opacity:1;  transform:scale(0); }
         100%{ opacity:0;  transform:scale(1); }
       }
 
@@ -344,6 +363,7 @@
     <div id="fx-glitch"></div>
     <div id="fx-ripple"></div>
     <div id="fx-ripple2"></div>
+    <div id="fx-ripple3"></div>
 
     <div id="intro-ts">
       <div id="intro-title"></div>
@@ -449,6 +469,8 @@
       r1.className=''; r1.style.cssText='';
       var r2=document.getElementById('fx-ripple2');
       r2.className=''; r2.style.cssText='';
+      var r3=document.getElementById('fx-ripple3');
+      r3.className=''; r3.style.cssText='';
     }
 
     function fxAt(ms, fn){
@@ -528,15 +550,16 @@
     function fxI(cx,cy){
       var scr=document.getElementById('intro-screen');
       var sw=scr.offsetWidth, sh=scr.offsetHeight;
-      var sz=Math.min(sw,sh)*0.8;
+      var sz=Math.min(sw,sh)*0.85;
       var lf=(sw*cx/100-sz/2)+'px';
       var tp=(sh*cy/100-sz/2)+'px';
+      var base='width:'+sz+'px;height:'+sz+'px;left:'+lf+';top:'+tp+';';
       var r1=document.getElementById('fx-ripple');
       var r2=document.getElementById('fx-ripple2');
-      r1.style.cssText='width:'+sz+'px;height:'+sz+'px;left:'+lf+';top:'+tp+';';
-      r2.style.cssText='width:'+sz+'px;height:'+sz+'px;left:'+lf+';top:'+tp+';';
-      r1.classList.remove('go'); void r1.offsetWidth; r1.classList.add('go');
-      r2.classList.remove('go'); void r2.offsetWidth; r2.classList.add('go');
+      var r3=document.getElementById('fx-ripple3');
+      r1.style.cssText=base; r1.classList.remove('go'); void r1.offsetWidth; r1.classList.add('go');
+      r2.style.cssText=base; r2.classList.remove('go'); void r2.offsetWidth; r2.classList.add('go');
+      r3.style.cssText=base; r3.classList.remove('go'); void r3.offsetWidth; r3.classList.add('go');
     }
 
     /* K 天氣粒子（橙紅塵埃） */
