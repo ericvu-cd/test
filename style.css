@@ -995,7 +995,7 @@ body.game-started > *:not(#welcome-screen):not(#intro-screen) {
     overflow: hidden;
     display: flex;
     flex-wrap: wrap;
-    align-content: flex-start;
+    align-content: center;
     justify-content: center;
     gap: 2px;
     padding: 3px 2px 2px;
@@ -1004,11 +1004,11 @@ body.game-started > *:not(#welcome-screen):not(#intro-screen) {
     background-size: 10px 10px;
 }
 .card-back-tags .tag {
-    font-size: 0.58rem;
+    font-size: 0.70rem;
     padding: 1px 3px;
     border-radius: 3px;
     margin: 0;
-    line-height: 1.15;
+    line-height: 2;
     white-space: nowrap;
 }
 
@@ -1463,17 +1463,18 @@ body.game-started > *:not(#welcome-screen):not(#intro-screen) {
 .drawer-card-tags {
     flex: 1;
     overflow: hidden;
-    padding: 4px 3px 5px;
+    padding: 3px 2px 3px;
     display: flex;
     flex-wrap: wrap;
     align-content: flex-start;
     justify-content: center;
-    gap: 1px;
+    gap: 0;
 }
 .drawer-card-tags .tag {
-    font-size: 0.74rem;
-    padding: 2px 5px;
+    font-size: 0.62rem;
+    padding: 1px 4px;
     margin: 1px;
+    line-height: 1.2;
 }
 
 /* 符合條件紅點（右上角） */
