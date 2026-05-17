@@ -4,6 +4,7 @@ let sfxEnabled = sessionStorage.getItem("sfxEnabled") !== "false";
 let showSummaryMode = true; // 預設開啟結算頁面
 let roundReport = [];       // 每回合出牌結果紀錄
 let gameLog = [];            // 玩家出牌歷史（供分享圖卡用）
+let handFlipTimers = [];     // 手牌翻轉計時器
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -269,6 +270,35 @@ function getFishTags(f) {
     return html;
 }
 
+// 手牌反面標籤：輸出純 span 串，由 .card-back-tags 容器排版
+function getHandBackTags(f) {
+    let html = "";
+    const ecoMethods = ["一支釣", "定置", "養殖", "手釣", "棒受網", "籠具", "釣具", "標槍"];
+
+    if (f.s.includes("全年")) html += `<span class="tag tag-all">全年</span>`;
+    else {
+        if (f.s.includes("春")) html += `<span class="tag tag-spring">春</span>`;
+        if (f.s.includes("夏")) html += `<span class="tag tag-summer">夏</span>`;
+        if (f.s.includes("秋")) html += `<span class="tag tag-autumn">秋</span>`;
+        if (f.s.includes("冬")) html += `<span class="tag tag-winter">冬</span>`;
+    }
+
+    f.m.forEach(method => {
+        const isEco = ecoMethods.some(eco => method.includes(eco));
+        html += `<span class="tag ${isEco ? 'tag-eco' : 'tag-warn'}">${method}</span>`;
+    });
+
+    const hClass = f.h.includes("洄游") ? "tag-migratory" : "tag-sedentary";
+    html += `<span class="tag ${hClass}">${f.h}</span>`;
+
+    let dClass = "tag-coastal";
+    if (f.d.includes("遠洋")) dClass = "tag-ocean";
+    if (f.d.includes("養殖")) dClass = "tag-farm";
+    html += `<span class="tag ${dClass}">${f.d}</span>`;
+
+    return html;
+}
+
 // 卡牌預覽功能 (2X放大)
 let previewTimeout = null;
 
@@ -383,23 +413,50 @@ function renderUI() {
     
 	const handEl = document.getElementById("player-hand");
     handEl.innerHTML = "";
-    
+
+    // 清除所有舊翻轉計時器，避免疊加
+    handFlipTimers.forEach(t => clearInterval(t));
+    handFlipTimers = [];
+
     const isNormalTask = currentS && !currentS.isMazu && phase === "PLAYER_TURN" && callerIdx === 0;
 
     players[0].hand.forEach((f, idx) => {
         const c = document.createElement("div");
         c.className = `card light-${f.l}`;
         const isValid = isNormalTask && currentS.c(f);
-        c.innerHTML = `<div class="card-n">${f.n}</div><div class="card-img"><img src="fishdb/${f.n}.png" alt="${f.n}" onerror="this.style.display='none'"></div>`;
+
+        // 正面：魚名 + 魚圖
+        const front = document.createElement("div");
+        front.className = "card-front";
+        front.innerHTML = `<div class="card-n">${f.n}</div><div class="card-img"><img src="fishdb/${f.n}.png" alt="${f.n}" onerror="this.style.display='none'"></div>`;
+
+        // 反面：魚名 + 特性標籤
+        const back = document.createElement("div");
+        back.className = "card-back";
+        back.innerHTML = `<div class="card-n">${f.n}</div><div class="card-back-tags">${getHandBackTags(f)}</div>`;
+
+        c.appendChild(front);
+        c.appendChild(back);
+
         if (isValid) {
             const dot = document.createElement("span");
             dot.className = "valid-dot";
             c.appendChild(dot);
         }
-        
+
         // 手牌點擊：放大預覽，並帶有出牌功能
         c.onclick = () => showCardPreview(idx, f, true);
-        
+
+        // 每 5 秒翻轉；若卡片已離開 DOM 則自動清除
+        const timer = setInterval(() => {
+            if (c.isConnected) {
+                c.classList.toggle("flipped");
+            } else {
+                clearInterval(timer);
+            }
+        }, 5000);
+        handFlipTimers.push(timer);
+
         handEl.appendChild(c);
     });
     // 玩家回合時強高亮手牌區

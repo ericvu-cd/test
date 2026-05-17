@@ -889,7 +889,8 @@ body.game-started > *:not(#welcome-screen):not(#intro-screen) {
     position: relative;
     touch-action: manipulation;
     overflow: hidden;
-    transition: transform 0.22s ease, box-shadow 0.22s ease, filter 0.22s ease;
+    transform-style: preserve-3d;
+    transition: transform 0.6s ease, box-shadow 0.22s ease, filter 0.22s ease;
 
     /* 冰晶玻璃底 */
     background:
@@ -907,8 +908,8 @@ body.game-started > *:not(#welcome-screen):not(#intro-screen) {
         0 18px 36px rgba(0,5,30,0.4);
 }
 
-/* 冰晶玻璃高光層（左上光源） */
-.card::before {
+/* 冰晶玻璃高光層（左上光源）— 桌面大卡；手牌卡由 .card-front::before 處理 */
+.card:not(#player-hand .card)::before {
     content: "";
     position: absolute;
     inset: 0;
@@ -921,8 +922,8 @@ body.game-started > *:not(#welcome-screen):not(#intro-screen) {
         linear-gradient(180deg, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0.04) 18%, transparent 42%);
 }
 
-/* 鐵框內側細線 */
-.card::after {
+/* 鐵框內側細線 — 桌面大卡 */
+.card:not(#player-hand .card)::after {
     content: "";
     position: absolute;
     inset: 2px;
@@ -933,6 +934,82 @@ body.game-started > *:not(#welcome-screen):not(#intro-screen) {
     box-shadow:
         inset 0 1px 0 rgba(255,255,255,0.18),
         inset 0 -1px 0 rgba(0,0,0,0.2);
+}
+
+/* ── 手牌翻轉：正反面共用基礎 ── */
+.card-front,
+.card-back {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    overflow: hidden;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    display: flex;
+    flex-direction: column;
+    background:
+        linear-gradient(160deg,
+            rgba(255,255,255,0.22) 0%,
+            rgba(200,230,255,0.12) 40%,
+            rgba(150,200,255,0.07) 100%);
+}
+
+/* 反面預設翻轉 180° */
+.card-back {
+    transform: rotateY(180deg);
+}
+
+/* 手牌卡正面的高光 / 框線偽元素 */
+#player-hand .card-front::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    z-index: 20;
+    background:
+        radial-gradient(ellipse at 0% 0%, rgba(255,255,255,0.38) 0%, transparent 38%),
+        linear-gradient(180deg, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0.04) 18%, transparent 42%);
+}
+#player-hand .card-front::after {
+    content: "";
+    position: absolute;
+    inset: 1px;
+    border-radius: inherit;
+    border: 1px solid rgba(255,255,255,0.13);
+    pointer-events: none;
+    z-index: 20;
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.18),
+        inset 0 -1px 0 rgba(0,0,0,0.2);
+}
+
+/* 翻轉觸發 class */
+#player-hand .card.flipped {
+    transform: rotateY(180deg);
+}
+
+/* 反面：魚名下方的特性標籤容器 */
+.card-back-tags {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-wrap: wrap;
+    align-content: flex-start;
+    justify-content: center;
+    gap: 2px;
+    padding: 3px 2px 2px;
+    background-color: #000;
+    background-image: radial-gradient(rgba(180,210,255,0.2) 1px, transparent 1px);
+    background-size: 10px 10px;
+}
+.card-back-tags .tag {
+    font-size: 0.58rem;
+    padding: 1px 3px;
+    border-radius: 3px;
+    margin: 0;
+    line-height: 1.15;
+    white-space: nowrap;
 }
 
 .card-n { font-weight: 900; text-align: center; padding: 12px 5px; border-bottom: 2px solid rgba(0,0,0,0.12); font-size: 1.9rem; color: #444; position: relative; z-index: 5; border-radius: 15px 15px 0 0; }
@@ -987,8 +1064,9 @@ body.game-started > *:not(#welcome-screen):not(#intro-screen) {
 #player-hand .card {
     position: relative;
     border-radius: 15px;
-    overflow: hidden;
-    transition: transform 0.22s ease, box-shadow 0.22s ease, filter 0.22s ease;
+    overflow: visible;
+    transform-style: preserve-3d;
+    transition: transform 0.6s ease, box-shadow 0.22s ease, filter 0.22s ease;
 }
 
 /* 符合條件的紅點標記 — 貼在卡片右上角外側，像通知徽章 */
@@ -1019,6 +1097,9 @@ body.game-started > *:not(#welcome-screen):not(#intro-screen) {
         0 2px 6px rgba(0,0,0,0.45) !important;
     transition: transform 0.08s ease, box-shadow 0.08s ease !important;
 }
+#player-hand .card.flipped:active {
+    transform: rotateY(180deg) translateY(3px) !important;
+}
 
 /* 燈號色帶 */
 #player-hand .light-1 { border-top: 4px solid #4caf50 !important; }
@@ -1046,7 +1127,7 @@ body.game-started > *:not(#welcome-screen):not(#intro-screen) {
 #table { min-height: 122px; gap: 6px; }
 #player-zone { padding: 8px; border-radius: 15px 15px 0 0; }
 .hand { min-height: 126px; gap: 6px; padding-bottom: 5px; }
-.card { width: 74px; height: 115px; border-radius: 8px; border-width: 1px; }
+.card { width: 74px; height: 115px; border-radius: 8px; border-width: 1px; transform-style: preserve-3d; }
 .card-n { font-size: 0.8rem; padding: 4px 1px; border-bottom-width: 1px; }
 .card-i { padding: 2px; }
 .tag { font-size: 0.6rem; padding: 2px 4px; border-radius: 4px; margin: 1px; line-height: 1.1; }
@@ -1326,6 +1407,7 @@ body.game-started > *:not(#welcome-screen):not(#intro-screen) {
     cursor: pointer;
     display: flex;
     flex-direction: column;
+    height: 160px;
     transition: transform 0.1s ease, box-shadow 0.1s ease;
     -webkit-tap-highlight-color: transparent;
 }
@@ -1379,9 +1461,12 @@ body.game-started > *:not(#welcome-screen):not(#intro-screen) {
 
 /* 標籤區 */
 .drawer-card-tags {
+    flex: 1;
+    overflow: hidden;
     padding: 4px 3px 5px;
     display: flex;
     flex-wrap: wrap;
+    align-content: flex-start;
     justify-content: center;
     gap: 1px;
 }
