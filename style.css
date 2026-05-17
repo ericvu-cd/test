@@ -1004,11 +1004,11 @@ body.game-started > *:not(#welcome-screen):not(#intro-screen) {
     background-size: 10px 10px;
 }
 .card-back-tags .tag {
-    font-size: 0.70rem;
+    font-size: 0.62rem;
     padding: 1px 3px;
     border-radius: 3px;
     margin: 0;
-    line-height: 2;
+    line-height: 1.2;
     white-space: nowrap;
 }
 
@@ -1442,7 +1442,7 @@ body.game-started > *:not(#welcome-screen):not(#intro-screen) {
 
 /* 魚圖：contain 顯示完整，黑底加點點 */
 .drawer-card-img {
-    height: 64px;
+    height: 59px;
     overflow: hidden;
     background-color: #000;
     background-image: radial-gradient(rgba(180,210,255,0.18) 1px, transparent 1px);
