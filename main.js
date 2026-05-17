@@ -469,7 +469,7 @@ function addLog(m, type="") {
     const plainLine = `${rPrefix}${m.replace(/<[^>]*>/g, "")}`;
     logPlainText.unshift(plainLine); // 同樣最新在前
     const prefix = roundCount > 0 ? `<span style="color:#aaa; font-size:0.85em;">[R${roundCount}]</span> ` : "";
-    l.innerHTML = `<div class="${className}">> ${prefix}${m}</div>` + l.innerHTML;
+    l.insertAdjacentHTML('afterbegin', `<div class="${className}">> ${prefix}${m}</div>`);
 }
 
 function copyLog() {
@@ -518,8 +518,8 @@ function toggleMusic() {
     }
 }
 
-const BUBBLE_MAX = 10;      // 同時最多幾顆
-const BUBBLE_INTERVAL = 900; // 每 900ms 嘗試生一顆
+const BUBBLE_MAX = 6;       // 同時最多幾顆
+const BUBBLE_INTERVAL = 1200; // 每 1200ms 嘗試生一顆
 let _bubbleTimer = null;
 
 function createBubble() {
@@ -698,7 +698,7 @@ function createFish(forceSprint = false) {
 }
 
 // 普通魚：遊戲開始後才啟動，4.5 秒一條，最多同時 6 條
-const FISH_MAX = 6;
+const FISH_MAX = 5;
 const FISH_INTERVAL = 4500;
 let _fishTimer = null;
 let _sprintTimer = null;
@@ -716,6 +716,25 @@ function stopFish() {
     if (_fishTimer)  { clearInterval(_fishTimer);  _fishTimer  = null; }
     if (_sprintTimer){ clearTimeout(_sprintTimer); _sprintTimer = null; }
 }
+
+// ── Page Visibility API：背景時暫停動畫省電 ──────────────
+document.addEventListener('visibilitychange', () => {
+    const inGame = document.body.classList.contains('game-started');
+    if (document.hidden) {
+        stopFish();
+        stopBubbles();
+        const bgm = document.getElementById('bgm');
+        if (bgm && !bgm.paused) { bgm._wasPlaying = true; bgm.pause(); }
+    } else {
+        if (inGame) {
+            startFish();
+            startBubbles();
+        }
+        const bgm = document.getElementById('bgm');
+        if (bgm && bgm._wasPlaying && sfxEnabled) { bgm._wasPlaying = false; bgm.play().catch(() => {}); }
+        else if (bgm) { bgm._wasPlaying = false; } // 靜音狀態下也清旗標
+    }
+});
 
 // 衝刺魚：每 15-25 秒強制產生一條近景快魚
 function scheduleSprintFish() {
@@ -1579,9 +1598,9 @@ function showRoundSummary() {
     overlay.id = "round-summary-overlay";
     overlay.style.cssText = `
         position:fixed;top:0;left:0;width:100%;height:100%;
-        background:rgba(4,12,22,0.85);display:flex;justify-content:center;
+        background:rgba(4,12,22,0.92);display:flex;justify-content:center;
         align-items:center;box-sizing:border-box;
-        z-index:4000;backdrop-filter:blur(6px);
+        z-index:4000;
     `;
 
     // ── modal ──

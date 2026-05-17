@@ -188,7 +188,7 @@
         bottom: calc(8vh + 16px);
         right: 20px;
         z-index: 9999;
-        background: rgba(0,0,0,.45);
+        background: rgba(0,0,0,0.65);
         border: 1px solid rgba(255,255,255,.25);
         border-radius: 20px;
         color: rgba(255,255,255,.6);
@@ -196,7 +196,6 @@
         letter-spacing: .1em;
         padding: 6px 14px;
         cursor: pointer;
-        backdrop-filter: blur(4px);
         transition: color .2s, border-color .2s;
       }
       #intro-skip-btn:hover {
