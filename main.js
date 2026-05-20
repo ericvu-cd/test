@@ -1,4 +1,4 @@
-let gameDifficulty = 0.7;
+let gameDifficulty = 0.4;
 let speakingAI = null;
 let sfxEnabled = sessionStorage.getItem("sfxEnabled") !== "false";
 let showSummaryMode = true; // 預設開啟結算頁面
@@ -74,7 +74,9 @@ function openStory() {
     overlay.style.opacity = "1"; // 確保不透明
 	
 	infoBGM.currentTime = 0; // 從頭播放
-    infoBGM.play().catch(e => console.log("音樂播放受阻，需使用者互動過才能播放:", e));
+    if (sfxEnabled) {
+        infoBGM.play().catch(e => console.log("音樂播放受阻，需使用者互動過才能播放:", e));
+    }
 	
     startStoryTimer();
 
@@ -156,7 +158,9 @@ function openInfo() {
     overlay.style.opacity = "1";
 	
 	infoBGM.currentTime = 0; // 從頭播放
-    infoBGM.play().catch(e => console.log("音樂播放受阻，需使用者互動過才能播放:", e));
+    if (sfxEnabled) {
+        infoBGM.play().catch(e => console.log("音樂播放受阻，需使用者互動過才能播放:", e));
+    }
 	
     startInfoTimer();
 

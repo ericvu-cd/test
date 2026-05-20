@@ -316,9 +316,9 @@
 				<div>
 					<div class="ws-field-label">難度選擇</div>
 					<div class="ws-diff-row">
-						<button class="ws-diff-btn"
-							onclick="wsSetDiff(0.4,this)">🐚 新手</button>
 						<button class="ws-diff-btn ws-active"
+							onclick="wsSetDiff(0.4,this)">🐚 新手</button>
+						<button class="ws-diff-btn"
 							onclick="wsSetDiff(0.7,this)">🐠 標準</button>
 						<button class="ws-diff-btn"
 							onclick="wsSetDiff(0.9,this)">🦈 專業</button>
@@ -337,7 +337,7 @@
 				<!-- 結算報告 -->
 				<div class="ws-sound-wrap">
 					<span class="ws-sound-label">
-						<span>📊</span>結算報告
+						<span id="ws-report-icon">📊</span>結算報告
 					</span>
 					<div class="ws-toggle ws-on" id="ws-report-toggle"
 						onclick="wsToggleReport()"></div>
@@ -517,9 +517,11 @@
 		/* 結算報告開關 */
 		window.wsToggleReport = function(){
 			var toggle = document.getElementById('ws-report-toggle');
+			var icon   = document.getElementById('ws-report-icon');
 			var isOn   = toggle.classList.toggle('ws-on');
 			if(typeof showSummaryMode !== 'undefined') showSummaryMode = isOn;
 			sessionStorage.setItem('reportMode', isOn ? 'true' : 'false');
+			if(icon) icon.style.filter = isOn ? '' : 'grayscale(1) opacity(0.35)';
 		};
 		/* 初始化：讀取 sessionStorage */
 		(function(){
@@ -528,6 +530,8 @@
 				if(typeof showSummaryMode !== 'undefined') showSummaryMode = false;
 				var t = document.getElementById('ws-report-toggle');
 				if(t) t.classList.remove('ws-on');
+				var icon = document.getElementById('ws-report-icon');
+				if(icon) icon.style.filter = 'grayscale(1) opacity(0.35)';
 			}
 		})();
 
