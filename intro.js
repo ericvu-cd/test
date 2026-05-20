@@ -1,409 +1,559 @@
-// ======================
-// 🎬 電影開場模組 intro.js
-// ======================
+/* ════════════════════════════════════════════════════
+   intro.js  —  開場動畫（CSS 注入 + 完整邏輯）
+   ════════════════════════════════════════════════════ */
 
+/* ── 動態注入 intro 相關 CSS ── */
 (function () {
-
-  const IMAGES = [
-    "P1.jpg","P2.jpg","P3.jpg","P4.jpg","P5.jpg",
-    "P6.jpg","P7.jpg","P8.jpg","P9.jpg"
-  ];
-  const IMAGE_DURATION = 5200;   // 每張停留 ms
-  const FADE_BLACK     = 400;    // 淡黑 ms
-  const BLACK_PAUSE    = 300;    // 純黑停頓 ms
-  const FADE_IN        = 700;    // 淡入 ms
-
-  let currentIdx  = 0;
-  let introActive = true;
-  let bgmEl       = null;
-  let volumeFadeTimer = null;
-
-  // ── 建立 DOM ──────────────────────────────────────────
-  function buildIntroDOM() {
-    const el = document.createElement("div");
-    el.id = "intro-screen";
-    el.innerHTML = `
-      <div id="intro-vignette"></div>
-      <div id="intro-letterbox-top"></div>
-      <div id="intro-letterbox-bot"></div>
-
-      <!-- 標題幕 -->
-      <div id="intro-title-screen">
-        <div id="intro-title-text"></div>
-        <div id="intro-start-hint">點擊畫面開場</div>
-      </div>
-
-      <!-- 漫畫放映幕 -->
-      <div id="intro-comic-screen" style="display:none;">
-        <img id="intro-img-a" class="intro-img" src="" alt="">
-        <img id="intro-img-b" class="intro-img" src="" alt="">
-        <div id="intro-page-num"></div>
-      </div>
-
-      <!-- SKIP -->
-      <button id="intro-skip-btn" style="display:none;" onclick="introSkip()">跳過 ▶▶</button>
-    `;
-    document.body.prepend(el);
-    injectIntroStyles();
-  }
-
-  // ── CSS 注入 ──────────────────────────────────────────
-  function injectIntroStyles() {
-    const s = document.createElement("style");
-    s.textContent = `
-      #intro-screen {
-        position: fixed;
-        inset: 0;
-        z-index: 9999;
-        background: #000;
-        overflow: hidden;
-        cursor: pointer;
-        font-family: 'Noto Serif TC', 'Noto Serif', serif;
-      }
-
-      /* 遮幅 letterbox */
-      #intro-letterbox-top,
-      #intro-letterbox-bot {
-        position: absolute;
-        left: 0; right: 0;
-        height: 8vh;
-        background: #000;
-        z-index: 10;
-        pointer-events: none;
-      }
-      #intro-letterbox-top { top: 0; }
-      #intro-letterbox-bot { bottom: 0; }
-
-      /* 暗角 vignette */
-      #intro-vignette {
-        position: absolute;
-        inset: 0;
-        z-index: 9;
-        pointer-events: none;
-        background: radial-gradient(ellipse at center,
-          transparent 50%,
-          rgba(0,0,0,0.72) 100%);
-      }
-
-      /* ── 標題幕 ── */
-      #intro-title-screen {
-        position: absolute;
-        inset: 0;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 3vh;
-        z-index: 5;
-      }
-
-      #intro-title-text {
-        font-size: clamp(2rem, 6vw, 4.5rem);
-        font-weight: 900;
-        letter-spacing: .18em;
-        color: #e8f4ff;
-        text-shadow:
-          0 0 18px rgba(100,200,255,0.9),
-          0 0 45px rgba(80,170,255,0.5),
-          0 0 90px rgba(60,140,255,0.25);
-        white-space: nowrap;
-        min-height: 1.4em;
-      }
-
-      /* 打字機游標 */
-      #intro-title-text::after {
-        content: '|';
-        animation: introCursor .7s step-end infinite;
-        color: rgba(150,220,255,0.8);
-        margin-left: 2px;
-      }
-      #intro-title-text.typing-done::after {
-        animation: introGlow 2s ease-in-out infinite;
-        color: transparent;
-      }
-      @keyframes introCursor {
-        0%,100%{ opacity:1 } 50%{ opacity:0 }
-      }
-      @keyframes introGlow {
-        0%,100%{ text-shadow: 0 0 18px rgba(100,200,255,.9),0 0 45px rgba(80,170,255,.5) }
-        50%{ text-shadow: 0 0 30px rgba(100,200,255,1),0 0 80px rgba(80,170,255,.8),0 0 130px rgba(60,140,255,.4) }
-      }
-
-      #intro-start-hint {
-        font-size: clamp(.75rem, 2vw, 1rem);
-        letter-spacing: .25em;
-        color: rgba(180,230,255,0.6);
-        animation: introHintBlink 1.8s ease-in-out infinite;
-        opacity: 0;
-        transition: opacity 1s;
-      }
-      #intro-start-hint.visible { opacity: 1; }
-      @keyframes introHintBlink {
-        0%,100%{ opacity:.25 } 50%{ opacity:.85 }
-      }
-
-      /* ── 漫畫幕 ── */
-      #intro-comic-screen {
-        position: absolute;
-        inset: 0;
-        z-index: 4;
-      }
-
-      .intro-img {
-        position: absolute;
-        inset: 0;
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        filter: saturate(0.88) brightness(0.95);
-        opacity: 0;
-        transition: opacity 0s;
-        transform: scale(1.08);
-        will-change: transform, opacity;
-      }
-      .intro-img.active {
-        opacity: 1;
-        animation: introBreath var(--breath-dur, 5.2s) ease-in-out forwards;
-      }
-      @keyframes introBreath {
-        0%   { transform: scale(1.08); }
-        100% { transform: scale(1.00); }
-      }
-
-      /* 頁碼 */
-      #intro-page-num {
-        position: absolute;
-        bottom: calc(8vh + 14px);
-        right: 18px;
-        z-index: 12;
-        font-size: .72rem;
-        letter-spacing: .12em;
-        color: rgba(255,255,255,.45);
-        font-family: monospace;
-      }
-
-      /* SKIP */
-      #intro-skip-btn {
-        position: fixed;
-        bottom: calc(8vh + 16px);
-        right: 20px;
-        z-index: 9999;
-        background: rgba(0,0,0,0.65);
-        border: 1px solid rgba(255,255,255,.25);
-        border-radius: 20px;
-        color: rgba(255,255,255,.6);
-        font-size: .78rem;
-        letter-spacing: .1em;
-        padding: 6px 14px;
-        cursor: pointer;
-        transition: color .2s, border-color .2s;
-      }
-      #intro-skip-btn:hover {
-        color: #fff;
-        border-color: rgba(255,255,255,.6);
-      }
-
-      /* 整體淡出 */
-      #intro-screen.fade-out {
-        animation: introFadeOut .9s ease forwards;
-      }
-      @keyframes introFadeOut {
-        to { opacity: 0; pointer-events: none; }
-      }
-    `;
-    document.head.appendChild(s);
-  }
-
-  // ── 打字機 ────────────────────────────────────────────
-  const TITLE    = "友魚勇者之路";
-  const SUBTITLE = "單人挑戰";
-
-  function typewriterTitle(cb) {
-    const el   = document.getElementById("intro-title-text");
-    const hint = document.getElementById("intro-start-hint");
-    let i = 0;
-
-    function type() {
-      if (i <= TITLE.length) {
-        el.textContent = TITLE.slice(0, i);
-        i++;
-        setTimeout(type, 120);
-      } else {
-        el.classList.add("typing-done");
-        setTimeout(() => {
-          hint.classList.add("visible");
-          if (cb) cb();
-        }, 500);
-      }
+  var style = document.createElement('style');
+  style.textContent = `
+    #intro-screen {
+      position: fixed !important;
+      top: 0 !important; left: 0 !important;
+      width: 100% !important; height: 100% !important;
+      z-index: 99999 !important;
+      background: #000 !important;
+      overflow: hidden !important;
+      cursor: pointer;
+      font-family: 'Noto Serif TC', Georgia, serif;
     }
-    setTimeout(type, 800);
-  }
-
-  // ── 漫畫放映 ─────────────────────────────────────────
-  let imgA, imgB, activeSlot = "a";
-
-  function startComic() {
-    const titleScr = document.getElementById("intro-title-screen");
-    const comicScr = document.getElementById("intro-comic-screen");
-    const skipBtn  = document.getElementById("intro-skip-btn");
-
-    titleScr.style.transition = "opacity .6s";
-    titleScr.style.opacity    = "0";
-    setTimeout(() => { titleScr.style.display = "none"; }, 600);
-
-    comicScr.style.display = "block";
-    skipBtn.style.display  = "block";
-
-    imgA = document.getElementById("intro-img-a");
-    imgB = document.getElementById("intro-img-b");
-
-    currentIdx = 0;
-    showImage(currentIdx);
-  }
-
-  function showImage(idx) {
-    if (!introActive) return;
-
-    const src     = IMAGES[idx];
-    const pageNum = document.getElementById("intro-page-num");
-    pageNum.textContent = `● ${idx + 1} / ${IMAGES.length}`;
-
-    const incoming = activeSlot === "a" ? imgA : imgB;
-    const outgoing = activeSlot === "a" ? imgB : imgA;
-
-    // 先黑掉舊圖
-    outgoing.style.transition = `opacity ${FADE_BLACK}ms ease`;
-    outgoing.style.opacity    = "0";
-
-    // 預載新圖
-    incoming.src = src;
-    incoming.style.setProperty("--breath-dur", `${IMAGE_DURATION}ms`);
-    incoming.style.transition = "opacity 0s";
-    incoming.style.opacity    = "0";
-    incoming.classList.remove("active");
-
-    setTimeout(() => {
-      // 純黑停頓後淡入
-      incoming.style.transition = `opacity ${FADE_IN}ms ease`;
-      incoming.style.opacity    = "1";
-      // 觸發 breath 動畫
-      void incoming.offsetWidth;
-      incoming.classList.add("active");
-
-      // 切換 slot
-      activeSlot = activeSlot === "a" ? "b" : "a";
-
-      // 排程下一張
-      const nextDelay = IMAGE_DURATION + FADE_BLACK + BLACK_PAUSE;
-      if (idx < IMAGES.length - 1) {
-        setTimeout(() => {
-          if (!introActive) return;
-          showImage(idx + 1);
-        }, nextDelay);
-      } else {
-        // 最後一張播完 → 淡出並進入歡迎頁
-        setTimeout(() => {
-          if (!introActive) return;
-          endIntro();
-        }, IMAGE_DURATION);
-      }
-
-    }, FADE_BLACK + BLACK_PAUSE);
-  }
-
-  // ── 音量漸降 ─────────────────────────────────────────
-  function fadeVolumeTo(target, durationMs) {
-    if (!bgmEl) return;
-    const start    = bgmEl.volume;
-    const diff     = target - start;
-    const steps    = 40;
-    const interval = durationMs / steps;
-    let step = 0;
-    clearInterval(volumeFadeTimer);
-    volumeFadeTimer = setInterval(() => {
-      step++;
-      bgmEl.volume = Math.min(1, Math.max(0, start + diff * (step / steps)));
-      if (step >= steps) clearInterval(volumeFadeTimer);
-    }, interval);
-  }
-
-  // ── 結束開場 ─────────────────────────────────────────
-  function endIntro(fast) {
-    introActive = false;
-    const screen = document.getElementById("intro-screen");
-
-    // BGM 漸降至 50%
-    const fadeDur = fast ? 600 : 2000;
-    fadeVolumeTo(0.5, fadeDur);
-
-    screen.classList.add("fade-out");
-    setTimeout(() => {
-      screen.remove();
-      showWelcomeScreen();
-    }, fast ? 700 : 1000);
-  }
-
-  function showWelcomeScreen() {
-    const w = document.getElementById("welcome-screen");
-    if (w) {
-      w.style.opacity   = "0";
-      w.style.display   = "flex";
-      w.style.transition = "opacity .8s ease";
-      setTimeout(() => { w.style.opacity = "1"; }, 50);
+    #intro-vig {
+      position: absolute; inset: 0; z-index: 9; pointer-events: none;
+      background: radial-gradient(ellipse at center,
+        transparent 50%, rgba(0,0,0,.70) 100%);
     }
-  }
-
-  // ── 全域 SKIP ─────────────────────────────────────────
-  window.introSkip = function () {
-    if (!introActive) return;
-    endIntro(true);
-  };
-
-  // ── 點擊啟動音樂 + 漫畫 ──────────────────────────────
-  function onTitleClick() {
-    if (!introActive) return;
-
-    // 啟動 BGM
-    bgmEl = document.getElementById("bgm");
-    if (!bgmEl) {
-      bgmEl = new Audio("MZ.mp3");
-      bgmEl.loop = true;
-      bgmEl.id   = "bgm";
-      document.body.appendChild(bgmEl);
-    } else {
-      bgmEl.src = "MZ.mp3";
-      bgmEl.loop = true;
+    #intro-blk {
+      position: absolute; inset: 0; background: #000;
+      z-index: 8; opacity: 0; pointer-events: none;
+      transition: opacity 1.1s cubic-bezier(.4,0,.2,1);
     }
-    bgmEl.volume = 0;
-    bgmEl.play().catch(() => {});
-    fadeVolumeTo(1, 2000);
+    #intro-scan {
+      position: absolute; inset: 0; z-index: 11; pointer-events: none;
+      background: linear-gradient(to bottom,
+        transparent 0%,
+        rgba(255,255,255,.02) 46%,
+        rgba(255,255,255,.08) 50%,
+        rgba(255,255,255,.02) 54%,
+        transparent 100%);
+      opacity: 0; transform: translateY(-100%);
+    }
+    #intro-scan.sweep {
+      animation: iSweep 1.1s cubic-bezier(.4,0,.6,1) forwards;
+    }
+    @keyframes iSweep {
+      0%   { opacity:0; transform:translateY(-100%); }
+      25%  { opacity:1; }
+      100% { opacity:0; transform:translateY(210%); }
+    }
+    #intro-ts {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      z-index: 5;
+    }
+    #intro-title {
+      font-size: clamp(2rem, 7vw, 5rem);
+      font-weight: 900; letter-spacing: .22em;
+      font-family: 'Noto Serif TC', Georgia, serif;
+      color: #dff0ff;
+      text-shadow:
+        0 0 22px rgba(100,200,255,.95),
+        0 0 55px rgba(80,170,255,.55),
+        0 0 110px rgba(60,140,255,.28);
+      white-space: nowrap;
+      display: flex; gap: .12em;
+    }
+    .i-char {
+      display: inline-block;
+      opacity: 0;
+      animation: iImpact .38s cubic-bezier(.22,.61,.36,1) forwards;
+    }
+    @keyframes iImpact {
+      0%   { opacity:0; transform: scale(1.55) translateY(-8px); filter: brightness(2.5); }
+      45%  { opacity:1; transform: scale(.92) translateY(3px);  filter: brightness(1.4); }
+      70%  { transform: scale(1.04) translateY(-1px); filter: brightness(1.1); }
+      100% { opacity:1; transform: scale(1) translateY(0);      filter: brightness(1); }
+    }
+    #intro-title.done {
+      animation: iPulse 3s ease-in-out infinite;
+    }
+    @keyframes iPulse {
+      0%,100%{ text-shadow:0 0 22px rgba(100,200,255,.95),0 0 55px rgba(80,170,255,.55); }
+      50%    { text-shadow:0 0 38px rgba(100,200,255,1),0 0 95px rgba(80,170,255,.9),0 0 160px rgba(60,140,255,.5); }
+    }
+    #intro-hint {
+      margin-top: 1.2em;
+      font-size: clamp(.9rem, 2.5vw, 1.08rem);
+      letter-spacing: .28em; white-space: nowrap;
+      color: rgba(140,140,140,0);
+      transition: color 1.4s ease;
+      animation: iHint 3s ease-in-out infinite;
+      z-index: 20;
+    }
+    #intro-hint.show { color: rgba(138,138,138,.82); }
+    @keyframes iHint { 0%{opacity:.15} 25%{opacity:1} 75%{opacity:.9} 100%{opacity:.15} }
+    #intro-credits {
+      position: absolute;
+      bottom: 28px; left: 0; right: 0;
+      text-align: center; z-index: 20;
+      font-size: clamp(.75rem, 1.8vw, .9rem);
+      letter-spacing: .3em;
+      color: rgba(180,210,255,0.75);
+      font-family: 'Georgia', serif;
+      pointer-events: none;
+      opacity: 0; transition: opacity 2s;
+    }
+    #intro-cs {
+      position: absolute; inset: 0; z-index: 4; display: none;
+    }
+    .iimg {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      object-fit: cover;
+      filter: saturate(.87) brightness(.9);
+      opacity: 0; transform: scale(1.06);
+      will-change: transform, opacity;
+    }
+    .iimg.breath {
+      animation: iBreath 6s cubic-bezier(.25,.46,.45,.94) forwards;
+    }
+    @keyframes iBreath {
+      0%   { transform: scale(1.06); }
+      100% { transform: scale(1.00); }
+    }
+    #intro-flash {
+      position: absolute; inset: 0; z-index: 13; pointer-events: none;
+      background: #fff; opacity: 0;
+    }
+    #intro-flash.pop { animation: iFlash .55s ease-out forwards; }
+    @keyframes iFlash {
+      0%   { opacity:.18; }
+      100% { opacity:0; }
+    }
+    #intro-pgnum {
+      position: absolute; bottom: 18px; right: 20px;
+      z-index: 12; color: rgba(255,255,255,.28);
+      font-size: .65rem; letter-spacing: .1em;
+      font-family: monospace; pointer-events: none;
+    }
+    #intro-skip {
+      position: fixed;
+      bottom: 16px; right: 18px; z-index: 999999;
+      background: rgba(0,0,0,.25);
+      border: 1px solid rgba(255,255,255,.25);
+      border-radius: 22px;
+      color: rgba(255,255,255,.75);
+      font-size: .76rem; letter-spacing: .1em;
+      padding: 6px 16px; cursor: pointer;
+      backdrop-filter: blur(3px);
+      display: none;
+      transition: color .3s, border-color .3s, background .3s;
+    }
+    #intro-skip:hover {
+      color: #fff;
+      border-color: rgba(255,255,255,.6);
+      background: rgba(0,0,0,.45);
+    }
 
-    // 移除點擊監聽，改為漫畫模式
-    document.getElementById("intro-screen")
-      .removeEventListener("click", onTitleClick);
-
-    startComic();
-  }
-
-  // ── 初始化 ────────────────────────────────────────────
-  function init() {
-    // 確保歡迎頁先隱藏
-    const w = document.getElementById("welcome-screen");
-    if (w) w.style.display = "none";
-
-    buildIntroDOM();
-
-    document.getElementById("intro-screen")
-      .addEventListener("click", onTitleClick);
-
-    typewriterTitle(); // 開始打字，不需等待點擊
-  }
-
-  // DOM ready
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", init);
-  } else {
-    init();
-  }
-
+    /* ── 特效層 ── */
+    #fx-vignette {
+      position:absolute; inset:0; z-index:15; pointer-events:none;
+      background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0) 100%);
+      transition: background 0.5s ease;
+    }
+    #fx-vignette.breathe { animation: fxVig 3s ease-in-out infinite; }
+    @keyframes fxVig {
+      0%,100%{ background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,.55) 100%); }
+      50%    { background: radial-gradient(ellipse at center, transparent 35%, rgba(0,0,0,.82) 100%); }
+    }
+    @keyframes fxShake {
+      0%  { transform:translate(0,0) rotate(0deg); }
+      15% { transform:translate(-4px,3px) rotate(-.3deg); }
+      30% { transform:translate(5px,-2px) rotate(.2deg); }
+      45% { transform:translate(-3px,4px) rotate(-.2deg); }
+      60% { transform:translate(4px,-3px) rotate(.3deg); }
+      75% { transform:translate(-2px,2px) rotate(0deg); }
+      100%{ transform:translate(0,0) rotate(0deg); }
+    }
+    #intro-cs.shake { animation: fxShake .55s cubic-bezier(.36,.07,.19,.97) forwards; }
+    #fx-particles {
+      position:absolute; inset:0; z-index:16; pointer-events:none; overflow:hidden;
+    }
+    .fx-p {
+      position:absolute; border-radius:50%; opacity:0;
+      animation: fxPFloat var(--pd,4s) ease-in-out var(--delay,0s) forwards;
+    }
+    @keyframes fxPFloat {
+      0%   { opacity:0; transform:translateY(0) scale(1); }
+      20%  { opacity:.9; }
+      100% { opacity:0; transform:translateY(var(--py,-120px)) scale(.4); }
+    }
+    #fx-halo {
+      position:absolute; z-index:16; pointer-events:none; border-radius:50%;
+      background: radial-gradient(circle, rgba(255,220,100,.35) 0%, transparent 70%);
+      opacity:0;
+    }
+    #fx-halo.pulse { animation: fxHalo 2.5s ease-in-out infinite; }
+    @keyframes fxHalo {
+      0%,100%{ opacity:.3; transform:scale(1);   }
+      50%    { opacity:.7; transform:scale(1.18); }
+    }
+    #fx-scan {
+      position:absolute; inset:0; z-index:16; pointer-events:none;
+      background: repeating-linear-gradient(
+        to bottom,
+        transparent 0px, transparent 2px,
+        rgba(80,200,255,.12) 2px, rgba(80,200,255,.12) 3px
+      );
+      opacity:0;
+    }
+    #fx-scan.sweep {
+      animation: fxScanIn .5s ease forwards, fxScanPulse 1.2s ease-in-out .5s infinite;
+    }
+    @keyframes fxScanIn {
+      0%  { opacity:0; transform:translateX(-100%); }
+      100%{ opacity:1; transform:translateX(0); }
+    }
+    @keyframes fxScanPulse {
+      0%,100%{ opacity:.6; } 50%{ opacity:1; }
+    }
+    #fx-glitch {
+      position:absolute; inset:0; z-index:17; pointer-events:none;
+      opacity:0; mix-blend-mode:screen;
+    }
+    #fx-glitch.go { animation: fxGlitch 1.2s steps(1) forwards; }
+    @keyframes fxGlitch {
+      0%  { opacity:0; }
+      8%  { opacity:1; background:rgba(255,0,0,.18); transform:translate(-5px,0) scaleY(1.01); }
+      18% { background:rgba(0,255,255,.18); transform:translate(6px,0); }
+      28% { background:rgba(255,0,0,.14); transform:translate(-4px,2px) scaleY(.99); }
+      38% { background:rgba(0,255,255,.14); transform:translate(5px,-2px); }
+      50% { background:rgba(255,0,0,.10); transform:translate(-3px,0); }
+      62% { background:rgba(0,255,255,.10); transform:translate(3px,0); }
+      75% { background:rgba(255,0,0,.06); transform:translate(-1px,0); }
+      88% { opacity:.4; }
+      100%{ opacity:0; transform:translate(0,0); }
+    }
+    #fx-spotlight {
+      position:absolute; inset:0; z-index:15; pointer-events:none; opacity:0;
+      background: radial-gradient(circle 28% at 50% 50%, transparent 0%, rgba(0,0,0,.52) 100%);
+      transition: opacity 1.5s ease;
+    }
+    #fx-spotlight.on { opacity:1; animation: fxSpot 6s ease-in-out infinite; }
+    @keyframes fxSpot {
+      0%,100%{ background: radial-gradient(circle 28% at 50% 42%, transparent 0%, rgba(0,0,0,.52) 100%); }
+      50%    { background: radial-gradient(circle 28% at 52% 55%, transparent 0%, rgba(0,0,0,.52) 100%); }
+    }
+    #fx-ripple {
+      position:absolute; z-index:16; pointer-events:none; border-radius:50%;
+      border: 3px solid rgba(100,200,255,.85);
+      box-shadow: 0 0 12px rgba(100,200,255,.5), inset 0 0 12px rgba(100,200,255,.2);
+      opacity:0; transform:scale(0);
+    }
+    #fx-ripple.go { animation: fxRipple 2.2s ease-out forwards; }
+    #fx-ripple2 {
+      position:absolute; z-index:16; pointer-events:none; border-radius:50%;
+      border: 2px solid rgba(100,200,255,.6);
+      box-shadow: 0 0 8px rgba(100,200,255,.3);
+      opacity:0; transform:scale(0);
+    }
+    #fx-ripple2.go { animation: fxRipple 2.2s ease-out .55s forwards; }
+    #fx-ripple3 {
+      position:absolute; z-index:16; pointer-events:none; border-radius:50%;
+      border: 1px solid rgba(100,200,255,.4);
+      opacity:0; transform:scale(0);
+    }
+    #fx-ripple3.go { animation: fxRipple 2.2s ease-out 1.1s forwards; }
+    @keyframes fxRipple {
+      0%  { opacity:1; transform:scale(0); }
+      100%{ opacity:0; transform:scale(1); }
+    }
+    #fx-weather {
+      position:absolute; inset:0; z-index:16; pointer-events:none; overflow:hidden;
+    }
+    .fx-w {
+      position:absolute; top:-5px; border-radius:50%; opacity:0;
+      animation: fxWeather var(--wd,6s) linear var(--wdelay,0s) forwards;
+    }
+    @keyframes fxWeather {
+      0%  { opacity:0;   transform:translateY(0) translateX(0); }
+      10% { opacity:.75; }
+      90% { opacity:.5;  }
+      100%{ opacity:0;   transform:translateY(110vh) translateX(var(--wx,20px)); }
+    }
+    #intro-screen.closing {
+      animation: iClose 1.5s ease forwards;
+      pointer-events: none;
+    }
+    @keyframes iClose { to { opacity: 0; } }
+  `;
+  document.head.appendChild(style);
 })();
+
+/* ── credits 延遲出現 ── */
+setTimeout(function () {
+  var c = document.getElementById('intro-credits');
+  if (c) c.style.opacity = '1';
+}, 2000);
+
+/* ── 開場邏輯 ── */
+if (sessionStorage.getItem('skipIntro') !== '1') {
+  (function () {
+    var IMGS = ['P1.jpg','P2.jpg','P3.jpg','P4.jpg','P5.jpg','P6.jpg','P7.jpg','P8.jpg','P9.jpg'];
+    var STAY = 12000, BREATH_DUR = 6000, FADE_OUT = 900, BLACK = 400, FADE_IN = 800;
+    var alive = true, slotA = true, bgmEl = null, volTmr = null;
+    var imgA, imgB, blkOvl, scanEl, flashEl;
+
+    function fadeVol(to, ms) {
+      if (!bgmEl) return;
+      var from = bgmEl.volume, steps = 40, dt = ms / steps, s = 0;
+      clearInterval(volTmr);
+      volTmr = setInterval(function () {
+        s++;
+        bgmEl.volume = Math.min(1, Math.max(0, from + (to - from) * (s / steps)));
+        if (s >= steps) clearInterval(volTmr);
+      }, dt);
+    }
+
+    /* 撞擊式打字機（144ms/字） */
+    var TITLE = '友魚勇者之路', ti = 0;
+    var titleEl = document.getElementById('intro-title');
+    var hintEl  = document.getElementById('intro-hint');
+    function typeImpact() {
+      if (ti < TITLE.length) {
+        var span = document.createElement('span');
+        span.className = 'i-char';
+        span.textContent = TITLE[ti];
+        span.style.animationDelay = '0s';
+        titleEl.appendChild(span);
+        ti++;
+        setTimeout(typeImpact, 144);
+      } else {
+        titleEl.classList.add('done');
+        setTimeout(function () { hintEl.classList.add('show'); }, 600);
+      }
+    }
+    setTimeout(typeImpact, 900);
+
+    var introScr = document.getElementById('intro-screen');
+    introScr.addEventListener('click', startComic, { once: true });
+
+    function startComic() {
+      bgmEl = document.getElementById('bgm');
+      if (bgmEl) {
+        bgmEl.src = 'MZ.mp3';
+        bgmEl.loop = true;
+        bgmEl.volume = 0;
+        bgmEl.play().catch(function () {});
+        fadeVol(1, 2200);
+      }
+
+      var ts      = document.getElementById('intro-ts');
+      var credits = document.getElementById('intro-credits');
+      ts.style.transition      = 'opacity .55s';
+      ts.style.opacity         = '0';
+      credits.style.transition = 'opacity .55s';
+      credits.style.opacity    = '0';
+      setTimeout(function () {
+        ts.style.display      = 'none';
+        credits.style.display = 'none';
+      }, 560);
+
+      document.getElementById('intro-cs').style.display   = 'block';
+      document.getElementById('intro-hint').style.display = 'none';
+      setTimeout(function () {
+        document.getElementById('intro-skip').style.display = 'block';
+      }, 2000);
+
+      imgA    = document.getElementById('iimg-a');
+      imgB    = document.getElementById('iimg-b');
+      blkOvl  = document.getElementById('intro-blk');
+      scanEl  = document.getElementById('intro-scan');
+      flashEl = document.getElementById('intro-flash');
+      showImg(0);
+    }
+
+    /* ══ 特效引擎 ══ */
+    var fxTimers = [];
+    function fxClear() {
+      fxTimers.forEach(clearTimeout); fxTimers = [];
+      document.getElementById('fx-vignette').className  = '';
+      document.getElementById('fx-particles').innerHTML = '';
+      document.getElementById('fx-weather').innerHTML   = '';
+      var halo = document.getElementById('fx-halo');
+      halo.className = ''; halo.style.cssText = '';
+      document.getElementById('fx-spotlight').className = '';
+      var sc = document.getElementById('fx-scan');
+      sc.className = ''; void sc.offsetWidth;
+      var gl = document.getElementById('fx-glitch');
+      gl.className = ''; void gl.offsetWidth;
+      var r1 = document.getElementById('fx-ripple');
+      r1.className = ''; r1.style.cssText = '';
+      var r2 = document.getElementById('fx-ripple2');
+      r2.className = ''; r2.style.cssText = '';
+      var r3 = document.getElementById('fx-ripple3');
+      r3.className = ''; r3.style.cssText = '';
+    }
+    function fxAt(ms, fn) { fxTimers.push(setTimeout(fn, ms)); }
+
+    function fxM() { document.getElementById('fx-vignette').classList.add('breathe'); }
+    function fxF() {
+      var cs = document.getElementById('intro-cs');
+      cs.classList.remove('shake'); void cs.offsetWidth; cs.classList.add('shake');
+    }
+    function fxA(color) {
+      var el = document.getElementById('fx-particles');
+      el.innerHTML = '';
+      var colors = {
+        gold: ['rgba(255,220,80,.9)', 'rgba(255,180,40,.8)', 'rgba(255,255,150,.7)'],
+        blue: ['rgba(100,200,255,.9)', 'rgba(150,230,255,.8)', 'rgba(80,170,255,.7)'],
+        warm: ['rgba(255,160,60,.9)',  'rgba(255,200,80,.8)',  'rgba(255,120,40,.7)']
+      };
+      var cl = colors[color] || colors.blue;
+      for (var i = 0; i < 28; i++) {
+        var p  = document.createElement('div');
+        p.className = 'fx-p';
+        var sz = (Math.random() * 4 + 2) + 'px';
+        var px = Math.random() * 100;
+        var py = -(80 + Math.random() * 140);
+        var pd = (2.5 + Math.random() * 2.5).toFixed(1) + 's';
+        var dl = (Math.random() * 1.5).toFixed(2) + 's';
+        p.style.cssText = 'width:' + sz + ';height:' + sz +
+          ';left:' + px + '%;bottom:' + (5 + Math.random() * 30) + '%;' +
+          'background:' + cl[Math.floor(Math.random() * cl.length)] + ';' +
+          '--py:' + py + 'px;--pd:' + pd + ';--delay:' + dl + ';' +
+          'box-shadow:0 0 4px ' + cl[0] + ';';
+        el.appendChild(p);
+      }
+    }
+    function fxB(cx, cy) {
+      var h  = document.getElementById('fx-halo');
+      var sw = document.getElementById('intro-screen').offsetWidth;
+      var sh = document.getElementById('intro-screen').offsetHeight;
+      var sz = Math.min(sw, sh) * 0.7;
+      h.style.cssText = 'width:' + sz + 'px;height:' + sz + 'px;' +
+        'left:' + (sw * cx / 100 - sz / 2) + 'px;top:' + (sh * cy / 100 - sz / 2) + 'px;';
+      h.classList.add('pulse');
+    }
+    function fxE() {
+      var s = document.getElementById('fx-scan');
+      s.classList.remove('sweep'); void s.offsetWidth; s.classList.add('sweep');
+    }
+    function fxG() {
+      var g = document.getElementById('fx-glitch');
+      g.classList.remove('go'); void g.offsetWidth; g.classList.add('go');
+    }
+    function fxH() { document.getElementById('fx-spotlight').classList.add('on'); }
+    function fxI(cx, cy) {
+      var scr  = document.getElementById('intro-screen');
+      var sw   = scr.offsetWidth, sh = scr.offsetHeight;
+      var sz   = Math.min(sw, sh) * 0.85;
+      var base = 'width:' + sz + 'px;height:' + sz + 'px;' +
+                 'left:' + (sw * cx / 100 - sz / 2) + 'px;' +
+                 'top:'  + (sh * cy / 100 - sz / 2) + 'px;';
+      ['fx-ripple','fx-ripple2','fx-ripple3'].forEach(function (id) {
+        var r = document.getElementById(id);
+        r.style.cssText = base; r.classList.remove('go'); void r.offsetWidth; r.classList.add('go');
+      });
+    }
+    function fxK() {
+      var el = document.getElementById('fx-weather');
+      el.innerHTML = '';
+      for (var i = 0; i < 22; i++) {
+        var p   = document.createElement('div');
+        p.className = 'fx-w';
+        var sz  = (Math.random() * 3 + 1.5) + 'px';
+        var col = Math.random() > .5 ? 'rgba(255,160,60,.8)' : 'rgba(255,210,80,.7)';
+        p.style.cssText =
+          'width:' + sz + ';height:' + sz + ';' +
+          'left:' + (Math.random() * 100) + '%;' +
+          'background:' + col + ';' +
+          '--wd:' + (5 + Math.random() * 4).toFixed(1) + 's;' +
+          '--wdelay:' + (Math.random() * 2).toFixed(2) + 's;' +
+          '--wx:' + ((Math.random() - 0.5) * 60).toFixed(0) + 'px;' +
+          'box-shadow:0 0 3px rgba(255,150,30,.6);';
+        el.appendChild(p);
+      }
+    }
+
+    /* ══ 每頁特效排程表 ══ */
+    var PAGE_FX = [
+      function () { fxAt(6000, fxM); fxAt(8000, fxF); },
+      function () { fxAt(6000, function () { fxA('gold'); fxB(50, 30); }); },
+      function () { fxAt(7000, fxE); fxAt(9000, fxG); },
+      function () { fxAt(7000, function () { fxI(50, 65); }); fxAt(9000, function () { fxA('blue'); }); },
+      function () { fxAt(7000, fxF); fxAt(9000, function () { fxB(50, 45); }); },
+      function () { fxAt(7000, fxH); fxAt(9000, fxM); },
+      function () { fxAt(7000, fxG); fxAt(9000, fxF); },
+      function () { fxAt(6000, function () { fxA('blue'); }); fxAt(8000, function () { fxI(50, 50); }); },
+      function () { fxAt(6000, fxK); fxAt(8000, function () { fxA('warm'); }); }
+    ];
+
+    function showImg(n) {
+      if (!alive) return;
+      fxClear();
+      document.getElementById('intro-pgnum').textContent = '● ' + (n + 1) + ' / ' + IMGS.length;
+      var inc = slotA ? imgA : imgB;
+      var out = slotA ? imgB : imgA;
+
+      blkOvl.style.opacity = '1';
+      scanEl.classList.remove('sweep'); void scanEl.offsetWidth;
+
+      inc.src = IMGS[n];
+      inc.classList.remove('breath');
+      inc.removeAttribute('style');
+      inc.style.opacity    = '0';
+      inc.style.transform  = 'scale(1.06)';
+      inc.style.transition = 'opacity 0s';
+
+      setTimeout(function () {
+        blkOvl.style.opacity = '0';
+        inc.style.transition = 'opacity ' + FADE_IN + 'ms cubic-bezier(.4,0,.2,1)';
+        inc.style.opacity    = '1';
+        inc.style.setProperty('--breath-dur', BREATH_DUR + 'ms');
+        void inc.offsetWidth;
+        inc.classList.add('breath');
+
+        out.style.transition = 'opacity ' + FADE_OUT + 'ms ease';
+        out.style.opacity    = '0';
+        slotA = !slotA;
+
+        if (PAGE_FX[n]) PAGE_FX[n]();
+        setTimeout(function () { scanEl.classList.add('sweep'); }, 300);
+
+        flashEl.classList.remove('pop'); void flashEl.offsetWidth; flashEl.classList.add('pop');
+
+        if (n < IMGS.length - 1) {
+          setTimeout(function () { if (alive) showImg(n + 1); }, STAY);
+        } else {
+          setTimeout(function () {
+            if (!alive) return;
+            fadeVol(0.5, 2000);
+            endIntro(false);
+          }, STAY);
+        }
+      }, FADE_OUT + BLACK);
+    }
+
+    function endIntro(fast) {
+      alive = false;
+      if (fast) fadeVol(0.5, 600);
+      var scr = document.getElementById('intro-screen');
+      scr.classList.add('closing');
+      setTimeout(function () {
+        scr.remove();
+        var w = document.getElementById('welcome-screen');
+        if (w) {
+          w.style.display    = 'flex';
+          w.style.opacity    = '0';
+          w.style.transition = 'opacity .85s ease';
+          setTimeout(function () { w.style.opacity = '1'; }, 30);
+        }
+      }, fast ? 700 : 1500);
+    }
+
+    window.introSkip = function () {
+      if (!alive) return;
+      alive = false;
+      introScr.removeEventListener('click', startComic);
+      endIntro(true);
+    };
+  })();
+}
