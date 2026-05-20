@@ -297,23 +297,38 @@ const TOUR_STEPS = [
     },
     {
         highlight: ".char-area",
-        text: "👆 上方亮起的是對手區\n大家輪流抽召喚牌、出魚牌\n最快出完手牌的人獲勝！",
+        // 對手區在頂部面板下方，不說上方
+        text: "🐙 亮起的是對手區\n大家輪流抽召喚牌、出魚牌\n最快出完手牌的人獲勝！",
         next: true
     },
     {
         highlight: "#ocean",
-        text: "🌊 中間亮起的是出牌區\n所有人出的牌都會出現在這裡\n觀察對手的牌，是推測條件的關鍵！",
+        text: "🌊 亮起的是出牌區\n所有人出的牌都會出現在這裡\n觀察對手的牌，是推測條件的關鍵！",
         next: true
     },
     {
         highlight: "#summon-display",
-        text: "📜 亮起的是召喚條件框\n你的回合會告訴你出牌條件\n對手回合則需要觀察牌來推測！",
-        next: true
+        // 這一步需要先把召喚框顯示出來才能高亮，用 onEnter 鉤子處理
+        text: "📜 亮起的是召喚條件框\n你的回合會顯示出牌條件\n對手回合則需要觀察牌來推測！",
+        next: true,
+        onEnter: () => {
+            // 暫時顯示召喚框讓玩家看到，離開此步後由 startPractice1 正式設定
+            const el = document.getElementById("summon-display");
+            if (el) {
+                el.style.display = "flex";
+                el.innerText     = "（例）出一張【養殖】來源的魚";
+            }
+        }
     },
     {
         highlight: "#player-zone",
         text: "👇 亮起的是你的手牌區\n點牌放大查看屬性\n對照條件，選對的魚出！\n\n準備好了嗎？來練習！",
-        next: true
+        next: true,
+        onEnter: () => {
+            // 離開召喚框步驟後把示例隱藏掉，等練習時再正式顯示
+            const el = document.getElementById("summon-display");
+            if (el) el.style.display = "none";
+        }
     }
 ];
 
@@ -331,6 +346,7 @@ function runTourStep() {
     }
     const step = TOUR_STEPS[tourStep];
     tutorClearHighlight();
+    if (step.onEnter) step.onEnter();
     if (step.highlight) tutorHighlight(step.highlight);
     tutorSay(step.text, step.next);
 }
