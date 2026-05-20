@@ -17,7 +17,7 @@ let tutorialLockedCardIdx = -1;
     #tutor-panel {
         position: fixed;
         top: 0; left: 0; right: 0;
-        z-index: 8500;
+        z-index: 9900;  /* 高過遮罩 9800 */
         display: none;
         flex-direction: row;
         align-items: center;
@@ -73,29 +73,46 @@ let tutorialLockedCardIdx = -1;
     }
     #tutor-next-btn:active { transform:scale(0.93); }
 
-    /* ══ 導覽遮罩：暗化背景，高亮區浮出 ══ */
+    /* ══ 導覽遮罩：clip-path 挖洞 spotlight ══
+       z-index 9800，高過遊戲所有元素（max 9000）
+       clip-path 由 JS 動態設定，挖出高亮區                ══ */
     #tutor-overlay {
         position: fixed;
         inset: 0;
-        z-index: 6000;
-        background: rgba(0,5,20,0.62);
+        z-index: 9800;
+        /* 預設滿版暗色；JS 會用 clip-path 挖洞 */
+        background: rgba(0,4,18,0.86);
         display: none;
-        pointer-events: all;
+        pointer-events: none;  /* 視覺暗化用，點擊穿透 */
+        transition: clip-path 0.35s ease;
     }
 
-    /* 高亮的區域：z-index 高於遮罩，加亮邊 */
-    .tutor-hl {
-        position: relative !important;
-        z-index: 6500 !important;
-        outline: 3px solid rgba(80,205,255,0.95) !important;
-        outline-offset: 4px !important;
-        border-radius: 10px !important;
-        animation: tutorHlPulse 1.5s ease-in-out infinite !important;
-        pointer-events: none !important;
+    /* 高亮區：純粹用來做亮邊動畫的偽元素覆蓋層
+       它本身在遮罩之上 (z-index 9850)，pointer-events off */
+    #tutor-hl-ring {
+        position: fixed;
+        z-index: 9850;
+        display: none;
+        border: 2.5px solid rgba(80,210,255,0.95);
+        border-radius: 12px;
+        pointer-events: none;
+        box-shadow:
+            0 0 0 4px rgba(60,180,255,0.12),
+            0 0 28px rgba(60,180,255,0.55),
+            inset 0 0 16px rgba(60,180,255,0.08);
+        animation: tutorRingPulse 1.5s ease-in-out infinite;
     }
-    @keyframes tutorHlPulse {
-        0%,100%{ box-shadow:0 0 0 5px rgba(60,180,255,0.14),0 0 22px rgba(60,180,255,0.22); }
-        50%     { box-shadow:0 0 0 9px rgba(60,180,255,0.06),0 0 38px rgba(60,180,255,0.38); }
+    @keyframes tutorRingPulse {
+        0%,100%{
+            box-shadow: 0 0 0 4px rgba(60,180,255,0.12),
+                        0 0 28px rgba(60,180,255,0.5),
+                        inset 0 0 14px rgba(60,180,255,0.08);
+        }
+        50%{
+            box-shadow: 0 0 0 8px rgba(60,180,255,0.06),
+                        0 0 52px rgba(60,180,255,0.75),
+                        inset 0 0 22px rgba(60,180,255,0.14);
+        }
     }
 
     /* ══ 指定手牌（金色閃爍）══ */
@@ -203,6 +220,12 @@ function buildTutorialDOM() {
         document.body.appendChild(ov);
     }
 
+    if (!document.getElementById("tutor-hl-ring")) {
+        const ring = document.createElement("div");
+        ring.id = "tutor-hl-ring";
+        document.body.appendChild(ring);
+    }
+
     if (!document.getElementById("tutor-end-modal")) {
         const m = document.createElement("div");
         m.id = "tutor-end-modal";
@@ -237,17 +260,51 @@ function tutorHide() {
 }
 
 // ======================
-// ✨ 高亮（浮出遮罩）
+// ✨ 高亮：clip-path 挖洞 + 亮邊框
 // ======================
+const _PADDING = 10; // 高亮框比元素多出的 px
+
 function tutorHighlight(selector) {
     tutorClearHighlight();
     const el = document.querySelector(selector);
-    if (el) el.classList.add("tutor-hl");
+    if (!el) return;
+
+    const rect = el.getBoundingClientRect();
+    const W = window.innerWidth;
+    const H = window.innerHeight;
+    const x1 = Math.max(0, rect.left   - _PADDING);
+    const y1 = Math.max(0, rect.top    - _PADDING);
+    const x2 = Math.min(W, rect.right  + _PADDING);
+    const y2 = Math.min(H, rect.bottom + _PADDING);
+
+    // clip-path polygon：滿版矩形中挖出目標區（evenodd 規則）
+    const overlay = document.getElementById("tutor-overlay");
+    if (overlay) {
+        overlay.style.clipPath = [
+            `polygon(evenodd,`,
+            `0 0, ${W}px 0, ${W}px ${H}px, 0 ${H}px, 0 0,`,          // 外框
+            `${x1}px ${y1}px, ${x1}px ${y2}px,`,                      // 洞（逆時針）
+            `${x2}px ${y2}px, ${x2}px ${y1}px, ${x1}px ${y1}px)`
+        ].join(" ");
+    }
+
+    // 亮邊框定位
+    const ring = document.getElementById("tutor-hl-ring");
+    if (ring) {
+        ring.style.left   = x1 + "px";
+        ring.style.top    = y1 + "px";
+        ring.style.width  = (x2 - x1) + "px";
+        ring.style.height = (y2 - y1) + "px";
+        ring.style.display = "block";
+    }
 }
 
 function tutorClearHighlight() {
-    document.querySelectorAll(".tutor-hl")
-        .forEach(el => el.classList.remove("tutor-hl"));
+    const overlay = document.getElementById("tutor-overlay");
+    if (overlay) overlay.style.clipPath = "none";
+
+    const ring = document.getElementById("tutor-hl-ring");
+    if (ring) ring.style.display = "none";
 }
 
 // ======================
@@ -277,11 +334,15 @@ function tutorUnlockHand() {
 // ======================
 function tutorShowOverlay() {
     const o = document.getElementById("tutor-overlay");
-    if (o) o.style.display = "block";
+    if (o) {
+        o.style.clipPath = "none";  // 預設無洞（全暗）
+        o.style.display  = "block";
+    }
 }
 function tutorHideOverlay() {
     const o = document.getElementById("tutor-overlay");
     if (o) o.style.display = "none";
+    tutorClearHighlight();
 }
 
 // ======================
@@ -823,6 +884,9 @@ function tutorFinish() {
     const _orig = window.playerAction;
     window.playerAction = async function(idx) {
         if (!tutorialMode) return _orig ? _orig.call(this, idx) : undefined;
+
+        // 導覽階段直接擋住所有出牌互動
+        if (tutorialPhase === "tour") return;
 
         // ── 媽祖籤 ──
         if (phase === "PLAYER_MAZU") {
