@@ -1,0 +1,197 @@
+/* =============================================
+   welcome.css — 歡迎頁樣式
+   ============================================= */
+
+#welcome-screen {
+    position: absolute; top: 0; left: 0;
+    width: 100%; height: 100%; z-index: 1000;
+    display: flex; justify-content: center; align-items: center;
+    background:
+        linear-gradient(rgba(0,0,0,0.15), rgba(0,0,0,0.42)),
+        url('bgi.png') no-repeat center center;
+    background-size: cover;
+    opacity: 0;
+    animation: welcomeFadeIn 1.5s ease-in-out forwards;
+    transition: opacity 1.2s ease-in-out, visibility 1.2s;
+    overflow: hidden;
+}
+@keyframes welcomeFadeIn { from{opacity:0} to{opacity:1} }
+#welcome-screen.fade-out { opacity:0; visibility:hidden; }
+#welcome-screen.hidden   { opacity:0; visibility:hidden; pointer-events:none; }
+
+/* 光柱 */
+#ws-rays { position:absolute; inset:0; pointer-events:none; overflow:hidden; z-index:1; }
+.ws-ray {
+    position:absolute; top:-6%;
+    background:linear-gradient(180deg,rgba(160,210,255,0.15) 0%,transparent 100%);
+    transform-origin:top center;
+    animation:wsRayPulse 8s ease-in-out infinite;
+}
+.ws-ray:nth-child(1){ left:18%; width:28px; height:55%; transform:rotate(-22deg); animation-delay:0s; }
+.ws-ray:nth-child(2){ left:38%; width:52px; height:62%; transform:rotate(-8deg);  animation-delay:-2.8s; opacity:.75; }
+.ws-ray:nth-child(3){ left:57%; width:36px; height:58%; transform:rotate(6deg);   animation-delay:-5s; }
+.ws-ray:nth-child(4){ left:76%; width:22px; height:48%; transform:rotate(20deg);  animation-delay:-1.8s; }
+@keyframes wsRayPulse { 0%,100%{opacity:.5} 50%{opacity:1} }
+
+/* 暗角 */
+#ws-vignette {
+    position:absolute; inset:0; pointer-events:none; z-index:2;
+    background:
+        radial-gradient(ellipse at center, transparent 35%, rgba(4,10,28,0.6) 100%),
+        linear-gradient(to top, rgba(4,10,28,0.75) 0%, transparent 32%);
+}
+
+/* 泡泡 */
+.ws-mbubble {
+    position:absolute; border-radius:50%;
+    border:1px solid rgba(160,220,255,0.35);
+    background:transparent;
+    animation:wsBubRise linear infinite;
+    pointer-events:none; z-index:2;
+}
+@keyframes wsBubRise {
+    0%  { transform:translateY(0);      opacity:.5; }
+    100%{ transform:translateY(-110vh); opacity:0; }
+}
+
+/* 容器 */
+.ws-container {
+    position:relative; z-index:5;
+    width:88%; max-width:360px;
+    display:flex; flex-direction:column; align-items:center;
+}
+
+/* 標題 */
+.ws-title-block { text-align:center; margin-bottom:20px; }
+.ws-game-title {
+    font-size:clamp(2rem,8vw,2.8rem);
+    font-weight:900; color:white; letter-spacing:.1em;
+    text-shadow: 0 0 10px rgba(255,255,255,0.85), 0 0 22px rgba(79,195,247,0.85), 0 0 48px rgba(3,169,244,0.65);
+    margin-bottom:4px;
+}
+.ws-subtitle {
+    font-size:1.05rem; letter-spacing:.28em;
+    color:rgba(215,242,255,0.92);
+    text-shadow:0 0 10px rgba(100,200,255,0.45);
+}
+.ws-deco-line {
+    display:flex; align-items:center; justify-content:center;
+    gap:10px; margin-top:10px;
+}
+.ws-deco-line::before, .ws-deco-line::after {
+    content:''; height:1px; width:50px;
+    background:linear-gradient(90deg,transparent,rgba(140,200,255,0.32),transparent);
+}
+
+/* 設定卡片 */
+.ws-card {
+    width:100%; box-sizing:border-box;
+    background:rgba(8,20,45,0.22);
+    border:1px solid rgba(160,210,255,0.18);
+    border-radius:18px; padding:18px 16px 16px;
+    backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+    margin-bottom:14px;
+    display:flex; flex-direction:column; gap:15px;
+    overflow:hidden;
+}
+.ws-field-label {
+    font-size:1.1rem; letter-spacing:.16em;
+    color:#ffffff; margin-bottom:6px; font-weight:700;
+    text-shadow:0 0 12px rgba(120,210,255,0.7), 0 1px 3px rgba(0,0,0,0.6);
+}
+
+/* 名稱輸入 */
+.ws-name-input {
+    width:100%; box-sizing:border-box;
+    background:rgba(255,255,255,0.07);
+    border:1px solid rgba(160,210,255,0.28);
+    border-radius:10px; padding:11px 12px;
+    color:#ffffff; font-size:1.1rem;
+    font-family:"Microsoft JhengHei",sans-serif;
+    outline:none; transition:border-color .2s;
+    -webkit-user-select:text; user-select:text;
+    text-shadow:0 1px 4px rgba(0,0,0,0.5);
+}
+.ws-name-input::placeholder { color:rgba(180,220,255,0.4); }
+.ws-name-input:focus { border-color:rgba(140,220,255,0.6); }
+
+/* 難度 */
+.ws-diff-row { display:flex; gap:7px; }
+.ws-diff-btn {
+    flex:1; padding:10px 0; border-radius:10px;
+    border:1px solid rgba(160,210,255,0.25);
+    background:rgba(255,255,255,0.05);
+    color:#ffffff; font-size:1.1rem; cursor:pointer;
+    transition:all .18s;
+    font-family:"Microsoft JhengHei",sans-serif;
+    -webkit-tap-highlight-color:transparent;
+    text-shadow:0 0 8px rgba(120,200,255,0.5), 0 1px 3px rgba(0,0,0,0.5);
+}
+.ws-diff-btn:active { transform:scale(0.95); }
+.ws-diff-btn.ws-active {
+    background:rgba(255,183,77,0.12);
+    border-color:rgba(255,200,100,0.6);
+    color:#ffe89e; font-weight:700;
+    text-shadow:0 0 10px rgba(255,180,60,0.7), 0 1px 3px rgba(0,0,0,0.5);
+}
+
+/* 音效開關 */
+.ws-sound-wrap { display:flex; align-items:center; justify-content:space-between; padding:2px 0; }
+.ws-sound-label {
+    font-size:1.1rem; color:#ffffff;
+    font-family:"Microsoft JhengHei",sans-serif;
+    display:flex; align-items:center; gap:7px;
+    font-weight:700;
+    text-shadow:0 0 12px rgba(120,210,255,0.7), 0 1px 3px rgba(0,0,0,0.6);
+}
+.ws-toggle {
+    width:44px; height:24px; border-radius:12px;
+    border:1px solid rgba(160,200,255,0.25);
+    background:rgba(255,255,255,0.08);
+    position:relative; cursor:pointer;
+    transition:background .22s, border-color .22s;
+    flex-shrink:0; -webkit-tap-highlight-color:transparent;
+}
+.ws-toggle.ws-on { background:rgba(255,183,77,0.35); border-color:rgba(255,183,77,0.6); }
+.ws-toggle::after {
+    content:''; position:absolute; top:3px; left:3px;
+    width:17px; height:17px; border-radius:50%;
+    background:rgba(200,230,255,0.7);
+    transition:transform .22s, background .22s;
+}
+.ws-toggle.ws-on::after { transform:translateX(20px); background:#ffcf6e; }
+
+/* 主按鈕 */
+#ws-start-btn {
+    width:100%; padding:8px; border-radius:50px; border:none;
+    background:linear-gradient(135deg,#ffb74d,#ff7043);
+    color:white; font-size:2rem; font-weight:700;
+    letter-spacing:.12em; cursor:pointer;
+    font-family:"Microsoft JhengHei",sans-serif;
+    box-shadow:0 5px 15px rgba(0,0,0,0.3),0 0 20px rgba(255,183,77,0.5);
+    transition:transform .15s; position:relative; overflow:hidden;
+    -webkit-tap-highlight-color:transparent;
+    text-shadow:0 1px 4px rgba(0,0,0,0.3);
+}
+#ws-start-btn::after {
+    content:''; position:absolute; top:-50%; left:-65%; width:38%; height:200%;
+    background:rgba(255,255,255,0.14); transform:rotate(30deg);
+    animation:wsShimmer 3.5s ease-in-out infinite;
+}
+@keyframes wsShimmer { 0%,55%{left:-65%} 78%{left:135%} 100%{left:135%} }
+#ws-start-btn:active { transform:scale(0.96); }
+
+/* 次要按鈕 */
+.ws-sub-row { display:flex; gap:10px; width:100%; }
+.ws-sub-btn {
+    flex:1; padding:12px 4px; font-size:1.1rem;
+    border-radius:30px; border:1px solid rgba(255,255,255,0.3);
+    background:rgba(255,255,255,0.07);
+    color:#ffffff; cursor:pointer;
+    font-family:"Microsoft JhengHei",sans-serif; font-weight:700;
+    transition:all .18s;
+    backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+    -webkit-tap-highlight-color:transparent;
+    text-shadow:0 0 10px rgba(120,210,255,0.5), 0 1px 4px rgba(0,0,0,0.5);
+}
+.ws-sub-btn:active { transform:scale(0.95); background:rgba(255,255,255,0.14); }
