@@ -3,7 +3,6 @@ let speakingAI = null;
 let sfxEnabled = sessionStorage.getItem("sfxEnabled") !== "false";
 let showSummaryMode = true; // 預設開啟結算頁面
 let roundReport = [];       // 每回合出牌結果紀錄
-let gameLog = [];            // 玩家出牌歷史（供分享圖卡用）
 let handFlipTimers = [];     // 手牌翻轉計時器
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
@@ -35,12 +34,6 @@ function preloadFishImages() {
     });
 }
 
-function setDifficulty(d, btn) {
-    gameDifficulty = d;
-	document.querySelectorAll('.sub-btnd').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-}
-
 // --- 故事與說明功能 ---
 let storyIdx = 1;
 let storyTimer = null;
@@ -62,72 +55,6 @@ function handleSwipe() {
     const diff = touchEndX - touchStartX;
     if (diff < -50) nextStory();
     else if (diff > 50) prevStory();
-}
-
-// 故事功能
-function openStory() {
-    storyIdx = 1;
-    updateStory();
-    const overlay = document.getElementById("story-overlay");
-    overlay.style.display = "flex"; // 顯示
-    overlay.style.visibility = "visible"; // 確保可見
-    overlay.style.opacity = "1"; // 確保不透明
-	
-	infoBGM.currentTime = 0; // 從頭播放
-    if (sfxEnabled) {
-        infoBGM.play().catch(e => console.log("音樂播放受阻，需使用者互動過才能播放:", e));
-    }
-	
-    startStoryTimer();
-
-    // 綁定觸控事件（用 on= 避免重複疊加）
-    overlay.ontouchstart = (e) => {
-        touchStartX = e.changedTouches[0].screenX;
-    };
-
-    overlay.ontouchend = (e) => {
-        touchEndX = e.changedTouches[0].screenX;
-        handleSwipe();
-    };
-}
-
-function updateStory() {
-    document.getElementById("story-img").src = `P${storyIdx}.jpg`;
-    document.getElementById("story-page-num").innerText = `${storyIdx} / ${totalStories}`;
-}
-
-function nextStory() {
-    stopStoryTimer();
-    if (storyIdx < totalStories) {
-        storyIdx++;
-        updateStory();
-        startStoryTimer();
-    } else {
-        closeStory();
-    }
-}
-
-function startStoryTimer() {
-    stopStoryTimer();
-    storyTimer = setTimeout(() => {
-        if (storyIdx < totalStories) {
-            storyIdx++;
-            updateStory();
-            startStoryTimer();
-        } else {
-            closeStory();
-        }
-    }, 10000); 
-}
-
-function stopStoryTimer() {
-    if (storyTimer) clearTimeout(storyTimer);
-}
-
-function closeStory() {
-    stopStoryTimer();
-    document.getElementById("story-overlay").style.display = "none";
-	infoBGM.pause();
 }
 
 // --- 說明功能變數 ---
@@ -925,7 +852,6 @@ function startGame() {
         hand: p.hand.map(f => ({ n: f.n, l: f.l, d: f.d, m: [...f.m], h: f.h, s: f.s }))
     }));
     logPlainText = []; // 清空上局紀錄
-    gameLog = [];      // 清空出牌歷史
     
     const diffLabel = gameDifficulty <= 0.4 ? "新手(難度0.4)" : gameDifficulty >= 0.9 ? "專業(難度0.9)" : "標準(難度0.7)";
     addLog(`勇者集結！難度：${diffLabel}。注意觀察大家的出牌...`);
@@ -1267,7 +1193,6 @@ async function playerAction(idx) {
         players[0].hand.splice(idx, 1);
         SFX.card();
         table.push({ pIdx: 0, card: fish });
-        gameLog.push({ fishName: fish.n, light: fish.l, success: null }); // success 在結算後填入
         phase = "AI_FOLLOWING";
         lockUI(); // 出牌後鎖定，防止亂點
 
@@ -1446,19 +1371,11 @@ function showResult() {
             if (isSuccess) {
                 addLog(`${player.n} 成功送出【${t.card.n}】`, "success");
                 // 更新玩家出牌紀錄的 success 狀態
-                if (t.pIdx === 0) {
-                    const entry = [...gameLog].reverse().find(g => g.fishName === t.card.n && g.success === null);
-                    if (entry) entry.success = true;
-                }
             } else {
                 // 先暫存，等結算頁關閉後再動畫退回
                 pendingReturns.push({ card: t.card, player });
                 addLog(`${player.n} 的【${t.card.n}】不符規律，退回。`);
                 // 更新玩家出牌紀錄的 success 狀態
-                if (t.pIdx === 0) {
-                    const entry = [...gameLog].reverse().find(g => g.fishName === t.card.n && g.success === null);
-                    if (entry) entry.success = false;
-                }
             }
         });
 

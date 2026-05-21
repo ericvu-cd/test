@@ -446,6 +446,12 @@ function startTutorial() {
     callerIdx = 0;
     phase     = "WAIT";
 
+    // 播放背景音樂（依音效設定決定）
+    if (typeof infoBGM !== "undefined" && typeof sfxEnabled !== "undefined" && sfxEnabled) {
+        infoBGM.currentTime = 0;
+        infoBGM.play().catch(e => console.log("教學BGM播放受阻:", e));
+    }
+
     setTimeout(() => {
         renderUI();
         renderTable();
@@ -848,6 +854,9 @@ function tutorFinish() {
     tutorClearHighlight();
     tutorUnlockHand();
     tutorHideOverlay();
+
+    // 停止教學 BGM
+    if (typeof infoBGM !== "undefined") infoBGM.pause();
 
     if (typeof stopFish    === "function") stopFish();
     if (typeof stopBubbles === "function") stopBubbles();
