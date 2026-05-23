@@ -428,7 +428,6 @@ body.game-started > *:not(#welcome-screen):not(#intro-screen) {
     height: 22%;
     border-radius: 50%;
     background: rgba(255,255,255,0.75);
-    filter: blur(1px);
 }
 
 /* 氣泡底部反光弧（用 ::after） */
@@ -441,7 +440,6 @@ body.game-started > *:not(#welcome-screen):not(#intro-screen) {
     height: 12%;
     border-radius: 50%;
     background: rgba(180,225,255,0.45);
-    filter: blur(1px);
 }
 @keyframes rise {
     0%   { transform: translateY(0)       translateX(0);   opacity: 0; }
@@ -547,7 +545,6 @@ body.game-started > *:not(#welcome-screen):not(#intro-screen) {
     transform-origin: center;
     /* 漸層在 JS 中動態設定，此處為 fallback */
     overflow: visible;
-    will-change: transform;
 }
 
 /* 魚腹高光條：疊在魚身上製造立體圓潤感 */
@@ -596,15 +593,11 @@ body.game-started > *:not(#welcome-screen):not(#intro-screen) {
     /* border-bottom 在 JS 中動態設定 */
     opacity: 0.75;
     transform-origin: bottom center;
-    animation: finSway ease-in-out infinite;
-    will-change: transform;
 }
 
-@keyframes finSway {
-    0%   { transform: rotate(-6deg); }
-    50%  { transform: rotate( 6deg); }
-    100% { transform: rotate(-6deg); }
-}
+/* =============================================
+   動畫：尾擺、游動、波動
+   ============================================= */
 
 /* 魚尾：右邊寬（尾端展開）、左邊尖（接魚身根部）
    魚往左游，尾巴從魚身右邊伸出，旋轉軸在左邊尖端 */
@@ -652,10 +645,6 @@ body.game-started > *:not(#welcome-screen):not(#intro-screen) {
     right: 12%;
 }
 
-/* =============================================
-   動畫：尾擺、游動、波動
-   ============================================= */
-
 /* 尾擺：振幅和波動同步節奏 */
 @keyframes tailWag {
     0%   { transform: rotate(-35deg); }
@@ -678,14 +667,6 @@ body.game-started > *:not(#welcome-screen):not(#intro-screen) {
     65%  { transform: translateY(calc(var(--wave-amp, 12px) *  0.7)) rotate(calc(var(--tilt-amp, 3deg) *  0.5)); }
     80%  { transform: translateY(calc(var(--wave-amp, 12px) *  1)) rotate(calc(var(--tilt-amp, 3deg) *  1)); }
     100% { transform: translateY(0px) rotate(0deg); }
-}
-
-/* 魚身搖擺：與波動同相位，讓頭部方向跟著游動方向偏轉 */
-@keyframes fishBodySway {
-    0%   { transform: rotate(0deg);   }
-    25%  { transform: rotate(-4deg);  }
-    75%  { transform: rotate( 4deg);  }
-    100% { transform: rotate(0deg);   }
 }
 
 #summon-display { z-index: 205; position: relative; background: rgba(0,20,60,0.82); padding: 16px 20px; border-radius: 16px; width: 90%; text-align: center; box-shadow: 0 8px 24px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.15); margin-bottom: 20px; font-weight: bold; min-height: 80px; border: 1px solid rgba(100,180,255,0.3); font-size: 1.7rem; color: #e0f4ff; display: flex; align-items: center; justify-content: center; line-height: 1.4; white-space: pre-wrap; box-sizing: border-box; transition: all 0.3s; text-shadow: 0 1px 8px rgba(0,0,0,0.8); }

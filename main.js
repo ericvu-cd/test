@@ -610,13 +610,10 @@ function createFish(forceSprint = false) {
     `;
 
     // 衝刺魚發光加強
-    const glowMult = isSprint ? 0.6 : 0.5;
-    const glowMult2 = isSprint ? 1.5 : 1.2;
     const bodyShadow = `
         inset -2px -2px 5px rgba(0,0,0,0.25),
         inset  1px  1px 4px rgba(255,255,255,0.15),
-        0 0 ${size * glowMult}px ${palette.glow},
-        0 0 ${size * glowMult2}px ${palette.glow.replace("0.4","0.15").replace("0.45","0.15").replace("0.35","0.12").replace("0.40","0.12").replace("0.30","0.10")}
+        0 0 ${size * 0.55}px ${palette.glow}
     `;
 
     const wrapper = document.createElement("div");
@@ -629,7 +626,6 @@ function createFish(forceSprint = false) {
         --wave-amp: ${cfg.waveAmp}px;
         --tilt-amp: ${cfg.tiltAmp}deg;
         animation: fishWave ${waveDur}s ${waveDelay}s ease-in-out infinite;
-        ${isSprint ? "filter: brightness(1.3) saturate(1.2);" : ""}
     `;
 
     const inner = document.createElement("div");
@@ -642,7 +638,6 @@ function createFish(forceSprint = false) {
         height: ${h}px;
         background: ${bodyGrad};
         box-shadow: ${bodyShadow};
-        animation: fishBodySway ${waveDur}s ${waveDelay}s ease-in-out infinite;
     `;
 
     const fin = document.createElement("div");
@@ -653,8 +648,6 @@ function createFish(forceSprint = false) {
         border-left:   ${finW * 0.35}px solid transparent;
         border-right:  ${finW * 0.65}px solid transparent;
         border-bottom: ${finH}px solid ${palette.fin};
-        animation-duration: ${waveDur * 0.9}s;
-        animation-delay:    ${waveDelay}s;
     `;
 
     const tail = document.createElement("div");
