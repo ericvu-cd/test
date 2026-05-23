@@ -336,14 +336,11 @@ if (sessionStorage.getItem('skipIntro') !== '1') {
     introScr.addEventListener('click', startComic, { once: true });
 
     function startComic() {
-      bgmEl = document.getElementById('bgm');
-      if (bgmEl) {
-        bgmEl.src = 'MZ.mp3';
-        bgmEl.loop = true;
-        bgmEl.volume = 0;
-        bgmEl.play().catch(function () {});
-        fadeVol(1, 2200);
-      }
+      bgmEl = new Audio('MZ.mp3');
+      bgmEl.loop = true;
+      bgmEl.volume = 0;
+      bgmEl.play().catch(function () {});
+      fadeVol(1, 2200);
 
       var ts      = document.getElementById('intro-ts');
       var credits = document.getElementById('intro-credits');
@@ -534,10 +531,11 @@ if (sessionStorage.getItem('skipIntro') !== '1') {
 
     function endIntro(fast) {
       alive = false;
-      if (fast) fadeVol(0.5, 600);
+      fadeVol(0, fast ? 600 : 1500);
       var scr = document.getElementById('intro-screen');
       scr.classList.add('closing');
       setTimeout(function () {
+        if (bgmEl) { bgmEl.pause(); bgmEl = null; }
         scr.remove();
         var w = document.getElementById('welcome-screen');
         if (w) {

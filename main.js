@@ -739,6 +739,7 @@ function initGame() {
 	startFish();    // ← 遊戲開始才啟動魚
 	startBubbles(); // ← 遊戲開始才啟動氣泡
 	document.body.classList.add('game-started');
+	
     // ✅ 改用加入 class 的方式觸發淡出
     const welcomeScreen = document.getElementById("welcome-screen");
     welcomeScreen.classList.add("fade-out");

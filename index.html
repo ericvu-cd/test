@@ -2,8 +2,7 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <!-- LINE 瀏覽器重導向 -->
-    <script>
+	<script>
         (function() {
             var ua = navigator.userAgent;
             if (ua.indexOf("Line") > -1) {
@@ -21,7 +20,228 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="welcome.css">
+
+
+    <!-- ══ 歡迎頁樣式 ══ -->
+    <style>
+    #welcome-screen {
+        position: absolute;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        z-index: 1000;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background:
+            linear-gradient(rgba(0,0,0,0.15), rgba(0,0,0,0.42)),
+            url('bgi.png') no-repeat center center;
+        background-size: cover;
+        opacity: 0;
+        animation: welcomeFadeIn 1.5s ease-in-out forwards;
+        transition: opacity 1.2s ease-in-out, visibility 1.2s;
+        overflow: hidden;
+    }
+    @keyframes welcomeFadeIn { from{opacity:0} to{opacity:1} }
+    #welcome-screen.fade-out  { opacity:0; visibility:hidden; }
+    #welcome-screen.hidden    { opacity:0; visibility:hidden; pointer-events:none; }
+
+    /* 光柱 */
+    #ws-rays { position:absolute; inset:0; pointer-events:none; overflow:hidden; z-index:1; }
+    .ws-ray  {
+        position:absolute; top:-6%;
+        background:linear-gradient(180deg,rgba(160,210,255,0.15) 0%,transparent 100%);
+        transform-origin:top center;
+        animation:wsRayPulse 8s ease-in-out infinite;
+    }
+    .ws-ray:nth-child(1){ left:18%; width:28px; height:55%; transform:rotate(-22deg); animation-delay:0s; }
+    .ws-ray:nth-child(2){ left:38%; width:52px; height:62%; transform:rotate(-8deg);  animation-delay:-2.8s; opacity:.75; }
+    .ws-ray:nth-child(3){ left:57%; width:36px; height:58%; transform:rotate(6deg);   animation-delay:-5s; }
+    .ws-ray:nth-child(4){ left:76%; width:22px; height:48%; transform:rotate(20deg);  animation-delay:-1.8s; }
+    @keyframes wsRayPulse { 0%,100%{opacity:.5} 50%{opacity:1} }
+
+    /* 暗角 */
+    #ws-vignette {
+        position:absolute; inset:0; pointer-events:none; z-index:2;
+        background:
+            radial-gradient(ellipse at center, transparent 35%, rgba(4,10,28,0.6) 100%),
+            linear-gradient(to top, rgba(4,10,28,0.75) 0%, transparent 32%);
+    }
+
+    /* 泡泡 */
+    .ws-mbubble {
+        position:absolute; border-radius:50%;
+        border:1px solid rgba(160,220,255,0.35);
+        background:transparent;
+        animation:wsBubRise linear infinite;
+        pointer-events:none; z-index:2;
+    }
+    @keyframes wsBubRise {
+        0%  { transform:translateY(0);      opacity:.5; }
+        100%{ transform:translateY(-110vh); opacity:0;  }
+    }
+
+    /* 容器 */
+    .ws-container {
+        position:relative; z-index:5;
+        width:88%; max-width:360px;
+        display:flex; flex-direction:column; align-items:center;
+    }
+
+    /* 標題 */
+    .ws-title-block { text-align:center; margin-bottom:20px; }
+    .ws-game-title {
+        font-size:clamp(2rem,8vw,2.8rem);
+        font-weight:900; color:white; letter-spacing:.1em;
+        text-shadow:
+            0 0 10px rgba(255,255,255,0.85),
+            0 0 22px rgba(79,195,247,0.85),
+            0 0 48px rgba(3,169,244,0.65);
+        margin-bottom:4px;
+    }
+    .ws-subtitle {
+        font-size:1.05rem; letter-spacing:.28em;
+        color:rgba(215,242,255,0.92);
+        text-shadow:0 0 10px rgba(100,200,255,0.45);
+    }
+    .ws-deco-line {
+        display:flex; align-items:center; justify-content:center;
+        gap:10px; margin-top:10px;
+    }
+    .ws-deco-line::before,.ws-deco-line::after {
+        content:''; height:1px; width:50px;
+        background:linear-gradient(90deg,transparent,rgba(140,200,255,0.32),transparent);
+    }
+
+    /* 設定卡片 — 極高透明，靠毛玻璃 */
+    .ws-card {
+        width:100%;
+        box-sizing:border-box;
+        background:rgba(8,20,45,0.22);
+        border:1px solid rgba(160,210,255,0.18);
+        border-radius:18px;
+        padding:18px 16px 16px;
+        backdrop-filter:blur(14px);
+        -webkit-backdrop-filter:blur(14px);
+        margin-bottom:14px;
+        display:flex; flex-direction:column; gap:15px;
+        overflow:hidden;
+    }
+    .ws-field-label {
+        font-size:1.1rem; letter-spacing:.16em;
+        color:#ffffff; margin-bottom:6px;
+        font-weight:700;
+        text-shadow:0 0 12px rgba(120,210,255,0.7), 0 1px 3px rgba(0,0,0,0.6);
+    }
+
+    /* 名稱輸入 — 不超出卡片 */
+    .ws-name-input {
+        width:100%;
+        box-sizing:border-box;
+        background:rgba(255,255,255,0.07);
+        border:1px solid rgba(160,210,255,0.28);
+        border-radius:10px;
+        padding:11px 12px;
+        color:#ffffff; font-size:1.1rem;
+        font-family:"Microsoft JhengHei",sans-serif;
+        outline:none; transition:border-color .2s;
+        -webkit-user-select:text; user-select:text;
+        text-shadow:0 1px 4px rgba(0,0,0,0.5);
+    }
+    .ws-name-input::placeholder { color:rgba(180,220,255,0.4); }
+    .ws-name-input:focus { border-color:rgba(140,220,255,0.6); }
+
+    /* 難度 */
+    .ws-diff-row { display:flex; gap:7px; }
+    .ws-diff-btn {
+        flex:1; padding:10px 0; border-radius:10px;
+        border:1px solid rgba(160,210,255,0.25);
+        background:rgba(255,255,255,0.05);
+        color:#ffffff;
+        font-size:1.1rem; cursor:pointer;
+        transition:all .18s;
+        font-family:"Microsoft JhengHei",sans-serif;
+        -webkit-tap-highlight-color:transparent;
+        text-shadow:0 0 8px rgba(120,200,255,0.5), 0 1px 3px rgba(0,0,0,0.5);
+    }
+    .ws-diff-btn:active { transform:scale(0.95); }
+    .ws-diff-btn.ws-active {
+        background:rgba(255,183,77,0.12);
+        border-color:rgba(255,200,100,0.6);
+        color:#ffe89e; font-weight:700;
+        text-shadow:0 0 10px rgba(255,180,60,0.7), 0 1px 3px rgba(0,0,0,0.5);
+    }
+
+    /* 音效開關 */
+    .ws-sound-wrap {
+        display:flex; align-items:center;
+        justify-content:space-between; padding:2px 0;
+    }
+    .ws-sound-label {
+        font-size:1.1rem; color:#ffffff;
+        font-family:"Microsoft JhengHei",sans-serif;
+        display:flex; align-items:center; gap:7px;
+        font-weight:700;
+        text-shadow:0 0 12px rgba(120,210,255,0.7), 0 1px 3px rgba(0,0,0,0.6);
+    }
+    .ws-toggle {
+        width:44px; height:24px; border-radius:12px;
+        border:1px solid rgba(160,200,255,0.25);
+        background:rgba(255,255,255,0.08);
+        position:relative; cursor:pointer;
+        transition:background .22s, border-color .22s;
+        flex-shrink:0; -webkit-tap-highlight-color:transparent;
+    }
+    .ws-toggle.ws-on {
+        background:rgba(255,183,77,0.35);
+        border-color:rgba(255,183,77,0.6);
+    }
+    .ws-toggle::after {
+        content:''; position:absolute; top:3px; left:3px;
+        width:17px; height:17px; border-radius:50%;
+        background:rgba(200,230,255,0.7);
+        transition:transform .22s, background .22s;
+    }
+    .ws-toggle.ws-on::after { transform:translateX(20px); background:#ffcf6e; }
+
+    /* 主按鈕 */
+    #ws-start-btn {
+        width:100%; padding:8px; border-radius:50px; border:none;
+        background:linear-gradient(135deg,#ffb74d,#ff7043);
+        color:white; font-size:2rem; font-weight:700;
+        letter-spacing:.12em; cursor:pointer;
+        font-family:"Microsoft JhengHei",sans-serif;
+        box-shadow:0 5px 15px rgba(0,0,0,0.3),0 0 20px rgba(255,183,77,0.5);
+        transition:transform .15s; position:relative; overflow:hidden;
+        -webkit-tap-highlight-color:transparent;
+        text-shadow:0 1px 4px rgba(0,0,0,0.3);
+    }
+    #ws-start-btn::after {
+        content:''; position:absolute;
+        top:-50%; left:-65%; width:38%; height:200%;
+        background:rgba(255,255,255,0.14);
+        transform:rotate(30deg);
+        animation:wsShimmer 3.5s ease-in-out infinite;
+    }
+    @keyframes wsShimmer { 0%,55%{left:-65%} 78%{left:135%} 100%{left:135%} }
+    #ws-start-btn:active { transform:scale(0.96); }
+
+    /* 次要按鈕 */
+    .ws-sub-row { display:flex; gap:10px; width:100%; }
+    .ws-sub-btn {
+        flex:1; padding:12px 4px; font-size:1.1rem;
+        border-radius:30px;
+        border:1px solid rgba(255,255,255,0.3);
+        background:rgba(255,255,255,0.07);
+        color:#ffffff; cursor:pointer;
+        font-family:"Microsoft JhengHei",sans-serif;
+        font-weight:700;
+        transition:all .18s;
+        backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+        -webkit-tap-highlight-color:transparent;
+        text-shadow:0 0 10px rgba(120,210,255,0.5), 0 1px 4px rgba(0,0,0,0.5);
+    }
+    .ws-sub-btn:active { transform:scale(0.95); background:rgba(255,255,255,0.14); }
+    </style>
 </head>
 <body>
 
@@ -31,6 +251,8 @@
     <div id="intro-blk"></div>
     <div id="intro-scan"></div>
     <div id="intro-flash"></div>
+
+    <!-- 特效層 -->
     <div id="fx-vignette"></div>
     <div id="fx-particles"></div>
     <div id="fx-weather"></div>
@@ -41,187 +263,312 @@
     <div id="fx-ripple"></div>
     <div id="fx-ripple2"></div>
     <div id="fx-ripple3"></div>
+
     <div id="intro-ts">
       <div id="intro-title"></div>
       <div id="intro-hint">點擊畫面開場</div>
     </div>
+
     <div id="intro-cs">
       <img id="iimg-a" class="iimg" src="" alt="">
       <img id="iimg-b" class="iimg" src="" alt="">
       <div id="intro-pgnum"></div>
     </div>
+
     <div id="intro-credits">Presented by Eric</div>
     <button id="intro-skip" onclick="introSkip()">不要跳過</button>
   </div>
 
-  <!-- ══ 歡迎頁 ══ -->
-  <div id="welcome-screen" style="display:none;">
-    <div id="ws-rays">
-      <div class="ws-ray"></div>
-      <div class="ws-ray"></div>
-      <div class="ws-ray"></div>
-      <div class="ws-ray"></div>
-    </div>
-    <div id="ws-vignette"></div>
-    <div id="ws-bubbles"></div>
+  <!-- ══ 開場邏輯 ══ -->
 
-    <div class="ws-container">
-      <div class="ws-title-block">
-        <div class="ws-subtitle">準備開始</div>
-      </div>
+	<div id="welcome-screen" style="display:none;">
 
-      <div class="ws-card">
-        <div>
-          <div class="ws-field-label">勇者暱稱</div>
-          <input class="ws-name-input" id="ws-name-input" type="text" placeholder="輸入你的暱稱…" maxlength="12">
-        </div>
-        <div>
-          <div class="ws-field-label">難度選擇</div>
-          <div class="ws-diff-row">
-            <button class="ws-diff-btn ws-active" onclick="wsSetDiff(0.4,this)">🐚 新手</button>
-            <button class="ws-diff-btn"           onclick="wsSetDiff(0.7,this)">🐠 標準</button>
-            <button class="ws-diff-btn"           onclick="wsSetDiff(0.9,this)">🦈 專業</button>
-          </div>
-        </div>
-        <div class="ws-sound-wrap">
-          <span class="ws-sound-label"><span id="ws-sound-icon">🔊</span>音效・音樂</span>
-          <div class="ws-toggle ws-on" id="ws-sound-toggle" onclick="wsToggleSound()"></div>
-        </div>
-        <div class="ws-sound-wrap">
-          <span class="ws-sound-label"><span id="ws-report-icon">📊</span>結算報告</span>
-          <div class="ws-toggle ws-on" id="ws-report-toggle" onclick="wsToggleReport()"></div>
-        </div>
-      </div>
+		<!-- 光柱 -->
+		<div id="ws-rays">
+			<div class="ws-ray"></div>
+			<div class="ws-ray"></div>
+			<div class="ws-ray"></div>
+			<div class="ws-ray"></div>
+		</div>
+		<!-- 暗角 -->
+		<div id="ws-vignette"></div>
+		<!-- 泡泡（JS 生成） -->
+		<div id="ws-bubbles"></div>
 
-      <div style="width:100%;display:flex;flex-direction:column;gap:10px;">
-        <button id="ws-start-btn" onclick="wsStartGame()">⚓ 啟航冒險</button>
-        <div class="ws-sub-row">
-          <button class="ws-sub-btn" onclick="openInfo()">簡介說明</button>
-          <button class="ws-sub-btn" onclick="startTutorial()">新手教學</button>
-        </div>
-      </div>
-    </div>
-  </div>
+		<div class="ws-container">
 
-  <!-- 開場跳過邏輯：必須在 #intro-screen 與 #welcome-screen 都出現在 DOM 後才執行 -->
+			<!-- 標題 -->
+			<div class="ws-title-block">
+				<div class="ws-subtitle">準備開始</div>
+			</div>
+
+			<!-- 設定卡片 -->
+			<div class="ws-card">
+
+				<!-- 勇者暱稱 -->
+				<div>
+					<div class="ws-field-label">勇者暱稱</div>
+					<input class="ws-name-input" id="ws-name-input"
+						type="text" placeholder="輸入你的暱稱…" maxlength="12">
+				</div>
+
+				<!-- 難度 -->
+				<div>
+					<div class="ws-field-label">難度選擇</div>
+					<div class="ws-diff-row">
+						<button class="ws-diff-btn ws-active"
+							onclick="wsSetDiff(0.4,this)">🐚 新手</button>
+						<button class="ws-diff-btn"
+							onclick="wsSetDiff(0.7,this)">🐠 標準</button>
+						<button class="ws-diff-btn"
+							onclick="wsSetDiff(0.9,this)">🦈 專業</button>
+					</div>
+				</div>
+
+				<!-- 音效・音樂 -->
+				<div class="ws-sound-wrap">
+					<span class="ws-sound-label">
+						<span id="ws-sound-icon">🔊</span>音效・音樂
+					</span>
+					<div class="ws-toggle ws-on" id="ws-sound-toggle"
+						onclick="wsToggleSound()"></div>
+				</div>
+
+				<!-- 結算報告 -->
+				<div class="ws-sound-wrap">
+					<span class="ws-sound-label">
+						<span id="ws-report-icon">📊</span>結算報告
+					</span>
+					<div class="ws-toggle ws-on" id="ws-report-toggle"
+						onclick="wsToggleReport()"></div>
+				</div>
+
+			</div>
+
+			<!-- 按鈕區 -->
+			<div style="width:100%;display:flex;flex-direction:column;gap:10px;">
+				<button id="ws-start-btn" onclick="wsStartGame()">⚓ 啟航冒險</button>
+				<div class="ws-sub-row">
+					<button class="ws-sub-btn" onclick="openInfo()">簡介說明</button>
+					<button class="ws-sub-btn" onclick="startTutorial()">新手教學</button>
+				</div>
+			</div>
+
+		</div>
+	</div>
+
   <script>
-  if (sessionStorage.getItem('skipIntro') === '1') {
+  if(sessionStorage.getItem('skipIntro')==='1'){
     sessionStorage.removeItem('skipIntro');
-    var _i = document.getElementById('intro-screen');
-    if (_i) _i.remove();
-    var _w = document.getElementById('welcome-screen');
-    if (_w) { _w.style.display = 'flex'; _w.style.animation = 'welcomeFadeIn 1.5s ease-in-out forwards'; }
+    document.getElementById('intro-screen').remove();
+    var _w=document.getElementById('welcome-screen');
+    _w.style.display='flex';
+    _w.style.animation='welcomeFadeIn 1.5s ease-in-out forwards';
   }
   </script>
 
-  <!-- ══ 音訊 ══ -->
-  <audio id="bgm" loop preload="auto">
-    <source src="Below_the_Surface.mp3" type="audio/mpeg">
-  </audio>
+    <audio id="bgm" loop preload="auto">
+        <source src="Below_the_Surface.mp3" type="audio/mpeg">
+    </audio>
 
-  <!-- ══ 懸浮控制鈕 ══ -->
-  <div id="music-control"  onclick="toggleMusic()"       style="position:fixed;top:10px;left:10px;z-index:2000;width:40px;height:40px;background:rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.2);border-radius:50%;display:none;justify-content:center;align-items:center;font-size:20px;cursor:pointer;backdrop-filter:blur(4px);">🎵</div>
-  <div id="report-control" onclick="toggleReportMode()"  style="position:fixed;top:10px;right:10px;z-index:2000;width:40px;height:40px;background:rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.2);border-radius:50%;display:none;justify-content:center;align-items:center;font-size:20px;cursor:pointer;backdrop-filter:blur(4px);">📊</div>
-
-  <!-- ══ 日誌彈窗 ══ -->
-  <div id="log-modal">
-    <div id="log-content">
-      <div class="log-header">
-        <span>出牌紀錄</span>
-        <div style="display:flex;gap:8px;align-items:center;">
-          <button id="log-copy-btn" onclick="copyLog()">📋 複製</button>
-          <button onclick="closeLog()">關閉</button>
+    <div id="music-control" onclick="toggleMusic()" style="position:fixed; top:10px; left:10px; z-index:2000; width:40px; height:40px; background:rgba(0,0,0,0.4); border:1px solid rgba(255,255,255,0.2); border-radius:50%; display:none; justify-content:center; align-items:center; font-size:20px; cursor:pointer; backdrop-filter:blur(4px);">
+        🎵
+    </div>
+	<div id="report-control" onclick="toggleReportMode()" style="position:fixed; top:10px; right:10px; z-index:2000; width:40px; height:40px; background:rgba(0,0,0,0.4); border:1px solid rgba(255,255,255,0.2); border-radius:50%; display:none; justify-content:center; align-items:center; font-size:20px; cursor:pointer; backdrop-filter:blur(4px);">
+        📊
+    </div>
+	
+    <div id="log-modal">
+        <div id="log-content">
+            <div class="log-header">
+                <span>出牌紀錄</span>
+                <div style="display:flex;gap:8px;align-items:center;">
+                    <button id="log-copy-btn" onclick="copyLog()">📋 複製</button>
+                    <button onclick="closeLog()">關閉</button>
+                </div>
+            </div>
+            <div id="log-messages"></div>
         </div>
-      </div>
-      <div id="log-messages"></div>
     </div>
-  </div>
 
-  <!-- ══ 故事 Overlay ══ -->
-  <div id="story-overlay" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:black;z-index:3000;">
-    <img id="story-img" src="" style="width:100%;height:100%;object-fit:cover;">
-    <div style="position:absolute;top:20px;right:20px;width:100%;display:flex;justify-content:right;gap:20px;">
-      <button class="ctrl-btn" onclick="closeStory()">X</button>
+    <div id="story-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:black; z-index:3000;">
+        <img id="story-img" src="" style="width:100%; height:100%; object-fit: cover;">
+        <div style="position:absolute; top:20px; right:20px; width:100%; display:flex; justify-content:right; gap:20px;">
+            <button class="ctrl-btn" onclick="closeStory()">X</button>
+        </div>
+        <div id="story-page-num" style="position:absolute; top:20px; left:20px; color:white; background:rgba(0,0,0,0.2); padding:5px 10px; border-radius:20px;">1 / 6</div>
     </div>
-    <div id="story-page-num" style="position:absolute;top:20px;left:20px;color:white;background:rgba(0,0,0,0.2);padding:5px 10px;border-radius:20px;">1 / 6</div>
-  </div>
 
-  <!-- ══ 說明 Overlay ══ -->
-  <div id="info-overlay" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:black;z-index:3000;">
-    <img id="info-img" src="" style="width:100%;height:100%;object-fit:cover;">
-    <div style="position:absolute;top:20px;right:20px;width:100%;display:flex;justify-content:right;gap:20px;">
-      <button class="ctrl-btn" onclick="closeInfo()">X</button>
+	<div id="info-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:black; z-index:3000;">
+        <img id="info-img" src="" style="width:100%; height:100%; object-fit: cover;">
+        <div style="position:absolute; top:20px; right:20px; width:100%; display:flex; justify-content:right; gap:20px;">
+            <button class="ctrl-btn" onclick="closeInfo()">X</button>
+        </div>
+        <div id="info-page-num" style="position:absolute; top:20px; left:20px; color:white; background:rgba(0,0,0,0.2); padding:5px 10px; border-radius:20px;">1 / 18</div>
     </div>
-    <div id="info-page-num" style="position:absolute;top:20px;left:20px;color:white;background:rgba(0,0,0,0.2);padding:5px 10px;border-radius:20px;">1 / 18</div>
-  </div>
 
-  <!-- ══ 卡片放大預覽 ══ -->
-  <div id="card-preview-overlay">
-    <div id="card-preview-container"></div>
-  </div>
+    <div id="card-preview-overlay">
+        <div id="card-preview-container"></div>
+    </div>
 
-  <!-- ══ 遊戲主畫面 ══ -->
-  <div id="header">友魚勇者之路單人挑戰</div>
+		<div id="header">友魚勇者之路單人挑戰</div>
 
-  <div class="char-area">
-    <div id="ai-1" class="box"></div>
-    <div id="ai-2" class="box"></div>
-    <div id="ai-3" class="box"></div>
-  </div>
+		<div class="char-area">
+			<div id="ai-1" class="box"></div>
+			<div id="ai-2" class="box"></div>
+			<div id="ai-3" class="box"></div>
+		</div>
 
-  <div id="ocean">
-    <div id="fish-layer"></div>
-    <div id="bubbles"></div>
-    <div id="deck-info">剩餘召喚卡: --</div>
-    <div id="log-btn" onclick="openLog()">📜出牌記錄</div>
-    <div id="summon-display"></div>
-    <div id="table"></div>
-  </div>
+		<div id="ocean">
+			<div id="fish-layer"></div>
+			<div id="bubbles"></div>
+			<div id="deck-info">剩餘召喚卡: --</div>
+			<div id="log-btn" onclick="openLog()">📜出牌記錄</div>
+			<div id="summon-display"></div>
+			<div id="table"></div>
+		</div>
 
-  <div id="player-zone" style="position:relative;overflow:hidden;">
-    <div id="drawer-up-arrow" style="display:none;">▲ 上滑/左滑/右滑選牌</div>
-    <div id="arrow-left"  class="hand-arrow"></div>
-    <div id="player-hand" class="hand"></div>
-    <div id="arrow-right" class="hand-arrow"></div>
-  </div>
+		<div id="player-zone" style="position: relative; overflow: hidden;">
+			<div id="drawer-up-arrow" style="display:none;">▲ 上滑/左滑/右滑選牌</div>
+			<div id="arrow-left" class="hand-arrow"></div>
+			<div id="player-hand" class="hand"></div>
+			<div id="arrow-right" class="hand-arrow"></div>
+		</div>
 
-  <!-- ══ 輔助層 ══ -->
-  <div id="chat-layer"></div>
-  <div id="tutorial-tooltip"></div>
-  <div id="ui-lock"></div>
-  <div id="summon-focus-overlay">
-    <div id="summon-focus-box">🔍 尋找勇者...<br>等待中...</div>
-  </div>
+    <script src="sfx.js"></script>
+    <script src="db.js"></script>
+    <script src="main.js"></script>
+	<script src="tutorial.js"></script>
+	<script src="win-screen.js"></script>
 
-  <!-- 停用右鍵選單 -->
-  <script>document.addEventListener('contextmenu', e => e.preventDefault());</script>
+	<script>
+	/* ══ 歡迎頁邏輯 ══════════════════════════════════════ */
+	(function(){
 
-  <!-- ══ 模組載入順序 ══════════════════════════════
-       1. sfx.js       — 音效系統（無依賴）
-       2. db.js        — 資料庫（無依賴）
-       3. state.js     — 全域狀態與工具函式
-       4. ui.js        — UI 渲染（依賴 state）
-       5. ocean.js     — 海洋動畫（依賴 state）
-       6. drawer.js    — 手牌抽屜（依賴 state, ui）
-       7. animation.js — 動畫特效（依賴 state, ui）
-       8. game.js      — 遊戲核心（依賴上述全部）
-       9. tutorial.js  — 教學模式（依賴 game）
-      10. win-screen.js— 勝利畫面（依賴 game）
-      11. welcome.js   — 歡迎頁邏輯（依賴 game）
-      12. intro.js     — 開場動畫（最後載入）
-  ════════════════════════════════════════════ -->
-  <script src="sfx.js"></script>
-  <script src="db.js"></script>
-  <script src="state.js"></script>
-  <script src="ui.js"></script>
-  <script src="ocean.js"></script>
-  <script src="drawer.js"></script>
-  <script src="animation.js"></script>
-  <script src="game.js"></script>
-  <script src="tutorial.js"></script>
-  <script src="win-screen.js"></script>
-  <script src="welcome.js"></script>
+		/* 泡泡 */
+		var _bubTimer = null;
+		function _mkBub(){
+			var wrap = document.getElementById('ws-bubbles');
+			if(!wrap) return;
+			var b = document.createElement('div');
+			b.className = 'ws-mbubble';
+			var s = 5 + Math.random()*12;
+			b.style.cssText =
+				'width:'+s+'px;height:'+s+'px;' +
+				'left:'+(Math.random()*88+5)+'%;' +
+				'bottom:-'+s+'px;' +
+				'animation-duration:'+(8+Math.random()*10)+'s;' +
+				'animation-delay:'+(Math.random()*4)+'s;';
+			wrap.appendChild(b);
+			setTimeout(function(){ b.remove(); }, 22000);
+		}
+		function _startBub(){
+			if(_bubTimer) return;
+			for(var i=0;i<8;i++) _mkBub();
+			_bubTimer = setInterval(_mkBub, 1800);
+		}
+		function _stopBub(){
+			if(_bubTimer){ clearInterval(_bubTimer); _bubTimer=null; }
+		}
+
+		/* 監聽 welcome-screen display 變化，自動啟停泡泡 */
+		var _wsEl = document.getElementById('welcome-screen');
+		if(_wsEl){
+			new MutationObserver(function(){
+				if(_wsEl.style.display !== 'none'){ _startBub(); }
+				else { _stopBub(); }
+			}).observe(_wsEl, { attributes:true, attributeFilter:['style'] });
+		}
+
+		/* 難度 */
+		window.wsSetDiff = function(val, btn){
+			if(typeof gameDifficulty !== 'undefined') gameDifficulty = val;
+			document.querySelectorAll('.ws-diff-btn')
+				.forEach(function(b){ b.classList.remove('ws-active'); });
+			btn.classList.add('ws-active');
+		};
+
+		/* 音效・音樂開關 */
+		window.wsToggleSound = function(){
+			var toggle = document.getElementById('ws-sound-toggle');
+			var icon   = document.getElementById('ws-sound-icon');
+			var isOn   = toggle.classList.toggle('ws-on');
+			if(typeof sfxEnabled !== 'undefined') sfxEnabled = isOn;
+			sessionStorage.setItem('sfxEnabled', isOn ? 'true' : 'false');
+			icon.textContent = isOn ? '🔊' : '🔇';
+			var bgm = document.getElementById('bgm');
+			if(bgm){
+				if(isOn){ bgm.play().catch(function(){}); }
+				else    { bgm.pause(); }
+			}
+		};
+		/* 初始化：讀取 sessionStorage */
+		(function(){
+			var stored = sessionStorage.getItem('sfxEnabled');
+			if(stored === 'false'){
+				if(typeof sfxEnabled !== 'undefined') sfxEnabled = false;
+				var t = document.getElementById('ws-sound-toggle');
+				var i = document.getElementById('ws-sound-icon');
+				if(t) t.classList.remove('ws-on');
+				if(i) i.textContent = '🔇';
+			}
+		})();
+
+		/* 結算報告開關 */
+		window.wsToggleReport = function(){
+			var toggle = document.getElementById('ws-report-toggle');
+			var icon   = document.getElementById('ws-report-icon');
+			var isOn   = toggle.classList.toggle('ws-on');
+			if(typeof showSummaryMode !== 'undefined') showSummaryMode = isOn;
+			sessionStorage.setItem('reportMode', isOn ? 'true' : 'false');
+			if(icon) icon.style.filter = isOn ? '' : 'grayscale(1) opacity(0.35)';
+		};
+		/* 初始化：讀取 sessionStorage */
+		(function(){
+			var stored = sessionStorage.getItem('reportMode');
+			if(stored === 'false'){
+				if(typeof showSummaryMode !== 'undefined') showSummaryMode = false;
+				var t = document.getElementById('ws-report-toggle');
+				if(t) t.classList.remove('ws-on');
+				var icon = document.getElementById('ws-report-icon');
+				if(icon) icon.style.filter = 'grayscale(1) opacity(0.35)';
+			}
+		})();
+
+		/* 啟航冒險 */
+		window.wsStartGame = function(){
+			var nameEl = document.getElementById('ws-name-input');
+			window.playerName = (nameEl && nameEl.value.trim()) ? nameEl.value.trim() : '勇者';
+			/* 同步結算報告狀態到 main.js 變數與遊戲中按鈕 */
+			var reportOn = document.getElementById('ws-report-toggle').classList.contains('ws-on');
+			if(typeof showSummaryMode !== 'undefined') showSummaryMode = reportOn;
+			var rBtn = document.getElementById('report-control');
+			if(rBtn){
+				if(reportOn){
+					rBtn.style.opacity = '1';
+					rBtn.innerHTML = '📊';
+				} else {
+					rBtn.style.opacity = '0.85';
+					rBtn.innerHTML = '<span style="filter:grayscale(1);display:inline-block;">📊</span><span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:1.2em;font-weight:900;color:#ff2222;pointer-events:none;">✕</span>';
+				}
+			}
+			_stopBub();
+			if(typeof initGame === 'function') initGame();
+		};
+
+	})();
+	</script>
+	
+	<div id="chat-layer"></div>
+	<div id="tutorial-tooltip"></div>
+	<div id="ui-lock"></div>
+	<div id="summon-focus-overlay">
+		<div id="summon-focus-box">🔍 尋找勇者...<br>等待中...</div>
+	</div>
+	<script>
+		document.addEventListener('contextmenu', e => e.preventDefault());
+	</script>
+
   <script src="intro.js"></script>
-
 </body>
 </html>
