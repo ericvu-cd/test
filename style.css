@@ -105,16 +105,16 @@ body.game-started > *:not(#welcome-screen):not(#intro-screen) {
 /* 歷史紀錄按鈕 */ 
 #log-btn {
     position: absolute;
-    top: 15px;
-    right: 15px;
+    top: 5px;
+    right: 5px;
     z-index: 2000;
     background: rgba(0,20,60,0.75);
     color: rgba(200,235,255,0.95);
-    padding: 8px 20px;
-    border-radius: 30px; 
+    padding: 4px 10px;
+    border-radius: 30px;
     border: 1px solid rgba(100,180,255,0.25);
     font-weight: bold;
-    font-size: 1rem;
+    font-size: 0.8rem;
     cursor: pointer;
     box-shadow: 0 2px 8px rgba(0,0,0,0.3);
     transition: 0.2s;
@@ -123,6 +123,7 @@ body.game-started > *:not(#welcome-screen):not(#intro-screen) {
     align-items: center;
     white-space: nowrap;
     text-shadow: 0 1px 4px rgba(0,0,0,0.8);
+    height: auto;
 }
 #log-btn:active { transform: scale(0.95); }
 
@@ -167,7 +168,7 @@ body.game-started > *:not(#welcome-screen):not(#intro-screen) {
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
     display: flex; justify-content: space-around; align-items: center;
-    padding: 48px 5px 10px;
+    padding: 54px 2px 8px;
     transition: all 0.3s;
     border-bottom: 1px solid rgba(255,255,255,0.08);
     z-index: 10;
@@ -177,7 +178,7 @@ body.game-started > *:not(#welcome-screen):not(#intro-screen) {
     text-align: center; color: white; transition: all 0.3s;
     display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
 }
-.ai-name { font-size: 1rem; font-weight: bold; text-shadow: 0 1px 6px rgba(0,0,0,0.9), 0 0 12px rgba(0,0,0,0.7); }
+.ai-name { font-size: 0.85rem; font-weight: bold; text-shadow: 0 1px 6px rgba(0,0,0,0.9), 0 0 12px rgba(0,0,0,0.7); }
 .ai-cards { font-size: 1rem; text-shadow: 0 1px 4px rgba(0,0,0,0.8); }
 
 .avatar-img {
@@ -384,8 +385,8 @@ body.game-started > *:not(#welcome-screen):not(#intro-screen) {
 
 #ocean {
     flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
-    position: relative; margin: 0; border-radius: 0;
-    padding-top: 50px; 
+    position: relative; margin: 5px; border-radius: 12px;
+    padding-top: 35px;
     min-height: 0;
     background: transparent;
     z-index: 1;
@@ -669,7 +670,7 @@ body.game-started > *:not(#welcome-screen):not(#intro-screen) {
     100% { transform: translateY(0px) rotate(0deg); }
 }
 
-#summon-display { z-index: 205; position: relative; background: rgba(0,20,60,0.82); padding: 16px 20px; border-radius: 16px; width: 90%; text-align: center; box-shadow: 0 8px 24px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.15); margin-bottom: 20px; font-weight: bold; min-height: 80px; border: 1px solid rgba(100,180,255,0.3); font-size: 1.7rem; color: #e0f4ff; display: flex; align-items: center; justify-content: center; line-height: 1.4; white-space: pre-wrap; box-sizing: border-box; transition: all 0.3s; text-shadow: 0 1px 8px rgba(0,0,0,0.8); }
+#summon-display { z-index: 205; position: relative; background: rgba(0,20,60,0.82); padding: 10px; border-radius: 12px; width: 92%; text-align: center; box-shadow: 0 8px 24px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.15); margin-bottom: 5px; font-weight: bold; min-height: 50px; border: 3px solid rgba(100,180,255,0.3); font-size: 1.05rem; color: #e0f4ff; display: flex; align-items: center; justify-content: center; line-height: 1.4; white-space: pre-wrap; box-sizing: border-box; transition: all 0.3s; text-shadow: 0 1px 8px rgba(0,0,0,0.8); }
 
 /* 召喚聚焦遮罩 */
 #summon-focus-overlay {
@@ -715,20 +716,20 @@ body.game-started > *:not(#welcome-screen):not(#intro-screen) {
     70%  { transform: scale(1.04) translateY(0);     opacity: 1; }
     100% { transform: scale(1)    translateY(0);     opacity: 1; }
 }
-#table { z-index: 5; position: relative; display: flex; gap: 15px; flex-grow: 1; min-height: 250px; align-items: center; width: 95%; justify-content: center; overflow-x: auto; }
-#deck-info { position: absolute; top: 15px; left: 20px; background: rgba(0,20,60,0.75); color: rgba(200,235,255,0.95); padding: 8px 20px; border-radius: 30px; font-size: 1.1rem; font-weight: bold; z-index: 5; border: 1px solid rgba(100,180,255,0.25); text-shadow: 0 1px 4px rgba(0,0,0,0.8); }
+#table { z-index: 5; position: relative; display: flex; gap: 6px; flex-grow: 1; min-height: 122px; align-items: center; width: 95%; justify-content: center; overflow-x: auto; }
+#deck-info { position: absolute; top: 5px; left: 5px; background: rgba(252,230,127,0.6); color: rgba(200,235,255,0.95); padding: 4px 10px; border-radius: 30px; font-size: 0.8rem; font-weight: bold; z-index: 5; border: 1px solid rgba(100,180,255,0.25); text-shadow: 0 1px 4px rgba(0,0,0,0.8); }
 
 /* 玩家區：極淡半透明 */
-#player-zone { 
+#player-zone {
     background: rgba(0, 10, 30, 0.55);
-    padding: 15px;
-    border-top: 1px solid rgba(100,180,255,0.2); 
-    transition: all 0.3s; 
-    border-radius: 0;
+    padding: 8px;
+    border-top: 1px solid rgba(100,180,255,0.2);
+    transition: all 0.3s;
+    border-radius: 15px 15px 0 0;
     position: relative;
     z-index: 10;
 }
-.hand { display: flex; overflow-x: auto; gap: 15px; padding-bottom: 10px; min-height: 270px; align-items: flex-end; -webkit-overflow-scrolling: touch; }
+.hand { display: flex; overflow-x: auto; gap: 6px; padding-bottom: 5px; min-height: 126px; align-items: flex-end; -webkit-overflow-scrolling: touch; }
 
 /* 預覽放大卡牌專用 */
 #card-preview-overlay {
@@ -834,10 +835,10 @@ body.game-started > *:not(#welcome-screen):not(#intro-screen) {
    卡牌基礎：冰晶玻璃 + 鐵金屬框架
    ============================================= */
 .card {
-    width: 165px;
-    height: 245px;
-    border-radius: 15px;
-    border: none;
+    width: 74px;
+    height: 115px;
+    border-radius: 8px;
+    border: 1px solid transparent;
     flex-shrink: 0;
     display: flex;
     flex-direction: column;
@@ -920,7 +921,7 @@ body.game-started > *:not(#welcome-screen):not(#intro-screen) {
     white-space: nowrap;
 }
 
-.card-n { font-weight: 900; text-align: center; padding: 12px 5px; border-bottom: 2px solid rgba(0,0,0,0.12); font-size: 1.9rem; color: #444; position: relative; z-index: 5; border-radius: 15px 15px 0 0; }
+.card-n { font-weight: 900; text-align: center; padding: 4px 1px; border-bottom: 1px solid rgba(0,0,0,0.12); font-size: 0.8rem; color: #444; position: relative; z-index: 5; border-radius: 8px 8px 0 0; }
 .light-1 .card-n { background-color: #d4f5e2 !important; color: #1b4d2e; }
 .light-2 .card-n { background-color: #fef3cd !important; color: #5d4037; }
 .light-3 .card-n { background-color: #ffd6da !important; color: #7b1c2a; }
@@ -942,11 +943,11 @@ body.game-started > *:not(#welcome-screen):not(#intro-screen) {
     display: block;
 }
 
-.card-i { padding: 8px; flex-grow: 1; color: #222; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; background-color: #000; background-image: radial-gradient(rgba(180,210,255,0.2) 1px, transparent 1px); background-size: 15px 15px; position: relative; z-index: 5; }
+.card-i { padding: 2px; flex-grow: 1; color: #222; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; background-color: #000; background-image: radial-gradient(rgba(180,210,255,0.2) 1px, transparent 1px); background-size: 15px 15px; position: relative; z-index: 5; }
 
 .card:active { transform: scale(0.95) translateY(3px) !important; transition: transform 0.08s ease !important; }
 
-.tag { display: inline-block; padding: 4px 10px; border-radius: 8px; font-size: 1.1rem; margin: 2px; color: white; font-weight: bold; text-shadow: 1px 1px 1px rgba(0,0,0,0.3); white-space: nowrap; box-shadow: 1px 1px 3px rgba(0,0,0,0.1); line-height: 1.2; }
+.tag { display: inline-block; padding: 2px 4px; border-radius: 4px; font-size: 0.6rem; margin: 1px; color: white; font-weight: bold; text-shadow: 1px 1px 1px rgba(0,0,0,0.3); white-space: nowrap; box-shadow: 1px 1px 3px rgba(0,0,0,0.1); line-height: 1.1; }
 .tag-spring { background-color: #f48fb1; }
 .tag-summer { background-color: #ffd54f; color: #5d4037; }
 .tag-autumn { background-color: #ff8a65; }
@@ -1015,25 +1016,11 @@ body.game-started > *:not(#welcome-screen):not(#intro-screen) {
 #player-hand .light-3 { border-top: 4px solid #f44336 !important; }
 
 #header { font-size: 1.3rem; padding: 10px; }
-#log-btn {
-    font-size: 0.8rem;
-    padding: 4px 10px;
-    top: 5px;
-    right: 5px;
-    height: auto;
-}
-.sub-menu {
-    flex-direction: column;
-    align-items: center;
-}
-.char-area { padding: 30px 2px; }
 .avatar-img { width: 40px; height: 40px; font-size: 1.3rem; border-width: 2px; }
 .ai-name { font-size: 0.85rem; }
 #ocean { margin: 5px; border-radius: 12px; padding-top: 35px; }
 #deck-info { font-size: 0.8rem; padding: 4px 10px; top: 5px; left: 5px; background: rgba(252, 230, 127, 0.6); }
 #summon-display { font-size: 1.05rem; padding: 10px; width: 92%; min-height: 50px; margin-bottom: 5px; border-width: 3px; border-radius: 12px; }
-#table { min-height: 122px; gap: 6px; }
-#player-zone { padding: 8px; border-radius: 15px 15px 0 0; }
 .hand { min-height: 126px; gap: 6px; padding-bottom: 5px; }
 .card { width: 74px; height: 115px; border-radius: 8px; border-width: 1px; transform-style: preserve-3d; }
 .card-n { font-size: 0.8rem; padding: 4px 1px; border-bottom-width: 1px; }
@@ -1117,8 +1104,8 @@ body.game-started > *:not(#welcome-screen):not(#intro-screen) {
 }
 
 #real-start-btn {
-    padding: 18px 60px;
-    font-size: 2rem;
+    padding: 15px 40px;
+    font-size: 1.8rem;
     border-radius: 50px;
     border: none;
 
@@ -1138,6 +1125,8 @@ body.game-started > *:not(#welcome-screen):not(#intro-screen) {
 
 .sub-menu {
     display: flex;
+    flex-direction: column;
+    align-items: center;
     gap: 20px;
     justify-content: center;
     margin-top: 20px;
