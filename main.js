@@ -1,5 +1,30 @@
 let gameDifficulty = 0.4;
-let speakingAI = null;
+
+// ── 對話排隊系統 ──────────────────────────────
+const chatQueue = {
+    _q: [],
+    _timer: null,
+    _interval: 1800,
+
+    push(p, msg) {
+        this._q.push({ p, msg });
+        if (!this._timer) this._flush();
+    },
+
+    _flush() {
+        if (!this._q.length) { this._timer = null; return; }
+        const { p, msg } = this._q.shift();
+        showChat(p, msg);
+        this._timer = setTimeout(() => this._flush(), this._interval);
+    },
+
+    clear() {
+        this._q = [];
+        if (this._timer) { clearTimeout(this._timer); this._timer = null; }
+    }
+};
+
+let roundChatCount = 0; // 每回合對話上限計數器（上限 2）
 let sfxEnabled = sessionStorage.getItem("sfxEnabled") !== "false";
 let showSummaryMode = true; // 預設開啟結算頁面
 let roundReport = [];       // 每回合出牌結果紀錄
@@ -610,10 +635,13 @@ function createFish(forceSprint = false) {
     `;
 
     // 衝刺魚發光加強
+    const glowMult = isSprint ? 0.6 : 0.5;
+    const glowMult2 = isSprint ? 1.5 : 1.2;
     const bodyShadow = `
         inset -2px -2px 5px rgba(0,0,0,0.25),
         inset  1px  1px 4px rgba(255,255,255,0.15),
-        0 0 ${size * 0.55}px ${palette.glow}
+        0 0 ${size * glowMult}px ${palette.glow},
+        0 0 ${size * glowMult2}px ${palette.glow.replace("0.4","0.15").replace("0.45","0.15").replace("0.35","0.12").replace("0.40","0.12").replace("0.30","0.10")}
     `;
 
     const wrapper = document.createElement("div");
@@ -626,6 +654,7 @@ function createFish(forceSprint = false) {
         --wave-amp: ${cfg.waveAmp}px;
         --tilt-amp: ${cfg.tiltAmp}deg;
         animation: fishWave ${waveDur}s ${waveDelay}s ease-in-out infinite;
+        ${isSprint ? "filter: brightness(1.3) saturate(1.2);" : ""}
     `;
 
     const inner = document.createElement("div");
@@ -638,6 +667,7 @@ function createFish(forceSprint = false) {
         height: ${h}px;
         background: ${bodyGrad};
         box-shadow: ${bodyShadow};
+        animation: fishBodySway ${waveDur}s ${waveDelay}s ease-in-out infinite;
     `;
 
     const fin = document.createElement("div");
@@ -648,6 +678,8 @@ function createFish(forceSprint = false) {
         border-left:   ${finW * 0.35}px solid transparent;
         border-right:  ${finW * 0.65}px solid transparent;
         border-bottom: ${finH}px solid ${palette.fin};
+        animation-duration: ${waveDur * 0.9}s;
+        animation-delay:    ${waveDelay}s;
     `;
 
     const tail = document.createElement("div");
@@ -943,8 +975,8 @@ function autoStep() {
 	
     table = [];
     roundCount++;
-    const aiPlayers = players.filter(p => p.isAI);
-    speakingAI = aiPlayers[Math.floor(Math.random() * aiPlayers.length)];
+    chatQueue.clear(); // 新回合開始，清空對話佇列
+    roundChatCount = 0; // 重置對話計數器
 	document.getElementById("table").innerHTML = "";
     document.getElementById("summon-display").classList.remove("mazu-glow");
     const causticsReset = document.getElementById("ocean-caustics");
@@ -1195,6 +1227,17 @@ async function playerAction(idx) {
         const fromEl = document.getElementById("player-zone");
         playCardFlyAnimation(fish, fromEl, () => renderTable());
 
+        // 玩家出牌後：隨機抽 1～2 個 AI 說話，受回合上限控制
+        const aiPlayers = players.filter(p => p.isAI);
+        const shuffled = aiPlayers.sort(() => Math.random() - 0.5);
+        const count = Math.random() < 0.5 ? 1 : 2;
+        shuffled.slice(0, count).forEach(p => {
+            if (roundChatCount >= 2) return;
+            const isCorrect = currentS && currentS.c ? currentS.c(fish) : null;
+            queueAITalk(p, fish, isCorrect);
+            roundChatCount++;
+        });
+
         await new Promise(resolve => setTimeout(resolve, 1550));
         for (let pi = 0; pi < players.length; pi++) {
             const p = players[pi];
@@ -1214,22 +1257,35 @@ async function playerAction(idx) {
 
 function aiMove(pI, cI) {
     const p = players[pI];
-	if (!p.hand[cI]) return; // 安全機制：確保這位置有牌
+	if (!p.hand[cI]) return;
 	
     const f = p.hand.splice(cI, 1)[0];
 
     SFX.cardAI();
     table.push({ pIdx: pI, card: f });
 
-    // 出牌飛行動畫：動畫跑完後才讓卡出現在 ocean
     const fromEl = document.getElementById(p.id);
     playCardFlyAnimation(f, fromEl, () => renderTable());
 
-    renderUI(); // 立即更新 AI 手牌數量
+    renderUI();
 
-    let isCorrect = currentS && currentS.c ? currentS.c(f) : null;
+    const isCorrect = currentS && currentS.c ? currentS.c(f) : null;
 
-    aiTalk(p, f, isCorrect);
+    // 出牌的 AI：50% 機率說話，受回合上限控制
+    if (roundChatCount < 2 && Math.random() < 0.5) {
+        queueAITalk(p, f, isCorrect);
+        roundChatCount++;
+    }
+
+    // 其他 AI：隨機抽 1 個說話，受回合上限控制
+    if (roundChatCount < 2) {
+        const others = players.filter(other => other.isAI && other !== p);
+        if (others.length) {
+            const speaker = others[Math.floor(Math.random() * others.length)];
+            queueAITalk(speaker, f, null);
+            roundChatCount++;
+        }
+    }
 }
 
 // =============================================
@@ -1786,31 +1842,41 @@ function showChat(p, msg) {
     setTimeout(() => bubble.remove(), 3000);
 }
 
-function aiTalk(p, card, isCorrectGuess = null) {
-    if (p !== speakingAI) return;
-
+// 組合台詞並加入 queue
+function queueAITalk(p, card, isCorrectGuess) {
     const persona = p.personality;
-    let lines = [...dialogueDB[persona].play];
+    const db = dialogueDB[persona];
+    let pool = [];
 
-    // 針對狡猾性格的特殊邏輯：如果亂出牌且有設定特殊台詞
-    if (isCorrectGuess === false && dialogueDB[persona].playWrong) {
-        lines.push(...dialogueDB[persona].playWrong);
+    if (isCorrectGuess === false && db.playWrong) pool.push(...db.playWrong);
+
+    if (card) {
+        if (card.l === 3 && db.playRed)          pool.push(...db.playRed);
+        else if (card.l === 1 && db.playGreen)   pool.push(...db.playGreen);
+        if (card.d === "養殖" && db.playFarm)    pool.push(...db.playFarm);
     }
 
-    const msg = lines[Math.floor(Math.random() * lines.length)];
-    showChat(p, msg);
+    if (!pool.length) pool = [...db.play];
+
+    const msg = pool[Math.floor(Math.random() * pool.length)];
+    chatQueue.push(p, msg);
+}
+
+// 保留 aiTalk 作為向後相容（目前已無直接呼叫，備用）
+function aiTalk(p, card, isCorrectGuess = null) {
+    queueAITalk(p, card, isCorrectGuess);
 }
 
 function aiTalkMazuGive(p, target, card) {
     const lines = dialogueDB[p.personality].mazuGive;
     const msg = lines[Math.floor(Math.random() * lines.length)];
-    showChat(p, msg);
+    chatQueue.push(p, msg);
 }
 
 function aiTalkMazuReceive(p, from, card) {
     const lines = dialogueDB[p.personality].mazuReceive;
     const msg = lines[Math.floor(Math.random() * lines.length)];
-    showChat(p, msg);
+    chatQueue.push(p, msg);
 }
 
 
