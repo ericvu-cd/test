@@ -777,7 +777,7 @@ function initGame() {
     const btn = document.getElementById("music-control");
     if (sfxEnabled) {
         music.play().then(() => {
-            music.volume = 0.03;
+            music.volume = 0.1;
             btn.style.filter = "sepia(1) saturate(3) hue-rotate(175deg) brightness(1.4)";
             btn.innerText = "🎵";
             btn.style.opacity = "1";

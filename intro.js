@@ -136,10 +136,10 @@
     #intro-skip {
       position: fixed;
       bottom: 16px; right: 18px; z-index: 999999;
-      background: rgba(0,0,0,.25);
-      border: 1px solid rgba(255,255,255,.25);
+      background: rgba(0,0,0,.10);
+      border: 1px solid rgba(255,255,255,.15);
       border-radius: 22px;
-      color: rgba(255,255,255,.75);
+      color: rgba(255,255,255,.4);
       font-size: .76rem; letter-spacing: .1em;
       padding: 6px 16px; cursor: pointer;
       backdrop-filter: blur(3px);
@@ -147,9 +147,9 @@
       transition: color .3s, border-color .3s, background .3s;
     }
     #intro-skip:hover {
-      color: #fff;
-      border-color: rgba(255,255,255,.6);
-      background: rgba(0,0,0,.45);
+	  color: rgba(255,255,255,.45);
+	  border-color: rgba(255,255,255,.30);
+	  background: rgba(0,0,0,.20);
     }
 
     /* ── 特效層 ── */

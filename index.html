@@ -15,12 +15,15 @@
         })();
     </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>友魚勇者之路-單人版</title>
+    <title>友魚勇者之路-單人挑戰</title>
     <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@900&display=swap" rel="stylesheet">
 
+	<style>
+		body { background: #000; }
+	</style>
 
     <!-- ══ 歡迎頁樣式 ══ -->
     <style>
@@ -275,8 +278,8 @@
       <div id="intro-pgnum"></div>
     </div>
 
-    <div id="intro-credits">Presented by Eric</div>
-    <button id="intro-skip" onclick="introSkip()">不要跳過</button>
+	<div id="intro-credits" style="opacity:0">Presented by Eric</div>
+    <button id="intro-skip" onclick="introSkip()" style="display:none">不要跳過 >></button>
   </div>
 
   <!-- ══ 開場邏輯 ══ -->
