@@ -135,7 +135,7 @@
     }
     #intro-skip {
       position: fixed;
-      bottom: 16px; right: 18px; z-index: 999999;
+      bottom: 12px; left: 16px; z-index: 999999;
       background: rgba(0,0,0,.10);
       border: 1px solid rgba(255,255,255,.15);
       border-radius: 22px;
@@ -372,7 +372,7 @@ if (sessionStorage.getItem('skipIntro') !== '1') {
 		bgmEl.loop = false;
 		bgmEl.volume = 0;
 		bgmEl.play().catch(function () {});
-		fadeVol(1, 2200);
+		fadeVol(0.78, 2200);
 
       var ts      = document.getElementById('intro-ts');
       var credits = document.getElementById('intro-credits');
