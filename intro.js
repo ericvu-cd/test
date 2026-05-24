@@ -323,8 +323,8 @@ setTimeout(function () {
 if (sessionStorage.getItem('skipIntro') !== '1') {
   (function () {
     var IMGS = ['P1.jpg','P2.jpg','P3.jpg','P4.jpg','P5.jpg','P6.jpg','P7.jpg','P8.jpg','P9.jpg'];
-    var STAY = 12000, BREATH_DUR = 6000, FADE_OUT = 900, BLACK = 400, FADE_IN = 800;
-    var alive = true, slotA = true, bgmEl = null, volTmr = null;
+    var STAY = 11400, BREATH_DUR = 6000, FADE_OUT = 900, BLACK = 400, FADE_IN = 800;
+    var alive = true, slotA = true, bgmEl = null, volTmr = null, wakeLock = null;
     var imgA, imgB, blkOvl, scanEl, flashEl;
 
     function fadeVol(to, ms) {
@@ -362,11 +362,17 @@ if (sessionStorage.getItem('skipIntro') !== '1') {
     introScr.addEventListener('click', startComic, { once: true });
 
     function startComic() {
-      bgmEl = new Audio('MZ.mp3');
-      bgmEl.loop = true;
-      bgmEl.volume = 0;
-      bgmEl.play().catch(function () {});
-      fadeVol(1, 2200);
+      if ('wakeLock' in navigator) {
+        navigator.wakeLock.request('screen').then(function (lock) {
+          wakeLock = lock;
+        }).catch(function () {});
+      }
+
+		bgmEl = new Audio('Where_the_Tide_Breaks.mp3');
+		bgmEl.loop = false;
+		bgmEl.volume = 0;
+		bgmEl.play().catch(function () {});
+		fadeVol(1, 2200);
 
       var ts      = document.getElementById('intro-ts');
       var credits = document.getElementById('intro-credits');
@@ -570,6 +576,7 @@ if (sessionStorage.getItem('skipIntro') !== '1') {
     function endIntro(fast) {
       alive = false;
       fadeVol(0, fast ? 600 : 1500);
+      if (wakeLock) { wakeLock.release(); wakeLock = null; }
       var scr = document.getElementById('intro-screen');
       scr.classList.add('closing');
       setTimeout(function () {
