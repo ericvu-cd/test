@@ -22,7 +22,7 @@ let tutorialLockedCardIdx = -1;
         flex-direction: row;
         align-items: center;
         gap: 8px;
-        padding: 6px 10px 10px;
+        padding: 6px 10px 6px;
         background: linear-gradient(180deg,
             rgba(4,18,46,0.98) 0%,
             rgba(4,18,46,0.93) 80%,
@@ -50,7 +50,7 @@ let tutorialLockedCardIdx = -1;
         padding: 7px 11px;
         font-size: 0.82rem;
         line-height: 1.5;
-        color: #dff0ff;
+		color: rgb(255,215,0);
         white-space: pre-line;
         box-shadow: 0 0 14px rgba(60,160,255,0.18);
     }
@@ -157,7 +157,7 @@ let tutorialLockedCardIdx = -1;
     .tutor-sum-bubble .tsb-icon { font-size:1.5rem; flex-shrink:0; line-height:1.2; }
     .tutor-sum-bubble .tsb-text {
         font-size:0.88rem; line-height:1.58;
-        color:#dff0ff; white-space:pre-line; font-weight:600;
+        color:rgb(255,215,0); white-space:pre-line; font-weight:600;
     }
 
     /* ══ 教學結束彈窗 ══ */
@@ -359,12 +359,12 @@ const TOUR_STEPS = [
     {
         highlight: ".char-area",
         // 對手區在頂部面板下方，不說上方
-        text: "🐙 亮起的是對手區\n大家輪流抽召喚牌、出魚牌\n最快出完手牌的人獲勝！",
+        text: "🐙 畫面上端亮起的是對手區\n大家輪流抽召喚牌、出魚牌\n最快出完手牌的人獲勝！",
         next: true
     },
     {
         highlight: "#ocean",
-        text: "🌊 亮起的是出牌區\n所有人出的牌都會出現在這裡\n觀察對手的牌，是推測條件的關鍵！",
+        text: "🌊 中間亮起的是出牌區\n所有人出的牌都會出現在這裡\n觀察對手的牌，是推測條件的關鍵！",
         next: true
     },
     {
@@ -383,7 +383,7 @@ const TOUR_STEPS = [
     },
     {
         highlight: "#player-zone",
-        text: "👇 亮起的是你的手牌區\n點牌放大查看屬性\n對照條件，選對的魚出！\n\n準備好了嗎？來練習！",
+        text: "👇 亮起的是你的手牌區，點牌放大查看屬性\n對照條件，選對的魚出！\n\n準備好了嗎？來練習！",
         next: true,
         onEnter: () => {
             // 離開召喚框步驟後把示例隱藏掉，等練習時再正式顯示
@@ -537,7 +537,7 @@ function startPractice1() {
 
     setTimeout(() => {
         tutorSay(
-            "📜 第一次練習！\n條件：「出養殖來源的魚」\n\n【虱目魚】是養殖來源 ✅\n點亮起（金色閃爍）的牌出去吧！",
+            "📜 第一次練習！\n條件：「出養殖來源的魚」  =>  【虱目魚】是養殖來源 ✅\n點亮起（金色閃爍）的牌出去吧！",
             false
         );
         // 虱目魚固定在 index 0
@@ -617,7 +617,7 @@ function startPractice2() {
         await sleep(1800);
 
         tutorSay(
-            "👀 對手出了「洄游性」的鮭魚\n條件可能和洄游性有關？\n\n這次故意讓你出【吳郭魚】\n看看出錯了會發生什麼事 😈\n\n點亮起（金色）的牌！",
+            "👀 對手出了「洄游性」的鮭魚 => 條件可能和洄游性有關？\n這次故意讓你出【吳郭魚】，看看出錯了會發生什麼事!\n\n點亮起（金色）的牌！",
             false
         );
 
@@ -690,7 +690,7 @@ function startPracticeMazu() {
 
     setTimeout(() => {
         tutorSay(
-            "🙏 特殊召喚：媽祖籤！\n\n選一張手牌贈給別的玩家\n\n策略：送最難出的牌\n給手牌最少的對手最有效！\n\n選一張牌試試看 👇",
+            "🙏 特殊召喚：媽祖籤！\n選一張手牌贈給別的玩家\n策略：送最難出的牌\n給手牌最少的對手最有效！\n\n選其中一張牌試試看",
             false
         );
     }, 500);
@@ -701,7 +701,7 @@ function tutorAfterMazu() {
     tutorHide();
     setTimeout(() => {
         tutorSay(
-            "🎊 送牌成功！\n你已經學會全部基本操作了！",
+            "🎊 送牌成功！\n\n你已經學會全部基本操作了！",
             false
         );
         setTimeout(showTutorEndModal, 2000);

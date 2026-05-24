@@ -50,7 +50,7 @@
       z-index: 5;
     }
     #intro-title {
-      font-size: clamp(2rem, 7vw, 5rem);
+      font-size: clamp(3rem, 7vw, 5rem);
       font-weight: 900; letter-spacing: .22em;
       font-family: 'Noto Serif TC', Georgia, serif;
       color: #dff0ff;
@@ -80,8 +80,8 @@
       50%    { text-shadow:0 0 38px rgba(100,200,255,1),0 0 95px rgba(80,170,255,.9),0 0 160px rgba(60,140,255,.5); }
     }
     #intro-hint {
-      margin-top: 1.2em;
-      font-size: clamp(.9rem, 2.5vw, 1.08rem);
+      margin-top: 1.3em;
+      font-size: clamp(1.1rem, 3vw, 1.4rem);
       letter-spacing: .28em; white-space: nowrap;
       color: rgba(140,140,140,0);
       transition: color 1.4s ease;
@@ -89,12 +89,12 @@
       z-index: 20;
     }
     #intro-hint.show { color: rgba(138,138,138,.82); }
-    @keyframes iHint { 0%{opacity:.15} 25%{opacity:1} 75%{opacity:.9} 100%{opacity:.15} }
+    @keyframes iHint { 0%{opacity:.25} 25%{opacity:1} 75%{opacity:.95} 100%{opacity:.25} }
     #intro-credits {
       position: absolute;
       bottom: 28px; left: 0; right: 0;
       text-align: center; z-index: 20;
-      font-size: clamp(.75rem, 1.8vw, .9rem);
+      font-size: clamp(.8rem, 1.8vw, .95rem);
       letter-spacing: .3em;
       color: rgba(180,210,255,0.75);
       font-family: 'Georgia', serif;
