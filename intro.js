@@ -283,6 +283,32 @@
       pointer-events: none;
     }
     @keyframes iClose { to { opacity: 0; } }
+
+    /* ── 光幕掃過 ── */
+    #lens-wipe {
+      position: absolute; inset: 0; z-index: 60; pointer-events: none;
+      overflow: hidden;
+    }
+    #lens-beam {
+      position: absolute; left: 0; right: 0;
+      top: -60%; height: 60%;
+      background: linear-gradient(180deg,
+        transparent 0%,
+        rgba(255,255,255,0.08) 20%,
+        rgba(255,255,255,0.55) 45%,
+        rgba(255,255,255,1)    50%,
+        rgba(255,255,255,0.55) 55%,
+        rgba(255,255,255,0.08) 80%,
+        transparent 100%);
+      filter: blur(6px);
+    }
+    #lens-beam.sweep {
+      animation: lensSwipe 1.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    }
+    @keyframes lensSwipe {
+      0%   { top: -60%; }
+      100% { top: 160%; }
+    }
   `;
   document.head.appendChild(style);
 })();
@@ -364,7 +390,19 @@ if (sessionStorage.getItem('skipIntro') !== '1') {
       blkOvl  = document.getElementById('intro-blk');
       scanEl  = document.getElementById('intro-scan');
       flashEl = document.getElementById('intro-flash');
-      showImg(0);
+
+      /* ── 光幕掃過 ── */
+      var lWipe = document.createElement('div'); lWipe.id = 'lens-wipe';
+      var lBeam = document.createElement('div'); lBeam.id = 'lens-beam';
+      lWipe.appendChild(lBeam);
+      document.getElementById('intro-screen').appendChild(lWipe);
+
+      void lBeam.offsetWidth;
+      setTimeout(function () {
+        lBeam.classList.add('sweep');
+        setTimeout(function () { showImg(0); }, 900);
+        setTimeout(function () { lWipe.remove(); }, 1900);
+      }, 120);
     }
 
     /* ══ 特效引擎 ══ */
@@ -472,15 +510,15 @@ if (sessionStorage.getItem('skipIntro') !== '1') {
 
     /* ══ 每頁特效排程表 ══ */
     var PAGE_FX = [
-      function () { fxAt(6000, fxM); fxAt(8000, fxF); },
+      function () { fxAt(5000, fxM); fxAt(6000, fxF); },
       function () { fxAt(6000, function () { fxA('gold'); fxB(50, 30); }); },
-      function () { fxAt(7000, fxE); fxAt(9000, fxG); },
-      function () { fxAt(7000, function () { fxI(50, 65); }); fxAt(9000, function () { fxA('blue'); }); },
-      function () { fxAt(7000, fxF); fxAt(9000, function () { fxB(50, 45); }); },
-      function () { fxAt(7000, fxH); fxAt(9000, fxM); },
-      function () { fxAt(7000, fxG); fxAt(9000, fxF); },
-      function () { fxAt(6000, function () { fxA('blue'); }); fxAt(8000, function () { fxI(50, 50); }); },
-      function () { fxAt(6000, fxK); fxAt(8000, function () { fxA('warm'); }); }
+      function () { fxAt(6000, fxE); fxAt(7000, fxG); },
+      function () { fxAt(6000, function () { fxI(50, 65); }); fxAt(7000, function () { fxA('blue'); }); },
+      function () { fxAt(6000, fxF); fxAt(8000, function () { fxB(50, 45); }); },
+      function () { fxAt(6000, fxH); fxAt(9000, fxM); },
+      function () { fxAt(6000, fxG); fxAt(7000, fxF); },
+      function () { fxAt(6000, function () { fxA('blue'); }); fxAt(7000, function () { fxI(50, 50); }); },
+      function () { fxAt(6000, fxK); fxAt(7000, function () { fxA('warm'); }); }
     ];
 
     function showImg(n) {
