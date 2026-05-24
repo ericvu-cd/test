@@ -990,12 +990,16 @@ function autoStep() {
     if (callerIdx === 0) {
         SFX.draw(); // 玩家抽到召喚牌
         addLog(`【${players[0].n}】抽到召喚：${currentS.t.replace(/\n/g, " ")}`, "cmd");
-        document.getElementById("summon-display").innerText = (currentS.isMazu ? "【神明指示】\n" : "【你的召喚】\n") + currentS.t;
+        const sdEl = document.getElementById("summon-display");
+        sdEl.style.display = "flex";
+        sdEl.innerText = (currentS.isMazu ? "【神明指示】\n" : "【你的召喚】\n") + currentS.t;
         phase = currentS.isMazu ? "PLAYER_MAZU" : "PLAYER_TURN";
         renderUI();
     } else {
         addLog(`【${caller.n}】抽到了一張神祕召喚。`, "secret");
-        document.getElementById("summon-display").innerText = `【${caller.n}】抽到了神祕召喚！\n觀察對手出的魚，推敲召喚是什麼...`;
+        const sdEl2 = document.getElementById("summon-display");
+        sdEl2.style.display = "flex";
+        sdEl2.innerText = `【${caller.n}】抽到了神祕召喚！\n觀察對手出的魚，推敲召喚是什麼...`;
         phase = "WAIT";
     }
 
