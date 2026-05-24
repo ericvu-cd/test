@@ -50,7 +50,7 @@
       z-index: 5;
     }
     #intro-title {
-      font-size: clamp(3rem, 7vw, 5rem);
+      font-size: clamp(2.5rem, 7vw, 5rem);
       font-weight: 900; letter-spacing: .22em;
       font-family: 'Noto Serif TC', Georgia, serif;
       color: #dff0ff;
@@ -89,7 +89,7 @@
       z-index: 20;
     }
     #intro-hint.show { color: rgba(138,138,138,.82); }
-    @keyframes iHint { 0%{opacity:.25} 25%{opacity:1} 75%{opacity:.95} 100%{opacity:.25} }
+    @keyframes iHint { 0%{opacity:.15} 20%{opacity:1} 80%{opacity:.95} 100%{opacity:.15} }
     #intro-credits {
       position: absolute;
       bottom: 28px; left: 0; right: 0;
