@@ -1,4 +1,4 @@
-/* ════════════════════════════════════════════════════
+﻿/* ════════════════════════════════════════════════════
    intro.js  —  開場動畫（CSS 注入 + 完整邏輯）
    ════════════════════════════════════════════════════ */
 
@@ -50,8 +50,8 @@
       z-index: 5;
     }
     #intro-title {
-      font-size: clamp(2.5rem, 7vw, 5rem);
-      font-weight: 900; letter-spacing: .22em;
+      font-size: clamp(1.75rem, 5vw, 4rem);
+      font-weight: 900; letter-spacing: .08em;
       font-family: 'Noto Serif TC', Georgia, serif;
       color: #dff0ff;
       text-shadow:
@@ -339,7 +339,7 @@ if (sessionStorage.getItem('skipIntro') !== '1') {
     }
 
     /* 撞擊式打字機（144ms/字） */
-    var TITLE = '友魚勇者之路', ti = 0;
+    var TITLE = '海紋守護團', ti = 0;
     var titleEl = document.getElementById('intro-title');
     var hintEl  = document.getElementById('intro-hint');
     function typeImpact() {

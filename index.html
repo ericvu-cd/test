@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
@@ -15,7 +15,7 @@
         })();
     </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>友魚勇者之路-單人挑戰</title>
+    <title>海紋守護團：台灣海線任務</title>
     <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -174,6 +174,23 @@
         color:#ffe89e; font-weight:700;
         text-shadow:0 0 10px rgba(255,180,60,0.7), 0 1px 3px rgba(0,0,0,0.5);
     }
+    .ws-location-select {
+        width:100%;
+        box-sizing:border-box;
+        background:rgba(255,255,255,0.08);
+        border:1px solid rgba(160,210,255,0.28);
+        border-radius:10px;
+        padding:11px 12px;
+        color:#ffffff;
+        font-size:1rem;
+        font-family:"Microsoft JhengHei",sans-serif;
+        outline:none;
+        text-shadow:0 1px 4px rgba(0,0,0,0.5);
+    }
+    .ws-location-select option {
+        background:#08142d;
+        color:#ffffff;
+    }
 
     /* 音效開關 */
     .ws-sound-wrap {
@@ -309,9 +326,9 @@
 			<!-- 設定卡片 -->
 			<div class="ws-card">
 
-				<!-- 勇者暱稱 -->
+				<!-- 守護員暱稱 -->
 				<div>
-					<div class="ws-field-label">勇者暱稱</div>
+					<div class="ws-field-label">守護員暱稱</div>
 					<input class="ws-name-input" id="ws-name-input"
 						type="text" placeholder="輸入你的暱稱…" maxlength="12">
 				</div>
@@ -327,6 +344,19 @@
 						<button class="ws-diff-btn"
 							onclick="wsSetDiff(0.9,this)">🦈 專業</button>
 					</div>
+				</div>
+
+				<!-- 任務地點 -->
+				<div>
+					<div class="ws-field-label">任務地點</div>
+					<select class="ws-location-select" id="ws-location-select" onchange="wsSetLocation(this.value)">
+						<option value="longfeng">苗栗竹南龍鳳漁港</option>
+						<option value="badouzi">基隆八斗子漁港</option>
+						<option value="nanfangao">宜蘭南方澳漁港</option>
+						<option value="wuqi">台中梧棲漁港</option>
+						<option value="anping">台南安平漁港</option>
+						<option value="donggang">屏東東港漁港</option>
+					</select>
 				</div>
 
 				<!-- 音效・音樂 -->
@@ -378,6 +408,9 @@
     <div id="music-control" onclick="toggleMusic()" style="position:fixed; top:10px; left:10px; z-index:2000; width:40px; height:40px; background:rgba(0,0,0,0.4); border:1px solid rgba(255,255,255,0.2); border-radius:50%; display:none; justify-content:center; align-items:center; font-size:20px; cursor:pointer; backdrop-filter:blur(4px);">
         🎵
     </div>
+    <div id="collection-btn" onclick="openCollection()" style="position:fixed; top:10px; left:50%; transform:translateX(-50%); z-index:2000; height:40px; padding:0 14px; background:rgba(0,0,0,0.4); border:1px solid rgba(255,255,255,0.2); border-radius:20px; display:none; justify-content:center; align-items:center; font-size:13px; font-weight:500; color:rgba(255,255,255,0.85); cursor:pointer; backdrop-filter:blur(4px); white-space:nowrap; letter-spacing:0.05em;">
+        🐠 我的海紋收集
+    </div>
 	<div id="report-control" onclick="toggleReportMode()" style="position:fixed; top:10px; right:10px; z-index:2000; width:40px; height:40px; background:rgba(0,0,0,0.4); border:1px solid rgba(255,255,255,0.2); border-radius:50%; display:none; justify-content:center; align-items:center; font-size:20px; cursor:pointer; backdrop-filter:blur(4px);">
         📊
     </div>
@@ -415,7 +448,7 @@
         <div id="card-preview-container"></div>
     </div>
 
-		<div id="header">友魚勇者之路單人挑戰</div>
+		<div id="header">海紋守護團：台灣海線任務</div>
 
 		<div class="char-area">
 			<div id="ai-1" class="box"></div>
@@ -492,6 +525,26 @@
 			btn.classList.add('ws-active');
 		};
 
+		window.selectedLocationId = window.selectedLocationId || 'longfeng';
+		window.wsSetLocation = function(id){
+			window.selectedLocationId = id || 'longfeng';
+			sessionStorage.setItem('selectedLocationId', window.selectedLocationId);
+		};
+		(function(){
+			var stored = sessionStorage.getItem('selectedLocationId');
+			if(stored){
+				window.selectedLocationId = stored;
+				var sel = document.getElementById('ws-location-select');
+				if(sel) sel.value = stored;
+			}
+			// 自動帶入上次暱稱
+			var lastName = localStorage.getItem('lastPlayerName');
+			if(lastName){
+				var nameEl = document.getElementById('ws-name-input');
+				if(nameEl) nameEl.value = lastName;
+			}
+		})();
+
 		/* 音效・音樂開關 */
 		window.wsToggleSound = function(){
 			var toggle = document.getElementById('ws-sound-toggle');
@@ -542,7 +595,13 @@
 		/* 啟航冒險 */
 		window.wsStartGame = function(){
 			var nameEl = document.getElementById('ws-name-input');
-			window.playerName = (nameEl && nameEl.value.trim()) ? nameEl.value.trim() : '勇者';
+			var typedName = nameEl && nameEl.value.trim();
+			// 有輸入暱稱才存入 localStorage
+			if (typedName) localStorage.setItem('lastPlayerName', typedName);
+			window.playerName = typedName || '守護員';
+			var locEl = document.getElementById('ws-location-select');
+			window.selectedLocationId = locEl ? locEl.value : (window.selectedLocationId || 'longfeng');
+			sessionStorage.setItem('selectedLocationId', window.selectedLocationId);
 			/* 同步結算報告狀態到 main.js 變數與遊戲中按鈕 */
 			var reportOn = document.getElementById('ws-report-toggle').classList.contains('ws-on');
 			if(typeof showSummaryMode !== 'undefined') showSummaryMode = reportOn;
@@ -567,7 +626,7 @@
 	<div id="tutorial-tooltip"></div>
 	<div id="ui-lock"></div>
 	<div id="summon-focus-overlay">
-		<div id="summon-focus-box">🔍 尋找勇者...<br>等待中...</div>
+		<div id="summon-focus-box">🔍 尋找守護員...<br>等待中...</div>
 	</div>
 	<script>
 		document.addEventListener('contextmenu', e => e.preventDefault());

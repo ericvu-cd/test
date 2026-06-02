@@ -1,4 +1,4 @@
-let gameDifficulty = 0.4;
+﻿let gameDifficulty = 0.4;
 
 // ── 對話排隊系統 ──────────────────────────────
 const chatQueue = {
@@ -21,6 +21,52 @@ const chatQueue = {
     clear() {
         this._q = [];
         if (this._timer) { clearTimeout(this._timer); this._timer = null; }
+    }
+};
+
+// ── 玩家收集進度系統 ──────────────────────────
+const progress = {
+    _key(name) { return "progress_" + name; },
+
+    load(name) {
+        if (!name || !name.trim()) return null;
+        try {
+            const raw = localStorage.getItem(this._key(name.trim()));
+            return raw ? JSON.parse(raw) : { badges: [], fish: [], difficulty: [] };
+        } catch(e) { return { badges: [], fish: [] }; }
+    },
+
+    save(name, data) {
+        if (!name || !name.trim()) return;
+        try { localStorage.setItem(this._key(name.trim()), JSON.stringify(data)); } catch(e) {}
+    },
+
+    unlockBadge(name, badgeName) {
+        if (!name || !name.trim() || name.trim() === '守護員') return;
+        const data = this.load(name);
+        if (!data.badges.includes(badgeName)) {
+            data.badges.push(badgeName);
+            this.save(name, data);
+        }
+    },
+
+    unlockFish(name, fishName) {
+        if (!name || !name.trim() || name.trim() === '守護員') return;
+        const data = this.load(name);
+        if (!data.fish.includes(fishName)) {
+            data.fish.push(fishName);
+            this.save(name, data);
+        }
+    },
+
+    unlockDifficulty(name, label) {
+        if (!name || !name.trim() || name.trim() === '守護員') return;
+        const data = this.load(name);
+        if (!data.difficulty) data.difficulty = [];
+        if (!data.difficulty.includes(label)) {
+            data.difficulty.push(label);
+            this.save(name, data);
+        }
     }
 };
 
@@ -172,6 +218,105 @@ function openLog() {
 }
 function closeLog() {
     document.getElementById("log-modal").style.display = "none";
+}
+
+function openCollection() {
+    const name = window.playerName && window.playerName !== '守護員' ? window.playerName : null;
+    const data = name ? (progress.load(name) || { badges: [], fish: [], difficulty: [] }) : { badges: [], fish: [], difficulty: [] };
+
+    const locationBadges = typeof locationDB !== 'undefined'
+        ? locationDB.map(l => l.badge)
+        : [];
+    const difficultyBadges = ["新手", "標準", "專業"];
+    const fishList = typeof fishDB !== 'undefined' ? fishDB.map(f => f.n) : [];
+
+    const unlockedB = data.badges || [];
+    const unlockedD = data.difficulty || [];
+    const unlockedF = data.fish || [];
+
+    const totalAll = locationBadges.length + difficultyBadges.length + fishList.length;
+    const totalUnlocked = unlockedB.length + unlockedD.length + unlockedF.length;
+
+    function pct(got, total) { return total ? Math.round(got / total * 100) : 0; }
+
+    function badgeBlock(label, list, unlocked, imgPath) {
+        const got = list.filter(n => unlocked.includes(n)).length;
+        const isFish = label === '魚紋章';
+        const cols = isFish ? 4 : 3;
+        return `
+        <div style="margin-bottom:1.4rem;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <span style="font-size:13px;font-weight:500;color:rgba(255,255,255,0.6);letter-spacing:0.04em;">${label}</span>
+            <span style="font-size:12px;color:rgba(255,255,255,0.45);">${got} / ${list.length}</span>
+          </div>
+          <div style="background:rgba(255,255,255,0.08);border-radius:99px;height:3px;margin-bottom:10px;overflow:hidden;">
+            <div style="height:100%;border-radius:99px;background:#1D9E75;width:${pct(got,list.length)}%;transition:width 0.6s ease;"></div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(${cols},1fr);gap:${isFish ? 6 : 10}px;">
+            ${list.map(n => {
+                const isUnlocked = unlocked.includes(n);
+                const nameSize = isFish ? '9px' : '10px';
+                const imgStyle = isFish
+                    ? `width:100%;aspect-ratio:3/2;border-radius:6px;overflow:hidden;border:1px solid rgba(255,255,255,${isUnlocked?'0.18':'0.06'});background:rgba(255,255,255,0.05);${isUnlocked?'':'filter:grayscale(1) brightness(0.3)'};`
+                    : `width:100%;aspect-ratio:3/2;border-radius:8px;overflow:hidden;border:1px solid rgba(255,255,255,${isUnlocked?'0.22':'0.06'});background:rgba(255,255,255,0.05);${isUnlocked?'':'filter:grayscale(1) brightness(0.3)'};`;
+                return `
+                <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+                  <div style="${imgStyle}">
+                    <img src="${imgPath(n)}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">
+                  </div>
+                  <div style="font-size:${nameSize};text-align:center;color:rgba(255,255,255,${isUnlocked?'0.75':'0.25'});line-height:1.2;">${n}</div>
+                </div>`;
+            }).join('')}
+          </div>
+        </div>`;
+    }
+
+    const existing = document.getElementById('collection-modal');
+    if (existing) existing.remove();
+
+    const modal = document.createElement('div');
+    modal.id = 'collection-modal';
+    modal.style.cssText = `
+        position:fixed;inset:0;z-index:6000;
+        background:rgba(0,0,0,0.7);
+        display:flex;flex-direction:column;justify-content:flex-end;
+        backdrop-filter:blur(4px);
+    `;
+
+    modal.innerHTML = `
+        <div style="background:rgba(10,18,35,0.97);border-radius:20px 20px 0 0;max-height:85vh;display:flex;flex-direction:column;border-top:1px solid rgba(255,255,255,0.1);">
+          <div style="width:36px;height:4px;border-radius:2px;background:rgba(255,255,255,0.2);margin:12px auto 0;flex-shrink:0;"></div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px 12px;border-bottom:1px solid rgba(255,255,255,0.08);flex-shrink:0;">
+            <div style="font-size:16px;font-weight:500;color:rgba(255,255,255,0.9);">🐠 我的海紋收集</div>
+            <button onclick="closeCollection()" style="width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,0.1);border:none;color:rgba(255,255,255,0.6);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>
+          </div>
+          ${name ? `
+          <div style="padding:10px 16px;background:rgba(255,255,255,0.04);border-bottom:1px solid rgba(255,255,255,0.06);flex-shrink:0;display:flex;align-items:center;gap:10px;">
+            <div style="width:34px;height:34px;border-radius:50%;background:rgba(29,158,117,0.3);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:500;color:#5DCAA5;">${name.charAt(0)}</div>
+            <div>
+              <div style="font-size:14px;font-weight:500;color:rgba(255,255,255,0.85);">${name}</div>
+              <div style="font-size:12px;color:rgba(255,255,255,0.4);">已收集 ${totalUnlocked} / ${totalAll}</div>
+            </div>
+          </div>` : `
+          <div style="padding:10px 16px;font-size:13px;color:rgba(255,255,255,0.4);border-bottom:1px solid rgba(255,255,255,0.06);flex-shrink:0;">未輸入暱稱，不記錄收集進度</div>`}
+          <div style="overflow-y:auto;padding:16px;-webkit-overflow-scrolling:touch;">
+            ${badgeBlock('漁港章', locationBadges, unlockedB, n => `${n}.jpg`)}
+            ${badgeBlock('難度章', difficultyBadges, unlockedD, n => `${n}.jpg`)}
+            ${badgeBlock('魚紋章', fishList, unlockedF, n => `fishdb/${n}.png`)}
+          </div>
+        </div>
+    `;
+
+    modal.addEventListener('click', e => { if (e.target === modal) closeCollection(); });
+    document.body.appendChild(modal);
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+        modal.querySelector('div[style*="border-radius:20px"]').style.transform = 'translateY(0)';
+    }));
+}
+
+function closeCollection() {
+    const modal = document.getElementById('collection-modal');
+    if (modal) modal.remove();
 }
 
 let players = [], deckS = [], table = [], currentS = null, callerIdx = 0, phase = "WAIT";
@@ -773,6 +918,7 @@ function initGame() {
     document.getElementById("music-control").style.display = "flex";
 	document.getElementById("report-control").style.display = "flex";
     document.getElementById("log-btn").style.display = "flex";
+    document.getElementById("collection-btn").style.display = "flex";
     const music = document.getElementById("bgm");
     const btn = document.getElementById("music-control");
     if (sfxEnabled) {
@@ -822,7 +968,22 @@ function startGame() {
         });
     });	
 	
-    let fishD = shuffle([...fishDB]);
+    const selectedLocationId = window.selectedLocationId || sessionStorage.getItem("selectedLocationId") || "longfeng";
+    const currentLocation = (typeof locationDB !== "undefined" && locationDB.find)
+        ? locationDB.find(loc => loc.id === selectedLocationId) || locationDB[0]
+        : null;
+    const locationFishNames = currentLocation ? new Set(currentLocation.fishPool) : null;
+
+    // ── 解鎖漁港章 & 難度紋章 ──
+    if (currentLocation && currentLocation.badge) {
+        progress.unlockBadge(window.playerName, currentLocation.badge);
+    }
+    const diffLabelShort = gameDifficulty <= 0.4 ? "新手" : gameDifficulty >= 0.9 ? "專業" : "標準";
+    progress.unlockDifficulty(window.playerName, diffLabelShort);
+    let fishD = shuffle(locationFishNames
+        ? fishDB.filter(f => locationFishNames.has(f.n))
+        : [...fishDB]
+    );
     
     // 新手難度：玩家優先從 e:1（容易）牌池抽牌，AI 從剩餘隨機抽
     // 專業難度：完全隨機，不分等級
@@ -836,12 +997,16 @@ function startGame() {
             else playerHand.push(otherPool.splice(0, 1)[0]);
         }
         players[0].hand = playerHand;
+        // ── 解鎖初始手牌魚紋章 ──
+        playerHand.forEach(f => progress.unlockFish(window.playerName, f.n));
         // AI 從剩餘（easyPool 剩餘 + otherPool）隨機抽
         const remaining = shuffle([...easyPool, ...otherPool]);
         players.slice(1).forEach(p => p.hand = remaining.splice(0, 6));
     } else {
         // 普通/專業：完全隨機
         players.forEach(p => p.hand = fishD.splice(0, 6));
+        // ── 解鎖初始手牌魚紋章 ──
+        players[0].hand.forEach(f => progress.unlockFish(window.playerName, f.n));
     }
 
     deckS = shuffle([...summonDB, ...mazuCards]);
@@ -880,7 +1045,8 @@ function startGame() {
     logPlainText = []; // 清空上局紀錄
     
     const diffLabel = gameDifficulty <= 0.4 ? "新手(難度0.4)" : gameDifficulty >= 0.9 ? "專業(難度0.9)" : "標準(難度0.7)";
-    addLog(`勇者集結！難度：${diffLabel}。注意觀察大家的出牌...`);
+    const locationLabel = currentLocation ? currentLocation.name : "未指定海線";
+    addLog(`守護團集結！任務地點：${locationLabel}。難度：${diffLabel}。注意觀察大家的出牌...`);
 
     // 顯示等待藍框（HTML 已預先填好文字）
     const overlay = document.getElementById("summon-focus-overlay");
@@ -1079,6 +1245,8 @@ function handleMazuAI(caller) {
         // 2. 停頓 2 秒後，執行送牌動作與接收者說話
         setTimeout(() => {
             target.hand.push(card);
+            // ── 若送給玩家，解鎖魚紋章 ──
+            if (!target.isAI) progress.unlockFish(window.playerName, card.n);
             SFX.gift();
             addLog(`✨ ${caller.n} 分享了一張【${card.n}】給 ${target.n}！`, "success");
             
@@ -2126,4 +2294,3 @@ function toggleReportMode() {
         }
     }
 }
-

@@ -1,4 +1,4 @@
-// =============================================
+﻿// =============================================
 // 🏆 新版結束畫面  showWinScreen(winner)
 // 修正：全黑底遮罩、文字放大2x、結算BGM
 // =============================================
@@ -376,9 +376,25 @@ function showWinScreen(winner) {
     btnShare.textContent = "📤 分享這場冒險";
     btnShare.onclick = () => shareGameCard(isPlayer, winner);
 
+    const btnCollection = document.createElement("button");
+    btnCollection.style.cssText = `
+        width:100%;padding:15px;border-radius:50px;cursor:pointer;
+        font-size:1.05rem;font-weight:700;letter-spacing:.5px;
+        font-family:"Microsoft JhengHei","PingFang TC",sans-serif;
+        border:1.5px solid ${isPlayer?'rgba(100,220,150,.4)':'rgba(100,165,255,.38)'};
+        background:${isPlayer?'rgba(60,180,100,.14)':'rgba(60,100,200,.14)'};
+        color:${isPlayer?'rgba(165,248,194,.94)':'rgba(158,208,255,.92)'};
+        transition:background .2s;
+    `;
+    btnCollection.textContent = "🐠 我的海紋收集";
+    btnCollection.onclick = () => {
+        if (typeof openCollection === 'function') openCollection();
+    };
+
     btnZone.appendChild(btnMain);
     btnZone.appendChild(btnSub);
     btnZone.appendChild(btnShare);
+    btnZone.appendChild(btnCollection);
     content.appendChild(btnZone);
     overlay.appendChild(content);
 
@@ -484,7 +500,7 @@ async function shareGameCard(isPlayer, winner) {
     ctx.shadowColor = isPlayer ? "rgba(100,255,160,0.55)" : "rgba(50,130,255,0.5)";
     ctx.shadowBlur  = 28;
     ctx.fillStyle   = isPlayer ? "#ffffff" : "rgba(215,235,255,0.96)";
-    ctx.fillText("友魚勇者之路", CX, Y);
+    ctx.fillText("海紋守護團", CX, Y);
     ctx.shadowBlur  = 0;
     Y += 40;
 
@@ -492,7 +508,7 @@ async function shareGameCard(isPlayer, winner) {
     ctx.font      = "500 16px 'PingFang TC','Microsoft JhengHei',sans-serif";
     ctx.letterSpacing = "3px";
     ctx.fillStyle = isPlayer ? "rgba(160,245,195,0.72)" : "rgba(130,180,255,0.62)";
-    ctx.fillText("單人挑戰", CX, Y);
+    ctx.fillText("台灣海線任務", CX, Y);
     Y += 54;
 
     // 裝飾橫線
@@ -546,17 +562,17 @@ async function shareGameCard(isPlayer, winner) {
 
         ctx.font      = "500 20px 'PingFang TC','Microsoft JhengHei',sans-serif";
         ctx.fillStyle = "rgba(130,185,255,0.68)";
-        ctx.fillText("勇者折返，海域等你再來", CX, Y);
+        ctx.fillText("守護員折返，海域等你再來", CX, Y);
     }
 
     // ── 5. 轉 Blob → 分享或下載 ─────────────────
     canvas.toBlob(async (blob) => {
         if (!blob) { alert("卡片產生失敗"); return; }
 
-        const file = new File([blob], "友魚勇者之路.png", { type: "image/png" });
+        const file = new File([blob], "海紋守護團.png", { type: "image/png" });
         const shareText = isPlayer
-            ? `${winner.n} 在《友魚勇者之路》守護了海洋！難度【${diffLabel}】，共 ${rounds} 回合的激戰 🎉🌊`
-            : `${winner.n} 在《友魚勇者之路》這次沒守住…下次再來 🌊`;
+            ? `${winner.n} 在《海紋守護團》守護了海洋！難度【${diffLabel}】，共 ${rounds} 回合的激戰 🎉🌊`
+            : `${winner.n} 在《海紋守護團》這次沒守住…下次再來 🌊`;
 
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
             // 手機：系統分享選單（Line / IG 均出現）
@@ -586,6 +602,6 @@ function loadImageAsBlob(src) {
 function fallbackDownload(canvas) {
     const a = document.createElement("a");
     a.href     = canvas.toDataURL("image/png");
-    a.download = "友魚勇者之路.png";
+    a.download = "海紋守護團.png";
     a.click();
 }
