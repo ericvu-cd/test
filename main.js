@@ -67,6 +67,16 @@ const progress = {
             data.difficulty.push(label);
             this.save(name, data);
         }
+    },
+
+    unlockCompanion(name, companionName) {
+        if (!name || !name.trim() || name.trim() === '守護員') return;
+        const data = this.load(name);
+        if (!data.companions) data.companions = [];
+        if (!data.companions.includes(companionName)) {
+            data.companions.push(companionName);
+            this.save(name, data);
+        }
     }
 };
 
@@ -222,53 +232,151 @@ function closeLog() {
 
 function openCollection() {
     const name = window.playerName && window.playerName !== '守護員' ? window.playerName : null;
-    const data = name ? (progress.load(name) || { badges: [], fish: [], difficulty: [] }) : { badges: [], fish: [], difficulty: [] };
+    const data = name ? (progress.load(name) || { badges: [], fish: [], difficulty: [], companions: [] }) : { badges: [], fish: [], difficulty: [], companions: [] };
 
     const locationBadges = typeof locationDB !== 'undefined'
         ? locationDB.map(l => l.badge)
         : [];
     const difficultyBadges = ["新手", "標準", "專業"];
     const fishList = typeof fishDB !== 'undefined' ? fishDB.map(f => f.n) : [];
+    const companionList = typeof characterDB !== 'undefined'
+        ? characterDB.map(c => ({ n: c.n, img: c.img }))
+        : [];
 
     const unlockedB = data.badges || [];
     const unlockedD = data.difficulty || [];
     const unlockedF = data.fish || [];
+    const unlockedC = data.companions || [];
 
-    const totalAll = locationBadges.length + difficultyBadges.length + fishList.length;
-    const totalUnlocked = unlockedB.length + unlockedD.length + unlockedF.length;
+    const totalAll = locationBadges.length + difficultyBadges.length + fishList.length + companionList.length;
+    const totalUnlocked = unlockedB.length + unlockedD.length + unlockedF.length + unlockedC.length;
 
     function pct(got, total) { return total ? Math.round(got / total * 100) : 0; }
 
-    function badgeBlock(label, list, unlocked, imgPath) {
+    // 漁港章：可點選已收集項目 → 放大顯示圖片
+    function locationBadgeBlock(list, unlocked) {
         const got = list.filter(n => unlocked.includes(n)).length;
-        const isFish = label === '魚紋章';
-        const cols = isFish ? 4 : 3;
+        const cols = 3;
         return `
         <div style="margin-bottom:1.4rem;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-            <span style="font-size:13px;font-weight:500;color:rgba(255,255,255,0.6);letter-spacing:0.04em;">${label}</span>
+            <span style="font-size:13px;font-weight:500;color:rgba(255,255,255,0.6);letter-spacing:0.04em;">漁港章</span>
             <span style="font-size:12px;color:rgba(255,255,255,0.45);">${got} / ${list.length}</span>
           </div>
           <div style="background:rgba(255,255,255,0.08);border-radius:99px;height:3px;margin-bottom:10px;overflow:hidden;">
             <div style="height:100%;border-radius:99px;background:#1D9E75;width:${pct(got,list.length)}%;transition:width 0.6s ease;"></div>
           </div>
-          <div style="display:grid;grid-template-columns:repeat(${cols},1fr);gap:${isFish ? 6 : 10}px;">
+          <div style="display:grid;grid-template-columns:repeat(${cols},1fr);gap:10px;">
             ${list.map(n => {
                 const isUnlocked = unlocked.includes(n);
-                const nameSize = isFish ? '9px' : '10px';
-                const imgStyle = isFish
-                    ? `width:100%;aspect-ratio:3/2;border-radius:6px;overflow:hidden;border:1px solid rgba(255,255,255,${isUnlocked?'0.18':'0.06'});background:rgba(255,255,255,0.05);${isUnlocked?'':'filter:grayscale(1) brightness(0.3)'};`
-                    : `width:100%;aspect-ratio:3/2;border-radius:8px;overflow:hidden;border:1px solid rgba(255,255,255,${isUnlocked?'0.22':'0.06'});background:rgba(255,255,255,0.05);${isUnlocked?'':'filter:grayscale(1) brightness(0.3)'};`;
+                const clickable = isUnlocked ? `onclick="showCollectionZoom('${n}.jpg','${n}')" style="cursor:pointer;"` : '';
                 return `
-                <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
-                  <div style="${imgStyle}">
-                    <img src="${imgPath(n)}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">
+                <div style="display:flex;flex-direction:column;align-items:center;gap:4px;" ${clickable}>
+                  <div style="width:100%;aspect-ratio:3/2;border-radius:8px;overflow:hidden;border:1px solid rgba(255,255,255,${isUnlocked?'0.22':'0.06'});background:rgba(255,255,255,0.05);${isUnlocked?'':'filter:grayscale(1) brightness(0.3)'};${isUnlocked?'box-shadow:0 2px 8px rgba(29,158,117,0.35);':''}">
+                    <img src="${n}.jpg" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">
                   </div>
-                  <div style="font-size:${nameSize};text-align:center;color:rgba(255,255,255,${isUnlocked?'0.75':'0.25'});line-height:1.2;">${n}</div>
                 </div>`;
             }).join('')}
           </div>
         </div>`;
+    }
+
+    // 難度章：可點選已收集項目 → 放大顯示圖片（不顯示文字標籤）
+    function difficultyBadgeBlock(list, unlocked) {
+        const got = list.filter(n => unlocked.includes(n)).length;
+        const cols = 3;
+        return `
+        <div style="margin-bottom:1.4rem;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <span style="font-size:13px;font-weight:500;color:rgba(255,255,255,0.6);letter-spacing:0.04em;">難度章</span>
+            <span style="font-size:12px;color:rgba(255,255,255,0.45);">${got} / ${list.length}</span>
+          </div>
+          <div style="background:rgba(255,255,255,0.08);border-radius:99px;height:3px;margin-bottom:10px;overflow:hidden;">
+            <div style="height:100%;border-radius:99px;background:#1D9E75;width:${pct(got,list.length)}%;transition:width 0.6s ease;"></div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(${cols},1fr);gap:10px;">
+            ${list.map(n => {
+                const isUnlocked = unlocked.includes(n);
+                const clickable = isUnlocked ? `onclick="showCollectionZoom('${n}.jpg','${n}')" style="cursor:pointer;"` : '';
+                return `
+                <div style="display:flex;flex-direction:column;align-items:center;gap:4px;" ${clickable}>
+                  <div style="width:100%;aspect-ratio:3/2;border-radius:8px;overflow:hidden;border:1px solid rgba(255,255,255,${isUnlocked?'0.22':'0.06'});background:rgba(255,255,255,0.05);${isUnlocked?'':'filter:grayscale(1) brightness(0.3)'};${isUnlocked?'box-shadow:0 2px 8px rgba(29,158,117,0.35);':''}">
+                    <img src="${n}.jpg" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">
+                  </div>
+                </div>`;
+            }).join('')}
+          </div>
+        </div>`;
+    }
+
+    // 魚紋章：已收集的魚可點選 → 用 showCardPreview 放大 2X 魚卡
+    function fishBadgeBlock(list, unlocked) {
+        const got = list.filter(n => unlocked.includes(n)).length;
+        const cols = 4;
+        return `
+        <div style="margin-bottom:1.4rem;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <span style="font-size:13px;font-weight:500;color:rgba(255,255,255,0.6);letter-spacing:0.04em;">魚紋章</span>
+            <span style="font-size:12px;color:rgba(255,255,255,0.45);">${got} / ${list.length}</span>
+          </div>
+          <div style="background:rgba(255,255,255,0.08);border-radius:99px;height:3px;margin-bottom:10px;overflow:hidden;">
+            <div style="height:100%;border-radius:99px;background:#1D9E75;width:${pct(got,list.length)}%;transition:width 0.6s ease;"></div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(${cols},1fr);gap:6px;">
+            ${list.map((n, idx) => {
+                const isUnlocked = unlocked.includes(n);
+                // 用 fishDB 的真實 index 傳入，onclick 呼叫輔助函式拉高 z-index 再顯示
+                const dbIdx = (typeof fishDB !== 'undefined') ? fishDB.findIndex(f => f.n === n) : -1;
+                const clickAttr = (isUnlocked && dbIdx >= 0)
+                    ? `onclick="showCollectionFishPreview(${dbIdx})" style="cursor:pointer;"`
+                    : '';
+                return `
+                <div style="display:flex;flex-direction:column;align-items:center;gap:4px;" ${clickAttr}>
+                  <div style="width:100%;aspect-ratio:3/2;border-radius:6px;overflow:hidden;border:1px solid rgba(255,255,255,${isUnlocked?'0.18':'0.06'});background:rgba(255,255,255,0.05);${isUnlocked?'':'filter:grayscale(1) brightness(0.3)'};${isUnlocked?'box-shadow:0 2px 6px rgba(29,158,117,0.3);':''}">
+                    <img src="fishdb/${n}.png" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">
+                  </div>
+                  <div style="font-size:9px;text-align:center;color:rgba(255,255,255,${isUnlocked?'0.75':'0.25'});line-height:1.2;">${n}</div>
+                </div>`;
+            }).join('')}
+          </div>
+        </div>`;
+    }
+
+    // 同伴章：已出現的 AI 角色
+    function companionBadgeBlock(list, unlocked) {
+        const got = list.filter(c => unlocked.includes(c.n)).length;
+        const cols = 3;
+        return `
+        <div style="margin-bottom:1.4rem;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <span style="font-size:13px;font-weight:500;color:rgba(255,255,255,0.6);letter-spacing:0.04em;">同伴章</span>
+            <span style="font-size:12px;color:rgba(255,255,255,0.45);">${got} / ${list.length}</span>
+          </div>
+          <div style="background:rgba(255,255,255,0.08);border-radius:99px;height:3px;margin-bottom:10px;overflow:hidden;">
+            <div style="height:100%;border-radius:99px;background:#1D9E75;width:${pct(got,list.length)}%;transition:width 0.6s ease;"></div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(${cols},1fr);gap:10px;">
+            ${list.map(c => {
+                const isUnlocked = unlocked.includes(c.n);
+                const clickable = isUnlocked ? `onclick="showCompanionZoom('${c.img}','${c.n}')" style="cursor:pointer;"` : '';
+                return `
+                <div style="display:flex;flex-direction:column;align-items:center;gap:4px;" ${clickable}>
+                  <div style="width:100%;aspect-ratio:1/1;border-radius:50%;overflow:hidden;border:2px solid rgba(255,255,255,${isUnlocked?'0.25':'0.06'});background:rgba(255,255,255,0.05);${isUnlocked?'':'filter:grayscale(1) brightness(0.3)'};${isUnlocked?'box-shadow:0 2px 8px rgba(100,180,255,0.35);':''}">
+                    <img src="${c.img}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">
+                  </div>
+                  <div style="font-size:10px;text-align:center;color:rgba(255,255,255,${isUnlocked?'0.75':'0.25'});line-height:1.2;">${c.n}</div>
+                </div>`;
+            }).join('')}
+          </div>
+        </div>`;
+    }
+
+    // 注入已解鎖魚的 fish 物件到 window，讓 onclick 能取用
+    if (typeof fishDB !== 'undefined') {
+        fishDB.forEach(f => {
+            const key = '_collFish_' + f.n.replace(/[^a-zA-Z0-9]/g,'_');
+            window[key] = f;
+        });
     }
 
     const existing = document.getElementById('collection-modal');
@@ -286,23 +394,23 @@ function openCollection() {
     modal.innerHTML = `
         <div style="background:rgba(10,18,35,0.97);border-radius:20px 20px 0 0;max-height:85vh;display:flex;flex-direction:column;border-top:1px solid rgba(255,255,255,0.1);">
           <div style="width:36px;height:4px;border-radius:2px;background:rgba(255,255,255,0.2);margin:12px auto 0;flex-shrink:0;"></div>
-          <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px 12px;border-bottom:1px solid rgba(255,255,255,0.08);flex-shrink:0;">
-            <div style="font-size:16px;font-weight:500;color:rgba(255,255,255,0.9);">🐠 我的海紋收集</div>
+          <div style="display:flex;align-items:center;justify-content:flex-end;padding:10px 16px 10px;border-bottom:1px solid rgba(255,255,255,0.08);flex-shrink:0;">
             <button onclick="closeCollection()" style="width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,0.1);border:none;color:rgba(255,255,255,0.6);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>
           </div>
           ${name ? `
-          <div style="padding:10px 16px;background:rgba(255,255,255,0.04);border-bottom:1px solid rgba(255,255,255,0.06);flex-shrink:0;display:flex;align-items:center;gap:10px;">
-            <div style="width:34px;height:34px;border-radius:50%;background:rgba(29,158,117,0.3);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:500;color:#5DCAA5;">${name.charAt(0)}</div>
+          <div style="padding:10px 16px;background:rgba(160,215,235,0.18);border:1px solid rgba(160,215,235,0.25);border-radius:12px;margin:10px 16px;flex-shrink:0;display:flex;align-items:center;gap:10px;">
+            <div style="width:34px;height:34px;border-radius:50%;background:rgba(29,158,117,0.35);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:500;color:#5DCAA5;">${name.charAt(0)}</div>
             <div>
-              <div style="font-size:14px;font-weight:500;color:rgba(255,255,255,0.85);">${name}</div>
-              <div style="font-size:12px;color:rgba(255,255,255,0.4);">已收集 ${totalUnlocked} / ${totalAll}</div>
+              <div style="font-size:14px;font-weight:500;color:rgba(200,235,245,0.92);">${name}</div>
+              <div style="font-size:12px;color:rgba(160,215,235,0.7);">已收集 ${totalUnlocked} / ${totalAll}</div>
             </div>
           </div>` : `
           <div style="padding:10px 16px;font-size:13px;color:rgba(255,255,255,0.4);border-bottom:1px solid rgba(255,255,255,0.06);flex-shrink:0;">未輸入暱稱，不記錄收集進度</div>`}
           <div style="overflow-y:auto;padding:16px;-webkit-overflow-scrolling:touch;">
-            ${badgeBlock('漁港章', locationBadges, unlockedB, n => `${n}.jpg`)}
-            ${badgeBlock('難度章', difficultyBadges, unlockedD, n => `${n}.jpg`)}
-            ${badgeBlock('魚紋章', fishList, unlockedF, n => `fishdb/${n}.png`)}
+            ${locationBadgeBlock(locationBadges, unlockedB)}
+            ${difficultyBadgeBlock(difficultyBadges, unlockedD)}
+            ${companionBadgeBlock(companionList, unlockedC)}
+            ${fishBadgeBlock(fishList, unlockedF)}
           </div>
         </div>
     `;
@@ -310,8 +418,63 @@ function openCollection() {
     modal.addEventListener('click', e => { if (e.target === modal) closeCollection(); });
     document.body.appendChild(modal);
     requestAnimationFrame(() => requestAnimationFrame(() => {
-        modal.querySelector('div[style*="border-radius:20px"]').style.transform = 'translateY(0)';
+        const panel = modal.querySelector('div[style*="border-radius:20px"]');
+        if (panel) panel.style.transform = 'translateY(0)';
     }));
+}
+
+// 收集頁魚卡放大：先把 card-preview-overlay 拉到最上層再顯示
+function showCollectionFishPreview(dbIdx) {
+    if (typeof fishDB === 'undefined' || !fishDB[dbIdx]) return;
+    const ov = document.getElementById('card-preview-overlay');
+    if (ov) ov.style.zIndex = '7100';
+    showCardPreview(null, fishDB[dbIdx], false);
+}
+
+// 收集頁放大檢視（漁港章、難度章）
+function showCollectionZoom(imgSrc, label) {
+    const existing = document.getElementById('collection-zoom-overlay');
+    if (existing) existing.remove();
+    const ov = document.createElement('div');
+    ov.id = 'collection-zoom-overlay';
+    ov.style.cssText = `
+        position:fixed;inset:0;z-index:7000;
+        background:rgba(0,0,0,0.82);
+        display:flex;flex-direction:column;align-items:center;justify-content:center;
+        backdrop-filter:blur(6px);
+    `;
+    ov.innerHTML = `
+        <div style="max-width:88vw;max-height:80vh;border-radius:16px;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,0.7);">
+            <img src="${imgSrc}" style="width:100%;max-height:72vh;object-fit:contain;display:block;" onerror="this.style.display='none'">
+        </div>
+        <div style="margin-top:14px;font-size:1rem;color:rgba(255,255,255,0.85);letter-spacing:0.08em;">${label}</div>
+        <button onclick="document.getElementById('collection-zoom-overlay').remove()" style="margin-top:18px;padding:10px 30px;border-radius:50px;border:none;background:rgba(255,255,255,0.15);color:#fff;font-size:1rem;cursor:pointer;backdrop-filter:blur(4px);">關閉</button>
+    `;
+    ov.addEventListener('click', e => { if (e.target === ov) ov.remove(); });
+    document.body.appendChild(ov);
+}
+
+// 收集頁放大檢視（同伴章：圓形）
+function showCompanionZoom(imgSrc, label) {
+    const existing = document.getElementById('collection-zoom-overlay');
+    if (existing) existing.remove();
+    const ov = document.createElement('div');
+    ov.id = 'collection-zoom-overlay';
+    ov.style.cssText = `
+        position:fixed;inset:0;z-index:7000;
+        background:rgba(0,0,0,0.82);
+        display:flex;flex-direction:column;align-items:center;justify-content:center;
+        backdrop-filter:blur(6px);
+    `;
+    ov.innerHTML = `
+        <div style="width:72vw;max-width:260px;aspect-ratio:1/1;border-radius:50%;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,0.7);border:3px solid rgba(100,180,255,0.5);">
+            <img src="${imgSrc}" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.display='none'">
+        </div>
+        <div style="margin-top:16px;font-size:1.1rem;color:rgba(255,255,255,0.9);letter-spacing:0.1em;">${label}</div>
+        <button onclick="document.getElementById('collection-zoom-overlay').remove()" style="margin-top:18px;padding:10px 30px;border-radius:50px;border:none;background:rgba(255,255,255,0.15);color:#fff;font-size:1rem;cursor:pointer;backdrop-filter:blur(4px);">關閉</button>
+    `;
+    ov.addEventListener('click', e => { if (e.target === ov) ov.remove(); });
+    document.body.appendChild(ov);
 }
 
 function closeCollection() {
@@ -477,7 +640,9 @@ function showCardPreview(idx, fish, isHand = true) {
 
 function closePreview() {
     if (previewTimeout) clearTimeout(previewTimeout);
-    document.getElementById("card-preview-overlay").style.display = "none";
+    const ov = document.getElementById("card-preview-overlay");
+    ov.style.display = "none";
+    ov.style.zIndex = ""; // 還原 z-index，不影響遊戲中的正常顯示
     document.getElementById("card-preview-container").innerHTML = "";
 }
 
@@ -955,7 +1120,7 @@ function startGame() {
         { n: (window.playerName && window.playerName.trim()) ? window.playerName.trim() : "你", hand: [], isAI: false }
     ];
 
-    // 3. 將選出的 AI 加入 players 陣列
+    // 3. 將選出的 AI 加入 players 陣列，同時解鎖同伴章
     aiPool.forEach((char, index) => {
         players.push({
             n: char.n,
@@ -966,6 +1131,8 @@ function startGame() {
             // 統一頭像渲染方式
             avatar: `<img src="${char.img}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`
         });
+        // 解鎖同伴章
+        progress.unlockCompanion(window.playerName, char.n);
     });	
 	
     const selectedLocationId = window.selectedLocationId || sessionStorage.getItem("selectedLocationId") || "longfeng";
