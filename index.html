@@ -604,6 +604,7 @@
 
 		/* 角色語音開關 */
 		window.wsToggleVoice = function(){
+			if(typeof VoiceSystem !== 'undefined') VoiceSystem.unlock(); // 解鎖瀏覽器語音限制
 			var toggle = document.getElementById('ws-voice-toggle');
 			var icon   = document.getElementById('ws-voice-icon');
 			var isOn   = toggle.classList.toggle('ws-on');
@@ -624,6 +625,7 @@
 
 		/* 啟航冒險 */
 		window.wsStartGame = function(){
+			if(typeof VoiceSystem !== 'undefined') VoiceSystem.unlock(); // 解鎖瀏覽器語音限制
 			var nameEl = document.getElementById('ws-name-input');
 			var typedName = nameEl && nameEl.value.trim();
 			// 有輸入暱稱才存入 localStorage

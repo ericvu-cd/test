@@ -14,6 +14,7 @@ const VoiceSystem = (() => {
     };
 
     let _enabled = false;
+    let _unlocked = false;  // 語音引擎是否已被使用者互動解鎖
     let _voice_zh = null;
     let _voiceLoaded = false;
 
@@ -27,6 +28,19 @@ const VoiceSystem = (() => {
             voices.find(v => v.lang.startsWith('zh')) ||
             null;
         _voiceLoaded = true;
+    }
+
+    // 在使用者點擊的瞬間呼叫，解鎖瀏覽器語音限制
+    function unlock() {
+        if (_unlocked) return;
+        _loadVoice();
+        // 發一個無聲的空白語音來解鎖引擎
+        const utt = new SpeechSynthesisUtterance('');
+        utt.volume = 0;
+        utt.lang = 'zh-TW';
+        if (_voice_zh) utt.voice = _voice_zh;
+        window.speechSynthesis.speak(utt);
+        _unlocked = true;
     }
 
     function speak(text, charName) {
@@ -74,7 +88,7 @@ const VoiceSystem = (() => {
         }
     }
 
-    return { speak, setEnabled, isEnabled, init };
+    return { speak, setEnabled, isEnabled, unlock, init };
 
 })();
 
