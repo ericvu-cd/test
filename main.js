@@ -77,6 +77,17 @@ const progress = {
             data.companions.push(companionName);
             this.save(name, data);
         }
+    },
+
+    // 行為型勳章（存入 behaviorBadges 欄位）
+    unlockBehaviorBadge(name, badgeName) {
+        if (!name || !name.trim() || name.trim() === '守護員') return;
+        const data = this.load(name);
+        if (!data.behaviorBadges) data.behaviorBadges = [];
+        if (!data.behaviorBadges.includes(badgeName)) {
+            data.behaviorBadges.push(badgeName);
+            this.save(name, data);
+        }
     }
 };
 
@@ -247,9 +258,25 @@ function openCollection() {
     const unlockedD = data.difficulty || [];
     const unlockedF = data.fish || [];
     const unlockedC = data.companions || [];
+    const unlockedBehav = data.behaviorBadges || [];
 
-    const totalAll = locationBadges.length + difficultyBadges.length + fishList.length + companionList.length;
-    const totalUnlocked = unlockedB.length + unlockedD.length + unlockedF.length + unlockedC.length;
+    const BEHAVIOR_BADGES = [
+        { key: "綠燈先鋒",  icon: "🟢", desc: "本局出牌全為綠燈（至少3張）" },
+        { key: "一支釣達人", icon: "🎣", desc: "本局出4張以上一支釣漁法的魚" },
+        { key: "完美永續局", icon: "🏆", desc: "全綠燈＋全符合召喚＋獲勝" },
+        { key: "紅燈護送員", icon: "🔴", desc: "本局出3張以上紅燈魚" },
+        { key: "養殖支持者", icon: "🌾", desc: "本局出3張以上養殖魚" },
+        { key: "深海傳說",   icon: "🐋", desc: "本局出過鯨鯊（禁止捕撈）" },
+        { key: "浴火重生",   icon: "🔄", desc: "被退牌3張以上仍獲勝" },
+        { key: "百發百中",   icon: "💯", desc: "零退牌且至少出4張獲勝" },
+        { key: "海紋守護王", icon: "👑", desc: "完美永續局＋百發百中＋浴火重生同時達成" },
+        { key: "珊瑚守護者", icon: "🪸", desc: "本局出過全部3種定棲性綠燈魚" },
+        { key: "漁法通",     icon: "🎯", desc: "本局出牌涵蓋5種以上不同漁法" },
+        { key: "近海英雄",   icon: "🌏", desc: "全近海魚＋全符合召喚（至少4張）獲勝" },
+    ];
+
+    const totalAll = locationBadges.length + difficultyBadges.length + fishList.length + companionList.length + BEHAVIOR_BADGES.length;
+    const totalUnlocked = unlockedB.length + unlockedD.length + unlockedF.length + unlockedC.length + unlockedBehav.length;
 
     function pct(got, total) { return total ? Math.round(got / total * 100) : 0; }
 
@@ -371,6 +398,44 @@ function openCollection() {
         </div>`;
     }
 
+    // 神祕任務章：圖片顯示，未解鎖灰暗，已解鎖可點選放大
+    function behaviorBadgeBlock(list, unlocked) {
+        const got = list.filter(b => unlocked.includes(b.key)).length;
+        const cols = 4;
+        return `
+        <div style="margin-bottom:1.4rem;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <span style="font-size:13px;font-weight:500;color:rgba(255,255,255,0.6);letter-spacing:0.04em;">神祕任務章</span>
+            <span style="font-size:12px;color:rgba(255,255,255,0.45);">${got} / ${list.length}</span>
+          </div>
+          <div style="background:rgba(255,255,255,0.08);border-radius:99px;height:3px;margin-bottom:10px;overflow:hidden;">
+            <div style="height:100%;border-radius:99px;background:#1D9E75;width:${pct(got,list.length)}%;transition:width 0.6s ease;"></div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(${cols},1fr);gap:8px;">
+            ${list.map(b => {
+                const isUnlocked = unlocked.includes(b.key);
+                const clickable = isUnlocked
+                    ? `onclick="showCollectionZoom('${b.key}.png','${b.key}')" style="cursor:pointer;"`
+                    : '';
+                return `
+                <div style="display:flex;flex-direction:column;align-items:center;gap:4px;" ${clickable}>
+                  <div style="width:100%;aspect-ratio:3/4;border-radius:8px;overflow:hidden;
+                    ${isUnlocked
+                        ? 'border:1px solid rgba(255,255,255,0.22);box-shadow:0 2px 8px rgba(29,158,117,0.35);'
+                        : 'border:3px solid rgba(255,255,255,0.35);background:rgba(0,0,0,0.35);'
+                    }
+                    display:flex;align-items:center;justify-content:center;">
+                    ${isUnlocked
+                        ? `<img src="${b.key}.png" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">`
+                        : `<span style="font-size:42px;font-weight:900;color:#e02020;line-height:1;text-shadow:0 2px 8px rgba(0,0,0,0.5);">？</span>`
+                    }
+                  </div>
+                </div>`;
+            }).join('')}
+          </div>
+        </div>`;
+    }
+
     // 注入已解鎖魚的 fish 物件到 window，讓 onclick 能取用
     if (typeof fishDB !== 'undefined') {
         fishDB.forEach(f => {
@@ -411,6 +476,7 @@ function openCollection() {
             ${difficultyBadgeBlock(difficultyBadges, unlockedD)}
             ${companionBadgeBlock(companionList, unlockedC)}
             ${fishBadgeBlock(fishList, unlockedF)}
+            ${behaviorBadgeBlock(BEHAVIOR_BADGES, unlockedBehav)}
           </div>
         </div>
     `;
@@ -1141,12 +1207,11 @@ function startGame() {
         : null;
     const locationFishNames = currentLocation ? new Set(currentLocation.fishPool) : null;
 
-    // ── 解鎖漁港章 & 難度紋章 ──
+    // ── 解鎖漁港章（進入漁港即解鎖）──
     if (currentLocation && currentLocation.badge) {
         progress.unlockBadge(window.playerName, currentLocation.badge);
     }
-    const diffLabelShort = gameDifficulty <= 0.4 ? "新手" : gameDifficulty >= 0.9 ? "專業" : "標準";
-    progress.unlockDifficulty(window.playerName, diffLabelShort);
+    // 難度章：玩家勝利時才解鎖（見 showWinScreen）
     let fishD = shuffle(locationFishNames
         ? fishDB.filter(f => locationFishNames.has(f.n))
         : [...fishDB]
@@ -1210,6 +1275,8 @@ function startGame() {
         hand: p.hand.map(f => ({ n: f.n, l: f.l, d: f.d, m: [...f.m], h: f.h, s: f.s }))
     }));
     logPlainText = []; // 清空上局紀錄
+    // 重置行為型勳章追蹤
+    badgeTracker = { playerCards: [], returnCount: 0, mazuCompleted: false, mazuGiftCard: null };
     
     const diffLabel = gameDifficulty <= 0.4 ? "新手(難度0.4)" : gameDifficulty >= 0.9 ? "專業(難度0.9)" : "標準(難度0.7)";
     const locationLabel = currentLocation ? currentLocation.name : "未指定海線";
@@ -1478,6 +1545,10 @@ function confirmMazuGift(cardIdx, target) {
     target.hand.push(card);
     SFX.gift();
     addLog(`✨ ${players[0].n}分享了【${card.n}】給 ${target.n}！`, "success");
+
+    // 記錄媽祖贈牌
+    badgeTracker.mazuCompleted = true;
+    badgeTracker.mazuGiftCard = card;
 
     if (target.isAI) {
         aiTalkMazuReceive(target, players[0], card);
@@ -1759,12 +1830,17 @@ function showResult() {
 
             if (isSuccess) {
                 addLog(`${player.n} 成功送出【${t.card.n}】`, "success");
-                // 更新玩家出牌紀錄的 success 狀態
+                // 記錄玩家出牌（成功）
+                if (!player.isAI) badgeTracker.playerCards.push({ card: t.card, isSuccess: true });
             } else {
                 // 先暫存，等結算頁關閉後再動畫退回
                 pendingReturns.push({ card: t.card, player });
                 addLog(`${player.n} 的【${t.card.n}】不符規律，退回。`);
-                // 更新玩家出牌紀錄的 success 狀態
+                // 記錄玩家出牌（退回）並累計退牌數
+                if (!player.isAI) {
+                    badgeTracker.playerCards.push({ card: t.card, isSuccess: false });
+                    badgeTracker.returnCount++;
+                }
             }
         });
 
@@ -2461,3 +2537,11 @@ function toggleReportMode() {
         }
     }
 }
+
+// ── 行為型勳章追蹤（每局重置）────────────────
+let badgeTracker = {
+    playerCards: [],      // 本局玩家出過的每張牌 {card, isSuccess}
+    returnCount: 0,       // 被退牌次數
+    mazuCompleted: false, // 是否完成過媽祖贈牌
+    mazuGiftCard: null,   // 媽祖贈出的牌
+};

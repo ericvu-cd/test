@@ -6,6 +6,94 @@
 function showWinScreen(winner) {
     const isPlayer = !winner.isAI;
 
+    // ── 勝利時解鎖難度章 ──────────────────────────
+    if (isPlayer) {
+        const diffLabelShort = gameDifficulty <= 0.4 ? "新手" : gameDifficulty >= 0.9 ? "專業" : "標準";
+        progress.unlockDifficulty(window.playerName, diffLabelShort);
+    }
+
+    // ── 行為型勳章判斷（玩家勝利時才檢查）──────────
+    if (isPlayer && typeof badgeTracker !== "undefined") {
+        const cards   = badgeTracker.playerCards;
+        const total   = cards.length;
+
+        if (total > 0) {
+            const allCards   = cards.map(c => c.card);
+            const succCards  = cards.filter(c => c.isSuccess).map(c => c.card);
+            const allSuccess = cards.every(c => c.isSuccess);
+
+            // ── 🟢 綠燈先鋒：全綠燈，至少出 3 張 ──
+            if (total >= 3 && allCards.every(f => f.l === 1)) {
+                progress.unlockBehaviorBadge(window.playerName, "綠燈先鋒");
+            }
+
+            // ── 🎣 一支釣達人：4 張以上一支釣漁法 ──
+            const ikkCount = allCards.filter(f => f.m.includes("一支釣")).length;
+            if (ikkCount >= 4) {
+                progress.unlockBehaviorBadge(window.playerName, "一支釣達人");
+            }
+
+            // ── 🏆 完美永續局：全綠燈 + 全符合 + 獲勝 ──
+            if (allCards.every(f => f.l === 1) && allSuccess && total >= 3) {
+                progress.unlockBehaviorBadge(window.playerName, "完美永續局");
+            }
+
+            // ── 🔴 紅燈護送員：3 張以上紅燈魚 ──
+            const redCount = allCards.filter(f => f.l === 3).length;
+            if (redCount >= 3) {
+                progress.unlockBehaviorBadge(window.playerName, "紅燈護送員");
+            }
+
+            // ── 🌾 養殖支持者：3 張以上養殖魚 ──
+            const farmCount = allCards.filter(f => f.d === "養殖").length;
+            if (farmCount >= 3) {
+                progress.unlockBehaviorBadge(window.playerName, "養殖支持者");
+            }
+
+            // ── 🐋 深海傳說：出過鯨鯊 ──
+            if (allCards.some(f => f.n === "鯨鯊")) {
+                progress.unlockBehaviorBadge(window.playerName, "深海傳說");
+            }
+
+            // ── 🔄 浴火重生：退牌 3 張以上仍獲勝 ──
+            if (badgeTracker.returnCount >= 3) {
+                progress.unlockBehaviorBadge(window.playerName, "浴火重生");
+            }
+
+            // ── 💯 百發百中：零退牌，至少出 4 張 ──
+            if (allSuccess && total >= 4) {
+                progress.unlockBehaviorBadge(window.playerName, "百發百中");
+            }
+
+            // ── 🪸 珊瑚守護者：3 張以上定棲性綠燈魚 ──
+            // 定棲性綠燈只有 吳郭魚、星雞魚、養殖鱸魚，三張都出到才算
+            const greenSedentary = allCards.filter(f => f.l === 1 && f.h === "定棲性");
+            const uniqueGreenSed = [...new Set(greenSedentary.map(f => f.n))];
+            if (uniqueGreenSed.length >= 3) {
+                progress.unlockBehaviorBadge(window.playerName, "珊瑚守護者");
+            }
+
+            // ── 🎯 漁法通：涵蓋 5 種以上不同漁法 ──
+            const allMethods = new Set(allCards.flatMap(f => f.m));
+            if (allMethods.size >= 5) {
+                progress.unlockBehaviorBadge(window.playerName, "漁法通");
+            }
+
+            // ── 🌏 近海英雄：全近海、全符合召喚、至少出 4 張 ──
+            if (total >= 4 && allCards.every(f => f.d === "近海") && allSuccess) {
+                progress.unlockBehaviorBadge(window.playerName, "近海英雄");
+            }
+
+            // ── 👑 海紋守護王：完美永續局 + 百發百中 + 浴火重生同時達成 ──
+            const isPerfect  = allCards.every(f => f.l === 1) && allSuccess && total >= 3;
+            const isBullseye = allSuccess && total >= 4;
+            const isRevived  = badgeTracker.returnCount >= 3;
+            if (isPerfect && isBullseye && isRevived) {
+                progress.unlockBehaviorBadge(window.playerName, "海紋守護王");
+            }
+        }
+    }
+
     // 勝利畫面開始，立即解除 ui-lock（否則所有按鈕都無法觸控）
     const uiLock = document.getElementById("ui-lock");
     if (uiLock) uiLock.style.display = "none";
