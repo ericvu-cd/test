@@ -377,15 +377,6 @@
 						onclick="wsToggleReport()"></div>
 				</div>
 
-				<!-- 角色語音 -->
-				<div class="ws-sound-wrap">
-					<span class="ws-sound-label">
-						<span id="ws-voice-icon">🔇</span>角色語音
-					</span>
-					<div class="ws-toggle" id="ws-voice-toggle"
-						onclick="wsToggleVoice()"></div>
-				</div>
-
 			</div>
 
 			<!-- 按鈕區 -->
@@ -482,7 +473,6 @@
 		</div>
 
     <script src="sfx.js"></script>
-    <script src="voice.js"></script>
     <script src="db.js"></script>
     <script src="main.js"></script>
 	<script src="tutorial.js"></script>
@@ -602,30 +592,8 @@
 			}
 		})();
 
-		/* 角色語音開關 */
-		window.wsToggleVoice = function(){
-			if(typeof VoiceSystem !== 'undefined') VoiceSystem.unlock(); // 解鎖瀏覽器語音限制
-			var toggle = document.getElementById('ws-voice-toggle');
-			var icon   = document.getElementById('ws-voice-icon');
-			var isOn   = toggle.classList.toggle('ws-on');
-			if(typeof VoiceSystem !== 'undefined') VoiceSystem.setEnabled(isOn);
-			sessionStorage.setItem('voiceEnabled', isOn ? 'true' : 'false');
-			icon.textContent = isOn ? '🔊' : '🔇';
-		};
-		/* 初始化：讀取 sessionStorage */
-		(function(){
-			if(sessionStorage.getItem('voiceEnabled') === 'true'){
-				if(typeof VoiceSystem !== 'undefined') VoiceSystem.setEnabled(true);
-				var t = document.getElementById('ws-voice-toggle');
-				var i = document.getElementById('ws-voice-icon');
-				if(t) t.classList.add('ws-on');
-				if(i) i.textContent = '🔊';
-			}
-		})();
-
 		/* 啟航冒險 */
 		window.wsStartGame = function(){
-			if(typeof VoiceSystem !== 'undefined') VoiceSystem.unlock(); // 解鎖瀏覽器語音限制
 			var nameEl = document.getElementById('ws-name-input');
 			var typedName = nameEl && nameEl.value.trim();
 			// 有輸入暱稱才存入 localStorage
