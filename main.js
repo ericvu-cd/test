@@ -419,7 +419,7 @@ function openCollection() {
                     : '';
                 return `
                 <div style="display:flex;flex-direction:column;align-items:center;gap:4px;" ${clickable}>
-                  <div style="width:100%;aspect-ratio:3/4;border-radius:8px;overflow:hidden;
+                  <div style="width:100%;aspect-ratio:1/1;border-radius:8px;overflow:hidden;
                     ${isUnlocked
                         ? 'border:1px solid rgba(255,255,255,0.22);box-shadow:0 2px 8px rgba(29,158,117,0.35);'
                         : 'border:3px solid rgba(255,255,255,0.35);background:rgba(0,0,0,0.35);'
