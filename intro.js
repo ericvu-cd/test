@@ -575,6 +575,7 @@ if (sessionStorage.getItem('skipIntro') !== '1') {
 
     function endIntro(fast) {
       alive = false;
+      fxTimers.forEach(clearTimeout); fxTimers = [];
       fadeVol(0, fast ? 600 : 1500);
       if (wakeLock) { wakeLock.release(); wakeLock = null; }
       var scr = document.getElementById('intro-screen');
@@ -595,6 +596,7 @@ if (sessionStorage.getItem('skipIntro') !== '1') {
     window.introSkip = function () {
       if (!alive) return;
       alive = false;
+      fxTimers.forEach(clearTimeout); fxTimers = [];
       introScr.removeEventListener('click', startComic);
       endIntro(true);
     };
