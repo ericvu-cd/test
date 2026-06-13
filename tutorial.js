@@ -44,13 +44,13 @@ let tutorialLockedCardIdx = -1;
 
     #tutor-bubble {
         flex: 1;
-        background: linear-gradient(135deg,rgba(8,35,75,0.98),rgba(4,18,50,0.99));
+        background: linear-gradient(135deg,rgba(227,229,232,0.98),rgba(250,250,250,0.99));
         border: 1.5px solid rgba(100,200,255,0.5);
         border-radius: 12px;
         padding: 7px 11px;
         font-size: 0.82rem;
         line-height: 1.5;
-		color: rgb(255,215,0);
+		color: rgb(9,11,66);
         white-space: pre-line;
         box-shadow: 0 0 14px rgba(60,160,255,0.18);
     }
