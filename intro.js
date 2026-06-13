@@ -322,7 +322,7 @@ setTimeout(function () {
 /* ── 開場邏輯 ── */
 if (sessionStorage.getItem('skipIntro') !== '1') {
   (function () {
-    var IMGS = ['P1.jpg','P2.jpg','P3.jpg','P4.jpg','P5.jpg','P6.jpg','P7.jpg','P8.jpg','P9.jpg'];
+    var IMGS = ['image/P1.jpg','image/P2.jpg','image/P3.jpg','image/P4.jpg','image/P5.jpg','image/P6.jpg','image/P7.jpg','image/P8.jpg','image/P9.jpg'];
     var STAY = 11400, BREATH_DUR = 6000, FADE_OUT = 900, BLACK = 400, FADE_IN = 800;
     var alive = true, slotA = true, bgmEl = null, volTmr = null, wakeLock = null;
     var imgA, imgB, blkOvl, scanEl, flashEl;

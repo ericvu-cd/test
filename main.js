@@ -103,7 +103,7 @@ const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 function preloadImages(prefix, count) {
     for (let i = 1; i <= count; i++) {
         const img = new Image();
-        img.src = `${prefix}${i}.jpg`;
+        img.src = `image/${prefix}${i}.jpg`;
         img.decode().catch(() => {}); // 背景解碼，避免顯示時卡頓
     }
 }
@@ -195,7 +195,7 @@ function openInfo() {
 }
 
 function updateInfo() {
-    document.getElementById("info-img").src = `F${infoIdx}.jpg`;
+    document.getElementById("info-img").src = `image/F${infoIdx}.jpg`;
     document.getElementById("info-page-num").innerText = `${infoIdx} / ${totalInfo}`;
 }
 
@@ -296,11 +296,11 @@ function openCollection() {
           <div style="display:grid;grid-template-columns:repeat(${cols},1fr);gap:10px;">
             ${list.map(n => {
                 const isUnlocked = unlocked.includes(n);
-                const clickable = isUnlocked ? `onclick="showCollectionZoom('${n}.jpg','${n}')" style="cursor:pointer;"` : '';
+                const clickable = isUnlocked ? `onclick="showCollectionZoom('image/${n}.jpg','${n}')" style="cursor:pointer;"` : '';
                 return `
                 <div style="display:flex;flex-direction:column;align-items:center;gap:4px;" ${clickable}>
                   <div style="width:100%;aspect-ratio:3/2;border-radius:8px;overflow:hidden;border:1px solid rgba(255,255,255,${isUnlocked?'0.22':'0.06'});background:rgba(255,255,255,0.05);${isUnlocked?'':'filter:grayscale(1) brightness(0.3)'};${isUnlocked?'box-shadow:0 2px 8px rgba(29,158,117,0.35);':''}">
-                    <img src="${n}.jpg" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">
+                    <img src="image/${n}.jpg" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">
                   </div>
                 </div>`;
             }).join('')}
@@ -324,11 +324,11 @@ function openCollection() {
           <div style="display:grid;grid-template-columns:repeat(${cols},1fr);gap:10px;">
             ${list.map(n => {
                 const isUnlocked = unlocked.includes(n);
-                const clickable = isUnlocked ? `onclick="showCollectionZoom('${n}.jpg','${n}')" style="cursor:pointer;"` : '';
+                const clickable = isUnlocked ? `onclick="showCollectionZoom('image/${n}.jpg','${n}')" style="cursor:pointer;"` : '';
                 return `
                 <div style="display:flex;flex-direction:column;align-items:center;gap:4px;" ${clickable}>
                   <div style="width:100%;aspect-ratio:3/2;border-radius:8px;overflow:hidden;border:1px solid rgba(255,255,255,${isUnlocked?'0.22':'0.06'});background:rgba(255,255,255,0.05);${isUnlocked?'':'filter:grayscale(1) brightness(0.3)'};${isUnlocked?'box-shadow:0 2px 8px rgba(29,158,117,0.35);':''}">
-                    <img src="${n}.jpg" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">
+                    <img src="image/${n}.jpg" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">
                   </div>
                 </div>`;
             }).join('')}
@@ -415,7 +415,7 @@ function openCollection() {
             ${list.map(b => {
                 const isUnlocked = unlocked.includes(b.key);
                 const clickable = isUnlocked
-                    ? `onclick="showCollectionZoom('${b.key}.png','${b.key}')" style="cursor:pointer;"`
+                    ? `onclick="showCollectionZoom('image/${b.key}.png','${b.key}')" style="cursor:pointer;"`
                     : '';
                 return `
                 <div style="display:flex;flex-direction:column;align-items:center;gap:4px;" ${clickable}>
@@ -426,7 +426,7 @@ function openCollection() {
                     }
                     display:flex;align-items:center;justify-content:center;">
                     ${isUnlocked
-                        ? `<img src="${b.key}.png" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">`
+                        ? `<img src="image/${b.key}.png" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">`
                         : `<span style="font-size:42px;font-weight:900;color:#e02020;line-height:1;text-shadow:0 2px 8px rgba(0,0,0,0.5);">？</span>`
                     }
                   </div>

@@ -117,7 +117,7 @@ function showWinScreen(winner) {
     const bgDiv = document.createElement("div");
     bgDiv.style.cssText = `
         position:absolute;inset:0;
-        background:url('bge.png') center center/cover no-repeat;
+        background:url('image/bge.png') center center/cover no-repeat;
         opacity:${isPlayer ? 1 : 0.9};
         ${isPlayer ? '' : 'filter:hue-rotate(190deg) saturate(.85) brightness(.65);'}
     `;
@@ -503,7 +503,7 @@ async function shareAchievementCard(isPlayer, winner, badgeKey) {
     ctx.scale(2, 2);
 
     let bgImg = null;
-    try { bgImg = await loadImageAsBlob("bge.png"); } catch(_) {}
+    try { bgImg = await loadImageAsBlob("image/bge.png"); } catch(_) {}
     ctx.fillStyle = "#020a04";
     ctx.fillRect(0, 0, W, H);
 
@@ -616,7 +616,7 @@ async function shareGameCard(isPlayer, winner) {
     ctx.scale(2, 2);
 
     let bgImg = null;
-    try { bgImg = await loadImageAsBlob("bge.png"); } catch(_) {}
+    try { bgImg = await loadImageAsBlob("image/bge.png"); } catch(_) {}
     ctx.fillStyle = "#000";
     ctx.fillRect(0, 0, W, H);
     if (bgImg) {
@@ -679,7 +679,7 @@ async function shareGameCard(isPlayer, winner) {
 
     canvas.toBlob(async (blob) => {
         if (!blob) { alert("卡片產生失敗"); return; }
-        const file = new File([blob], "海紋守護團.png", {type:"image/png"});
+        const file = new File([blob], "image/海紋守護團.png", {type:"image/png"});
         const text = isPlayer
             ? `${winner.n} 在《海紋守護團》守護了海洋！難度【${diffLabel}】，共 ${rounds} 回合 🎉🌊`
             : `${winner.n} 在《海紋守護團》這次沒守住…下次再來 🌊`;
