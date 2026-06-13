@@ -44,12 +44,12 @@ let tutorialLockedCardIdx = -1;
 
     #tutor-bubble {
         flex: 1;
-        background: linear-gradient(135deg,rgba(227,229,232,0.98),rgba(250,250,250,0.99));
+        background: linear-gradient(135deg,rgba(227,229,232,0.90),rgba(250,250,250,0.8));
         border: 1.5px solid rgba(100,200,255,0.5);
         border-radius: 12px;
-        padding: 7px 11px;
-        font-size: 0.82rem;
-        line-height: 1.5;
+        padding: 6px 12px;
+        font-size: 0.8rem;
+        line-height: 1.3;
 		color: rgb(9,11,66);
         white-space: pre-line;
         box-shadow: 0 0 14px rgba(60,160,255,0.18);
@@ -353,13 +353,13 @@ let tourStep = 0;
 const TOUR_STEPS = [
     {
         highlight: null,
-        text: "嗨！我是導航魚 🐟\n歡迎來到友魚勇者之路！\n帶你快速認識畫面～",
+        text: "嗨！我是導航魚🐟 歡迎來到海紋守護團！\n帶你快速認識畫面～",
         next: true
     },
     {
         highlight: ".char-area",
         // 對手區在頂部面板下方，不說上方
-        text: "🐙 畫面上端亮起的是對手區\n大家輪流抽召喚牌、出魚牌\n最快出完手牌的人獲勝！",
+        text: "🐙 畫面上端亮起的是對手區\n大家輪流抽召喚牌、出魚牌～最快出完手牌的人獲勝！",
         next: true
     },
     {
@@ -370,7 +370,7 @@ const TOUR_STEPS = [
     {
         highlight: "#summon-display",
         // 這一步需要先把召喚框顯示出來才能高亮，用 onEnter 鉤子處理
-        text: "📜 亮起的是召喚條件框\n你的回合會顯示出牌條件\n對手回合則需要觀察牌來推測！",
+        text: "📜 亮起的是召喚條件框\n你的回合會顯示出牌條件、 對手回合則需要觀察牌來推測！",
         next: true,
         onEnter: () => {
             // 暫時顯示召喚框讓玩家看到，離開此步後由 startPractice1 正式設定
@@ -383,7 +383,7 @@ const TOUR_STEPS = [
     },
     {
         highlight: "#player-zone",
-        text: "👇 亮起的是你的手牌區，點牌放大查看屬性\n對照條件，選對的魚出！\n\n準備好了嗎？來練習！",
+        text: "👇 亮起的是你的手牌區，點牌放大查看屬性\n對照條件，選對的魚出！\n準備好了嗎？來練習！",
         next: true,
         onEnter: () => {
             // 離開召喚框步驟後把示例隱藏掉，等練習時再正式顯示
@@ -599,7 +599,7 @@ function startPractice2() {
 
     setTimeout(async () => {
         tutorSay(
-            "🕵️ 這次是對手抽召喚！\n你不知道條件是什麼…\n觀察對手出的牌來推測！",
+            "🕵️ 這次是對手抽召喚！\n你不知道條件是什麼…? 觀察對手出的牌來推測！",
             false
         );
 
@@ -617,7 +617,7 @@ function startPractice2() {
         await sleep(1800);
 
         tutorSay(
-            "👀 對手出了「洄游性」的鮭魚 => 條件可能和洄游性有關？\n這次故意讓你出【吳郭魚】，看看出錯了會發生什麼事!\n\n點亮起（金色）的牌！",
+            "👀 對手出了「洄游性」的鮭魚 => 條件可能和洄游性有關？\n這次故意讓你出【吳郭魚】，看看出錯了會發生什麼事!\n點亮起（金色）的牌！",
             false
         );
 
@@ -665,7 +665,7 @@ async function tutorAfterPlay2(fishPlayed) {
 }
 
 // ======================
-// 🙏 媽祖籤練習
+// 🙏 贈卡練習
 // ======================
 function startPracticeMazu() {
     tutorialPhase = "mazu";
@@ -690,7 +690,7 @@ function startPracticeMazu() {
 
     setTimeout(() => {
         tutorSay(
-            "🙏 特殊召喚：媽祖籤！\n選一張手牌贈給別的玩家\n策略：送最難出的牌\n給手牌最少的對手最有效！\n\n選其中一張牌試試看",
+            "🙏 特殊召喚：分享贈卡！\n選一張手牌贈給別的玩家\n策略：送最難出的牌, 給手牌最少的對手最有效！\n選其中一張牌試試看",
             false
         );
     }, 500);
@@ -727,7 +727,7 @@ function tutorShowSummary(summon, playerFish, tableCards, onClose) {
         else if (summon.t.includes("洄游")) reason = `棲地是「${playerFish.h}」，不符合洄游條件`;
         else                                reason = "不符合本回條件";
         icon = "❌";
-        text = `【${playerFish.n}】退牌了！\n${reason}\n\n退牌的魚會回到手牌\n沒關係，繼續推測就好！`;
+        text = `【${playerFish.n}】退牌了！\n${reason}\n退牌的魚會回到手牌\n沒關係，繼續推測就好！`;
     }
 
     // ── 結算卡片列表 ──
