@@ -579,6 +579,14 @@ async function shareAchievementCard(isPlayer, winner, badgeKey) {
     ctx.fillStyle = "rgba(175,255,210,.7)";
     ctx.fillText(`${winner.n}・${diffLabel}難度`, cx, cy + 128);
 
+    // 版權小字
+    ctx.font = "400 14px 'PingFang TC','Microsoft JhengHei',sans-serif";
+    ctx.letterSpacing = "1px";
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = "rgba(200,230,255,.5)";
+    ctx.fillText("© 2026 海紋守護團", cx, H - 28);
+    ctx.letterSpacing = "0px";
+
     canvas.toBlob(async (blob) => {
         if (!blob) { alert("卡片產生失敗"); return; }
         const file = new File([blob], `海紋守護團_${badgeKey}.png`, { type:"image/png" });
@@ -660,6 +668,14 @@ async function shareGameCard(isPlayer, winner) {
         ctx.fillStyle = "rgba(125,180,255,.65)";
         ctx.fillText("守護員折返，海域等你再來", CX, Y);
     }
+
+    // 版權小字
+    ctx.font = "400 14px 'PingFang TC','Microsoft JhengHei',sans-serif";
+    ctx.letterSpacing = "1px";
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = "rgba(200,230,255,.5)";
+    ctx.fillText("© 2026 海紋守護團", CX, H - 28);
+    ctx.letterSpacing = "0px";
 
     canvas.toBlob(async (blob) => {
         if (!blob) { alert("卡片產生失敗"); return; }
