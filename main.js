@@ -2548,41 +2548,44 @@ let badgeTracker = {
 
 // ── 聯絡我們 ──
 function openContact() {
-    document.getElementById("contact-overlay").style.display = "flex";
+    var overlay = document.getElementById("contact-overlay");
+    overlay.style.display = "flex";
+    // 重置表單
+    var form = document.getElementById("contact-form");
+    if (form) form.reset();
+    var msgEl = document.getElementById("contact-msg");
+    if (msgEl) msgEl.textContent = "";
+    var btn = document.getElementById("contact-submit-btn");
+    if (btn) { btn.disabled = false; btn.textContent = "送出留言"; }
+    // 偵測 iframe 載入（表示送出完成）
+    var iframe = document.querySelector('iframe[name="contact-iframe"]');
+    if (iframe) {
+        iframe.onload = function() {
+            // 第一次載入是空白頁，忽略；之後的載入才是送出結果
+            if (iframe._submitted) {
+                var msgEl = document.getElementById("contact-msg");
+                var btn = document.getElementById("contact-submit-btn");
+                if (msgEl) { msgEl.style.color = "rgba(120,220,160,.9)"; msgEl.textContent = "✓ 留言已送出，謝謝您！"; }
+                if (btn) { btn.textContent = "已送出"; }
+                setTimeout(closeContact, 1800);
+            }
+        };
+    }
+    // 監聽送出事件，標記已送出
+    var form2 = document.getElementById("contact-form");
+    if (form2) {
+        form2.onsubmit = function() {
+            var iframe2 = document.querySelector('iframe[name="contact-iframe"]');
+            if (iframe2) iframe2._submitted = true;
+            var btn2 = document.getElementById("contact-submit-btn");
+            var msgEl2 = document.getElementById("contact-msg");
+            if (btn2) { btn2.disabled = true; btn2.textContent = "送出中…"; }
+            if (msgEl2) msgEl2.textContent = "";
+        };
+    }
 }
 function closeContact() {
     document.getElementById("contact-overlay").style.display = "none";
-}
-async function submitContact() {
-    var name    = document.getElementById("contact-name").value.trim();
-    var email   = document.getElementById("contact-email").value.trim();
-    var message = document.getElementById("contact-message").value.trim();
-    var msgEl   = document.getElementById("contact-msg");
-    var btn     = document.getElementById("contact-submit-btn");
-    if (!message) {
-        msgEl.style.color = "rgba(255,140,120,.85)";
-        msgEl.textContent = "請填寫留言內容";
-        return;
-    }
-    btn.disabled = true;
-    btn.textContent = "送出中…";
-    msgEl.textContent = "";
-    try {
-        var res = await fetch("https://formspree.io/f/mrevayqw", {
-            method: "POST",
-            headers: { "Content-Type": "application/json", "Accept": "application/json" },
-            body: JSON.stringify({ name: name || "匿名", email: email || "未提供", message: message })
-        });
-        if (res.ok) {
-            msgEl.style.color = "rgba(120,220,160,.9)";
-            msgEl.textContent = "✓ 留言已送出，謝謝您！";
-            btn.textContent = "已送出";
-            setTimeout(closeContact, 2000);
-        } else { throw new Error(); }
-    } catch(e) {
-        msgEl.style.color = "rgba(255,140,120,.85)";
-        msgEl.textContent = "送出失敗，請稍後再試";
-        btn.disabled = false;
-        btn.textContent = "送出留言";
-    }
+    var iframe = document.querySelector('iframe[name="contact-iframe"]');
+    if (iframe) iframe._submitted = false;
 }
