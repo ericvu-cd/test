@@ -2545,3 +2545,44 @@ let badgeTracker = {
     mazuCompleted: false, // 是否完成過媽祖贈牌
     mazuGiftCard: null,   // 媽祖贈出的牌
 };
+
+// ── 聯絡我們 ──
+function openContact() {
+    document.getElementById("contact-overlay").style.display = "flex";
+}
+function closeContact() {
+    document.getElementById("contact-overlay").style.display = "none";
+}
+async function submitContact() {
+    var name    = document.getElementById("contact-name").value.trim();
+    var email   = document.getElementById("contact-email").value.trim();
+    var message = document.getElementById("contact-message").value.trim();
+    var msgEl   = document.getElementById("contact-msg");
+    var btn     = document.getElementById("contact-submit-btn");
+    if (!message) {
+        msgEl.style.color = "rgba(255,140,120,.85)";
+        msgEl.textContent = "請填寫留言內容";
+        return;
+    }
+    btn.disabled = true;
+    btn.textContent = "送出中…";
+    msgEl.textContent = "";
+    try {
+        var res = await fetch("https://formspree.io/f/mrevayqw", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Accept": "application/json" },
+            body: JSON.stringify({ name: name || "匿名", email: email || "未提供", message: message })
+        });
+        if (res.ok) {
+            msgEl.style.color = "rgba(120,220,160,.9)";
+            msgEl.textContent = "✓ 留言已送出，謝謝您！";
+            btn.textContent = "已送出";
+            setTimeout(closeContact, 2000);
+        } else { throw new Error(); }
+    } catch(e) {
+        msgEl.style.color = "rgba(255,140,120,.85)";
+        msgEl.textContent = "送出失敗，請稍後再試";
+        btn.disabled = false;
+        btn.textContent = "送出留言";
+    }
+}
