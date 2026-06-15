@@ -78,22 +78,13 @@
     }
     #ws-top-title {
         display: flex;
-        flex-direction: column;
-        gap: 1px;
+        align-items: center;
     }
-    #ws-top-title .main {
-        font-family: 'Noto Serif TC', serif;
-        font-size: clamp(1rem, 4vw, 1.25rem);
-        font-weight: 900;
-        color: #e8f4ff;
-        letter-spacing: .1em;
-        text-shadow: 0 0 14px rgba(80,180,255,0.7);
-        line-height: 1;
-    }
-    #ws-top-title .sub {
-        font-size: .65rem;
-        color: rgba(140,200,240,0.65);
-        letter-spacing: .22em;
+    #ws-subtitle-img {
+        height: 36px;
+        width: auto;
+        object-fit: contain;
+        display: block;
     }
     #ws-top-icons {
         display: flex;
@@ -224,8 +215,8 @@
         position: absolute;
         font-size: 1.5rem;
         transform: translate(-50%, -50%);
-        transition: left .9s cubic-bezier(.2,.85,.2,1),
-                    top  .9s cubic-bezier(.2,.85,.2,1);
+        transition: left 1.13s cubic-bezier(.2,.85,.2,1),
+                    top  1.13s cubic-bezier(.2,.85,.2,1);
         z-index: 11;
         pointer-events: none;
         filter: drop-shadow(0 0 6px rgba(255,255,255,0.5));
@@ -392,16 +383,30 @@
         padding-bottom: env(safe-area-inset-bottom, 0px);
     }
     #ws-copyright span {
-        font-size: .7rem;
-        color: rgba(100,160,200,0.5);
+        font-size: .84rem;
+        color: rgba(160,210,240,0.75);
         letter-spacing: .04em;
     }
     #ws-copyright a {
-        color: rgba(120,180,220,0.65);
+        color: rgba(160,210,240,0.9);
         cursor: pointer;
         text-decoration: underline;
         text-underline-offset: 2px;
-        text-decoration-color: rgba(120,180,220,0.3);
+        text-decoration-color: rgba(160,210,240,0.4);
+    }
+
+    /* ── 結算報告關閉時的紅X覆蓋層 ── */
+    #ws-rpt-btn .ws-rpt-x {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        font-weight: 900;
+        color: #ff3333;
+        pointer-events: none;
+        line-height: 1;
     }
     </style>
 </head>
@@ -453,8 +458,7 @@
 		<!-- ── 頂部列 ── -->
 		<div id="ws-topbar">
 			<div id="ws-top-title">
-				<div class="main">海紋守護團</div>
-				<div class="sub">台灣海線任務</div>
+				<img src="image/subtitle.png" alt="台灣海線任務" id="ws-subtitle-img">
 			</div>
 			<div id="ws-top-icons">
 				<div class="ws-icon-btn" id="ws-sfx-btn" onclick="wsToggleSound()" title="音效・音樂">🔊</div>
@@ -746,11 +750,23 @@
 				el.style.left = x + 'px';
 				el.style.top  = y + 'px';
 			});
-			/* 小船初始位置：圖片左側海面 */
+			/* 小船初始位置：右下角面板附近（台灣島南端右側海域） */
 			var boat = document.getElementById('ws-boat');
 			if(boat && !window._wsBoatMoved){
-				boat.style.left = (r.left + 0.05 * r.width) + 'px';
-				boat.style.top  = (r.top  + 0.50 * r.height) + 'px';
+				var panelEl = document.getElementById('ws-panel');
+				var px = panelEl
+					? (panelEl.offsetLeft - 28) / window.innerWidth
+					: 0.82;
+				var py = panelEl
+					? (panelEl.offsetTop + panelEl.offsetHeight * 0.3) / window.innerHeight
+					: 0.72;
+				boat.style.transition = 'none'; /* 初始定位不要動畫 */
+				boat.style.left = (px * window.innerWidth)  + 'px';
+				boat.style.top  = (py * window.innerHeight) + 'px';
+				/* 下一幀恢復 transition */
+				requestAnimationFrame(function(){
+					boat.style.transition = '';
+				});
 			}
 		}
 
@@ -857,7 +873,10 @@
 			btn.classList.add('ws-active');
 		};
 
-		/* ── 音效・音樂 ── */
+		/* ── 音效・音樂 ──
+		   歡迎頁本身沒有背景音樂，開關只儲存狀態，
+		   不在這裡呼叫 bgm.play()，由遊戲開始後的 initGame 處理。
+		*/
 		var _sfxOn = sessionStorage.getItem('sfxEnabled') !== 'false';
 		(function(){
 			var btn = document.getElementById('ws-sfx-btn');
@@ -873,22 +892,39 @@
 			}
 			if(typeof sfxEnabled !== 'undefined') sfxEnabled = _sfxOn;
 			sessionStorage.setItem('sfxEnabled', _sfxOn ? 'true' : 'false');
-			var bgm = document.getElementById('bgm');
-			if(bgm){ _sfxOn ? bgm.play().catch(function(){}) : bgm.pause(); }
+			/* 歡迎頁不播放 bgm，僅確保關閉時停掉（若遊戲音樂還在響） */
+			if(!_sfxOn){
+				var bgm = document.getElementById('bgm');
+				if(bgm) bgm.pause();
+			}
 			wsShowToast(_sfxOn ? '🔊 音效已開啟' : '🔇 音效已關閉');
 		};
 
 		/* ── 結算報告 ── */
 		var _rptOn = sessionStorage.getItem('reportMode') !== 'false';
-		(function(){
+		function _updateRptBtn(){
 			var btn = document.getElementById('ws-rpt-btn');
 			if(!btn) return;
-			if(!_rptOn){ btn.classList.add('ws-off'); }
-		})();
+			/* 清空舊內容 */
+			btn.innerHTML = '';
+			var icon = document.createElement('span');
+			icon.textContent = '📊';
+			if(!_rptOn){ icon.style.filter = 'grayscale(1)'; }
+			btn.appendChild(icon);
+			if(!_rptOn){
+				var x = document.createElement('span');
+				x.className = 'ws-rpt-x';
+				x.textContent = '✕';
+				btn.appendChild(x);
+				btn.classList.add('ws-off');
+			} else {
+				btn.classList.remove('ws-off');
+			}
+		}
+		_updateRptBtn();
 		window.wsToggleReport = function(){
 			_rptOn = !_rptOn;
-			var btn = document.getElementById('ws-rpt-btn');
-			if(btn) btn.classList.toggle('ws-off', !_rptOn);
+			_updateRptBtn();
 			if(typeof showSummaryMode !== 'undefined') showSummaryMode = _rptOn;
 			sessionStorage.setItem('reportMode', _rptOn ? 'true' : 'false');
 			wsShowToast(_rptOn ? '📊 結算報告已開啟' : '📊 結算報告已關閉');
@@ -937,6 +973,11 @@
 	</script>
 
   <script src="intro.js"></script>
+
+  <script>
+  /* 預載 tw.png：頁面啟動時就開始快取，歡迎頁顯示更快 */
+  (function(){ var p = new Image(); p.src = 'image/tw.png'; })();
+  </script>
 
 </body>
 </html>
