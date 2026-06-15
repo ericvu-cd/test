@@ -80,11 +80,43 @@
         display: flex;
         align-items: center;
     }
-    #ws-subtitle-img {
-        height: 47px;
+    #ws-title-text {
+        font-family: 'Noto Serif TC', 'Microsoft JhengHei', serif;
+        font-size: clamp(.95rem, 3.5vw, 1.15rem);
+        font-weight: 900;
+        color: #e0f0ff;
+        letter-spacing: .18em;
+        text-shadow: 0 0 12px rgba(80,180,255,0.65);
+    }
+
+    /* ── 海浪 canvas ── */
+    #ws-waves {
+        position: absolute;
+        inset: 0;
+        width: 100%; height: 100%;
+        z-index: 1;
+        pointer-events: none;
+    }
+
+    /* ── intro 副標 subtitle.png ── */
+    #intro-subtitle-wrap {
+        position: relative;
+        align-self: flex-end;       /* 靠右對齊標題右邊 */
+        margin-top: -4px;
+        margin-bottom: 6px;
+        opacity: 0;
+        animation: iSubFade 1.2s ease forwards;
+        animation-delay: 1.8s;      /* 標題打完後才出現 */
+    }
+    @keyframes iSubFade {
+        from { opacity:0; transform: translateY(6px); }
+        to   { opacity:1; transform: translateY(0); }
+    }
+    #intro-subtitle {
+        height: 42px;
         width: auto;
-        object-fit: contain;
         display: block;
+        filter: drop-shadow(0 0 8px rgba(100,200,255,0.5));
     }
     #ws-top-icons {
         display: flex;
@@ -433,6 +465,9 @@
 
     <div id="intro-ts">
       <div id="intro-title"></div>
+      <div id="intro-subtitle-wrap">
+        <img src="image/subtitle.png" id="intro-subtitle" alt="台灣海線任務">
+      </div>
       <div id="intro-hint">點擊畫面開場</div>
     </div>
 
@@ -455,10 +490,13 @@
 			<img src="image/tw.png" alt="台灣地圖" draggable="false">
 		</div>
 
+		<!-- ── 海浪動畫層 ── -->
+		<canvas id="ws-waves"></canvas>
+
 		<!-- ── 頂部列 ── -->
 		<div id="ws-topbar">
 			<div id="ws-top-title">
-				<img src="image/subtitle.png" alt="台灣海線任務" id="ws-subtitle-img">
+				<div id="ws-title-text">台灣海線任務</div>
 			</div>
 			<div id="ws-top-icons">
 				<div class="ws-icon-btn" id="ws-sfx-btn" onclick="wsToggleSound()" title="音效・音樂">🔊</div>
@@ -958,8 +996,115 @@
 			if(typeof initGame === 'function') initGame();
 		};
 
-	})();
-	</script>
+		/* ── 海浪動畫（canvas，台灣島周邊偶發波紋） ── */
+		(function(){
+			var cv  = document.getElementById('ws-waves');
+			if(!cv) return;
+			var ctx = cv.getContext('2d');
+
+			/* 波紋物件池 */
+			var ripples = [];
+
+			/* tw.png 在畫面上的島嶼邊界（近似橢圓，由 getImgRect 換算）
+			   島嶼在原圖中：cx≈50%, cy≈50%, rx≈38%, ry≈40%
+			   每次產生波紋時，從橢圓邊界隨機取一點 */
+			function randIslandEdge(){
+				var r = getImgRect();
+				if(!r.width) return null;
+				/* 島的橢圓參數（原圖百分比） */
+				var icx = 0.49, icy = 0.50, irx = 0.34, iry = 0.38;
+				var angle = Math.random() * Math.PI * 2;
+				/* 橢圓邊上取點，加少許 jitter */
+				var jitter = 0.92 + Math.random() * 0.16;
+				var px = icx + Math.cos(angle) * irx * jitter;
+				var py = icy + Math.sin(angle) * iry * jitter;
+				return {
+					x: r.left + px * r.width,
+					y: r.top  + py * r.height,
+				};
+			}
+
+			function addRipple(){
+				var pt = randIslandEdge();
+				if(!pt) return;
+				ripples.push({
+					x: pt.x, y: pt.y,
+					r: 0,
+					maxR: 28 + Math.random() * 22,
+					life: 0,          /* 0~1 */
+					speed: 0.006 + Math.random() * 0.005,
+				});
+			}
+
+			/* 每隔 1.8~4s 隨機加一個波紋 */
+			function scheduleRipple(){
+				addRipple();
+				setTimeout(scheduleRipple, 1800 + Math.random() * 2200);
+			}
+
+			function resize(){
+				cv.width  = window.innerWidth;
+				cv.height = window.innerHeight;
+			}
+			resize();
+			window.addEventListener('resize', resize);
+
+			var _rafId;
+			function draw(){
+				ctx.clearRect(0, 0, cv.width, cv.height);
+				for(var i = ripples.length - 1; i >= 0; i--){
+					var rp = ripples[i];
+					rp.life += rp.speed;
+					rp.r = rp.maxR * rp.life;
+					var alpha = (1 - rp.life) * 0.38;
+					if(alpha <= 0 || rp.life >= 1){
+						ripples.splice(i, 1);
+						continue;
+					}
+					ctx.beginPath();
+					ctx.arc(rp.x, rp.y, rp.r, 0, Math.PI * 2);
+					ctx.strokeStyle = 'rgba(140,210,255,' + alpha.toFixed(3) + ')';
+					ctx.lineWidth = 1.2;
+					ctx.stroke();
+
+					/* 第二圈（比第一圈小、稍微慢半拍） */
+					if(rp.life > 0.2){
+						var r2    = rp.maxR * (rp.life - 0.18);
+						var a2    = (1 - (rp.life - 0.18)) * 0.22;
+						if(r2 > 0 && a2 > 0){
+							ctx.beginPath();
+							ctx.arc(rp.x, rp.y, r2, 0, Math.PI * 2);
+							ctx.strokeStyle = 'rgba(180,230,255,' + a2.toFixed(3) + ')';
+							ctx.lineWidth = 0.8;
+							ctx.stroke();
+						}
+					}
+				}
+				_rafId = requestAnimationFrame(draw);
+			}
+
+			/* 只在 welcome-screen 可見時跑動畫 */
+			var _wsEl2 = document.getElementById('welcome-screen');
+			function startWaves(){
+				if(_rafId) return;
+				scheduleRipple();
+				draw();
+			}
+			function stopWaves(){
+				cancelAnimationFrame(_rafId);
+				_rafId = null;
+				ripples = [];
+			}
+			if(_wsEl2){
+				new MutationObserver(function(){
+					if(_wsEl2.style.display !== 'none' && _wsEl2.style.display !== ''){
+						startWaves();
+					} else {
+						stopWaves();
+					}
+				}).observe(_wsEl2, { attributes:true, attributeFilter:['style'] });
+			}
+		})();
 	
 	<div id="chat-layer"></div>
 	<div id="tutorial-tooltip"></div>
