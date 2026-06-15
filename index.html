@@ -28,240 +28,381 @@
 
     <!-- ══ 歡迎頁樣式 ══ -->
     <style>
+    /* ── 歡迎頁根容器 ── */
     #welcome-screen {
         position: absolute;
         top: 0; left: 0;
         width: 100%; height: 100%;
         z-index: 1000;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        background:
-            linear-gradient(rgba(0,0,0,0.15), rgba(0,0,0,0.42)),
-            url('image/bgi.png') no-repeat center center;
-        background-size: cover;
+        overflow: hidden;
         opacity: 0;
         animation: welcomeFadeIn 1.5s ease-in-out forwards;
         transition: opacity 1.2s ease-in-out, visibility 1.2s;
-        overflow: hidden;
+        font-family: "Microsoft JhengHei", "PingFang TC", sans-serif;
+        -webkit-tap-highlight-color: transparent;
     }
     @keyframes welcomeFadeIn { from{opacity:0} to{opacity:1} }
-    #welcome-screen.fade-out  { opacity:0; visibility:hidden; }
-    #welcome-screen.hidden    { opacity:0; visibility:hidden; pointer-events:none; }
+    #welcome-screen.fade-out { opacity:0; visibility:hidden; }
+    #welcome-screen.hidden   { opacity:0; visibility:hidden; pointer-events:none; }
 
-    /* 光柱 */
-    #ws-rays { position:absolute; inset:0; pointer-events:none; overflow:hidden; z-index:1; }
-    .ws-ray  {
-        position:absolute; top:-6%;
-        background:linear-gradient(180deg,rgba(160,210,255,0.15) 0%,transparent 100%);
-        transform-origin:top center;
-        animation:wsRayPulse 8s ease-in-out infinite;
+    /* ── 背景地圖（tw.png 鋪滿，object-fit:cover） ── */
+    #ws-map-bg {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
     }
-    .ws-ray:nth-child(1){ left:18%; width:28px; height:55%; transform:rotate(-22deg); animation-delay:0s; }
-    .ws-ray:nth-child(2){ left:38%; width:52px; height:62%; transform:rotate(-8deg);  animation-delay:-2.8s; opacity:.75; }
-    .ws-ray:nth-child(3){ left:57%; width:36px; height:58%; transform:rotate(6deg);   animation-delay:-5s; }
-    .ws-ray:nth-child(4){ left:76%; width:22px; height:48%; transform:rotate(20deg);  animation-delay:-1.8s; }
-    @keyframes wsRayPulse { 0%,100%{opacity:.5} 50%{opacity:1} }
-
-    /* 暗角 */
-    #ws-vignette {
-        position:absolute; inset:0; pointer-events:none; z-index:2;
-        background:
-            radial-gradient(ellipse at center, transparent 35%, rgba(4,10,28,0.6) 100%),
-            linear-gradient(to top, rgba(4,10,28,0.75) 0%, transparent 32%);
+    #ws-map-bg img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center top;
+        display: block;
+        user-select: none;
+        -webkit-user-drag: none;
     }
 
-    /* 泡泡 */
-    .ws-mbubble {
-        position:absolute; border-radius:50%;
-        border:1px solid rgba(160,220,255,0.35);
-        background:transparent;
-        animation:wsBubRise linear infinite;
-        pointer-events:none; z-index:2;
+    /* ── 頂部列 ── */
+    #ws-topbar {
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 52px;
+        padding: env(safe-area-inset-top, 0px) 14px 0;
+        background: rgba(3, 12, 26, 0.82);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        z-index: 50;
+        border-bottom: 1px solid rgba(80,160,220,0.12);
     }
-    @keyframes wsBubRise {
-        0%  { transform:translateY(0);      opacity:.5; }
-        100%{ transform:translateY(-110vh); opacity:0;  }
+    #ws-top-title {
+        display: flex;
+        flex-direction: column;
+        gap: 1px;
+    }
+    #ws-top-title .main {
+        font-family: 'Noto Serif TC', serif;
+        font-size: clamp(1rem, 4vw, 1.25rem);
+        font-weight: 900;
+        color: #e8f4ff;
+        letter-spacing: .1em;
+        text-shadow: 0 0 14px rgba(80,180,255,0.7);
+        line-height: 1;
+    }
+    #ws-top-title .sub {
+        font-size: .65rem;
+        color: rgba(140,200,240,0.65);
+        letter-spacing: .22em;
+    }
+    #ws-top-icons {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+    }
+    .ws-icon-btn {
+        width: 36px; height: 36px;
+        border-radius: 50%;
+        border: 1px solid rgba(80,160,220,0.3);
+        background: rgba(8,22,45,0.75);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.1rem;
+        cursor: pointer;
+        transition: background .18s, transform .12s;
+        position: relative;
+        -webkit-tap-highlight-color: transparent;
+    }
+    .ws-icon-btn:active { transform: scale(0.92); }
+    .ws-icon-btn.ws-off { opacity: 0.45; }
+
+    /* ── Toast 提示 ── */
+    #ws-toast {
+        position: absolute;
+        top: 58px; right: 12px;
+        background: rgba(8,22,45,0.95);
+        border: 1px solid rgba(80,160,220,0.35);
+        border-radius: 10px;
+        padding: 7px 13px;
+        font-size: .82rem;
+        color: #d0eaff;
+        z-index: 200;
+        pointer-events: none;
+        opacity: 0;
+        transform: translateY(-6px);
+        transition: opacity .22s, transform .22s;
+        white-space: nowrap;
+    }
+    #ws-toast.show {
+        opacity: 1;
+        transform: translateY(0);
     }
 
-    /* 容器 */
-    .ws-container {
-        position:relative; z-index:5;
-        width:88%; max-width:360px;
-        display:flex; flex-direction:column; align-items:center;
+    /* ── 港口容器（鋪滿全螢幕，與 welcome-screen 同層） ── */
+    #ws-harbor-layer {
+        position: absolute;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        z-index: 10;
+        pointer-events: none;
     }
 
-    /* 標題 */
-    .ws-title-block { text-align:center; margin-bottom:20px; }
-    .ws-game-title {
-        font-size:clamp(2rem,8vw,2.8rem);
-        font-weight:900; color:white; letter-spacing:.1em;
-        text-shadow:
-            0 0 10px rgba(255,255,255,0.85),
-            0 0 22px rgba(79,195,247,0.85),
-            0 0 48px rgba(3,169,244,0.65);
-        margin-bottom:4px;
+    /* ── 港口氣泡 ── */
+    .ws-harbor {
+        position: absolute;
+        transform: translate(-50%, -50%);
+        cursor: pointer;
+        pointer-events: all;
+        z-index: 12;
     }
-    .ws-subtitle {
-        font-size:1.05rem; letter-spacing:.28em;
-        color:rgba(215,242,255,0.92);
-        text-shadow:0 0 10px rgba(100,200,255,0.45);
+    .ws-harbor .ws-h-core {
+        width: 14px; height: 14px;
+        border-radius: 50%;
+        background: #7fd9ff;
+        border: 1.5px solid rgba(255,255,255,0.55);
+        margin: auto;
+        transition: background .22s, transform .22s;
+        animation: wsHarborPulse 2.8s ease-in-out infinite;
     }
-    .ws-deco-line {
-        display:flex; align-items:center; justify-content:center;
-        gap:10px; margin-top:10px;
+    @keyframes wsHarborPulse {
+        0%,100% { transform: scale(1); }
+        50%      { transform: scale(1.18); }
     }
-    .ws-deco-line::before,.ws-deco-line::after {
-        content:''; height:1px; width:50px;
-        background:linear-gradient(90deg,transparent,rgba(140,200,255,0.32),transparent);
+    .ws-harbor .ws-h-ring {
+        position: absolute;
+        top: 50%; left: 50%;
+        width: 26px; height: 26px;
+        border-radius: 50%;
+        border: 1.5px solid rgba(127,217,255,0.4);
+        transform: translate(-50%, -50%);
+        animation: wsRingPulse 2.8s ease-in-out infinite;
+        pointer-events: none;
+    }
+    @keyframes wsRingPulse {
+        0%   { transform: translate(-50%,-50%) scale(.7); opacity:.7; }
+        100% { transform: translate(-50%,-50%) scale(1.6); opacity:0; }
+    }
+    .ws-harbor .ws-h-label {
+        position: absolute;
+        top: 18px;
+        left: 50%;
+        transform: translateX(-50%);
+        white-space: nowrap;
+        font-size: .78rem;
+        font-weight: 700;
+        color: #fff;
+        text-shadow: 0 1px 5px rgba(0,0,0,0.95), 0 0 8px rgba(0,0,0,0.8);
+        pointer-events: none;
+    }
+    /* 西岸漁港標籤往右顯示，避免被邊緣切到 */
+    .ws-harbor.label-right .ws-h-label {
+        left: 14px;
+        transform: none;
+    }
+    /* 選中狀態 */
+    .ws-harbor.ws-selected .ws-h-core {
+        background: #ffd86b;
+        border-color: #fff;
+        box-shadow: 0 0 0 3px rgba(255,216,107,0.35);
+        animation: none;
+        transform: scale(1.2);
+    }
+    .ws-harbor.ws-selected .ws-h-ring {
+        border-color: rgba(255,216,107,0.6);
+        animation: wsRingPulseGold 1.8s ease-in-out infinite;
+    }
+    @keyframes wsRingPulseGold {
+        0%   { transform: translate(-50%,-50%) scale(.8); opacity:.8; }
+        100% { transform: translate(-50%,-50%) scale(1.8); opacity:0; }
+    }
+    .ws-harbor.ws-selected .ws-h-label {
+        color: #ffd86b;
+        text-shadow: 0 1px 5px rgba(0,0,0,0.95), 0 0 12px rgba(255,216,107,0.5);
     }
 
-    /* 設定卡片 — 極高透明，靠毛玻璃 */
-    .ws-card {
-        width:100%;
-        box-sizing:border-box;
-        background:rgba(8,20,45,0.22);
-        border:1px solid rgba(160,210,255,0.18);
-        border-radius:18px;
-        padding:18px 16px 16px;
-        backdrop-filter:blur(14px);
-        -webkit-backdrop-filter:blur(14px);
-        margin-bottom:14px;
-        display:flex; flex-direction:column; gap:15px;
-        overflow:hidden;
+    /* ── 小船 ── */
+    #ws-boat {
+        position: absolute;
+        font-size: 1.5rem;
+        transform: translate(-50%, -50%);
+        transition: left .9s cubic-bezier(.2,.85,.2,1),
+                    top  .9s cubic-bezier(.2,.85,.2,1);
+        z-index: 11;
+        pointer-events: none;
+        filter: drop-shadow(0 0 6px rgba(255,255,255,0.5));
+        animation: wsBoatFloat 2.8s ease-in-out infinite;
     }
-    .ws-field-label {
-        font-size:1.1rem; letter-spacing:.16em;
-        color:#ffffff; margin-bottom:6px;
-        font-weight:700;
-        text-shadow:0 0 12px rgba(120,210,255,0.7), 0 1px 3px rgba(0,0,0,0.6);
+    @keyframes wsBoatFloat {
+        0%,100% { margin-top: 0; }
+        50%      { margin-top: -3px; }
     }
 
-    /* 名稱輸入 — 不超出卡片 */
-    .ws-name-input {
-        width:100%;
-        box-sizing:border-box;
-        background:rgba(255,255,255,0.07);
-        border:1px solid rgba(160,210,255,0.28);
-        border-radius:10px;
-        padding:11px 12px;
-        color:#ffffff; font-size:1.1rem;
-        font-family:"Microsoft JhengHei",sans-serif;
-        outline:none; transition:border-color .2s;
-        -webkit-user-select:text; user-select:text;
-        text-shadow:0 1px 4px rgba(0,0,0,0.5);
+    /* ── 右下角面板 ── */
+    #ws-panel {
+        position: absolute;
+        right: 12px;
+        bottom: 36px; /* 版權列高度上方 */
+        width: 162px;
+        background: rgba(4, 14, 30, 0.9);
+        border: 1px solid rgba(60,140,200,0.25);
+        border-radius: 16px;
+        padding: 12px;
+        z-index: 30;
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        box-shadow: 0 8px 32px rgba(0,0,0,0.45);
     }
-    .ws-name-input::placeholder { color:rgba(180,220,255,0.4); }
-    .ws-name-input:focus { border-color:rgba(140,220,255,0.6); }
+    #ws-panel-hint {
+        text-align: center;
+        color: rgba(100,170,210,0.75);
+        font-size: .82rem;
+        line-height: 1.5;
+        padding: 12px 4px;
+    }
+    #ws-panel-harbor-info {
+        display: none;
+    }
+    #ws-panel-harbor-name {
+        font-size: .92rem;
+        font-weight: 700;
+        color: #e8f4ff;
+        margin-bottom: 1px;
+        text-shadow: 0 0 10px rgba(80,180,255,0.5);
+    }
+    #ws-panel-badge {
+        font-size: .72rem;
+        color: #f5c842;
+        margin-bottom: 9px;
+    }
+    .ws-panel-label {
+        font-size: .68rem;
+        letter-spacing: .1em;
+        color: rgba(100,170,210,0.7);
+        margin-bottom: 4px;
+    }
+    #ws-name-input {
+        width: 100%;
+        box-sizing: border-box;
+        background: rgba(255,255,255,0.07);
+        border: 1px solid rgba(60,140,200,0.3);
+        border-radius: 8px;
+        padding: 7px 9px;
+        color: #e8f4ff;
+        font-size: .85rem;
+        font-family: "Microsoft JhengHei", sans-serif;
+        outline: none;
+        margin-bottom: 9px;
+        -webkit-user-select: text;
+        user-select: text;
+        transition: border-color .2s;
+    }
+    #ws-name-input::placeholder { color: rgba(120,180,220,0.4); }
+    #ws-name-input:focus { border-color: rgba(100,200,255,0.6); }
 
-    /* 難度 */
-    .ws-diff-row { display:flex; gap:7px; }
+    .ws-diff-row { display: flex; gap: 4px; margin-bottom: 10px; }
     .ws-diff-btn {
-        flex:1; padding:10px 0; border-radius:10px;
-        border:1px solid rgba(160,210,255,0.25);
-        background:rgba(255,255,255,0.05);
-        color:#ffffff;
-        font-size:1.1rem; cursor:pointer;
-        transition:all .18s;
-        font-family:"Microsoft JhengHei",sans-serif;
-        -webkit-tap-highlight-color:transparent;
-        text-shadow:0 0 8px rgba(120,200,255,0.5), 0 1px 3px rgba(0,0,0,0.5);
+        flex: 1;
+        padding: 6px 0;
+        border-radius: 7px;
+        border: 1px solid rgba(60,140,200,0.25);
+        background: rgba(255,255,255,0.05);
+        color: rgba(160,210,240,0.8);
+        font-size: .75rem;
+        cursor: pointer;
+        transition: all .18s;
+        font-family: "Microsoft JhengHei", sans-serif;
+        -webkit-tap-highlight-color: transparent;
+        text-align: center;
     }
-    .ws-diff-btn:active { transform:scale(0.95); }
+    .ws-diff-btn:active { transform: scale(0.94); }
     .ws-diff-btn.ws-active {
-        background:rgba(255,183,77,0.12);
-        border-color:rgba(255,200,100,0.6);
-        color:#ffe89e; font-weight:700;
-        text-shadow:0 0 10px rgba(255,180,60,0.7), 0 1px 3px rgba(0,0,0,0.5);
-    }
-    .ws-location-select {
-        width:100%;
-        box-sizing:border-box;
-        background:rgba(255,255,255,0.08);
-        border:1px solid rgba(160,210,255,0.28);
-        border-radius:10px;
-        padding:11px 12px;
-        color:#ffffff;
-        font-size:1rem;
-        font-family:"Microsoft JhengHei",sans-serif;
-        outline:none;
-        text-shadow:0 1px 4px rgba(0,0,0,0.5);
-    }
-    .ws-location-select option {
-        background:#08142d;
-        color:#ffffff;
+        background: rgba(255,183,77,0.15);
+        border-color: rgba(255,200,100,0.55);
+        color: #ffe89e;
+        font-weight: 700;
     }
 
-    /* 音效開關 */
-    .ws-sound-wrap {
-        display:flex; align-items:center;
-        justify-content:space-between; padding:2px 0;
-    }
-    .ws-sound-label {
-        font-size:1.1rem; color:#ffffff;
-        font-family:"Microsoft JhengHei",sans-serif;
-        display:flex; align-items:center; gap:7px;
-        font-weight:700;
-        text-shadow:0 0 12px rgba(120,210,255,0.7), 0 1px 3px rgba(0,0,0,0.6);
-    }
-    .ws-toggle {
-        width:44px; height:24px; border-radius:12px;
-        border:1px solid rgba(160,200,255,0.25);
-        background:rgba(255,255,255,0.08);
-        position:relative; cursor:pointer;
-        transition:background .22s, border-color .22s;
-        flex-shrink:0; -webkit-tap-highlight-color:transparent;
-    }
-    .ws-toggle.ws-on {
-        background:rgba(255,183,77,0.35);
-        border-color:rgba(255,183,77,0.6);
-    }
-    .ws-toggle::after {
-        content:''; position:absolute; top:3px; left:3px;
-        width:17px; height:17px; border-radius:50%;
-        background:rgba(200,230,255,0.7);
-        transition:transform .22s, background .22s;
-    }
-    .ws-toggle.ws-on::after { transform:translateX(20px); background:#ffcf6e; }
-
-    /* 主按鈕 */
     #ws-start-btn {
-        width:100%; padding:8px; border-radius:50px; border:none;
-        background:linear-gradient(135deg,#ffb74d,#ff7043);
-        color:white; font-size:2rem; font-weight:700;
-        letter-spacing:.12em; cursor:pointer;
-        font-family:"Microsoft JhengHei",sans-serif;
-        box-shadow:0 5px 15px rgba(0,0,0,0.3),0 0 20px rgba(255,183,77,0.5);
-        transition:transform .15s; position:relative; overflow:hidden;
-        -webkit-tap-highlight-color:transparent;
-        text-shadow:0 1px 4px rgba(0,0,0,0.3);
+        width: 100%;
+        padding: 9px 0;
+        border-radius: 12px;
+        border: none;
+        background: linear-gradient(135deg, #1a7abf, #0d5a94);
+        color: #fff;
+        font-size: .95rem;
+        font-weight: 700;
+        letter-spacing: .08em;
+        cursor: pointer;
+        font-family: "Microsoft JhengHei", sans-serif;
+        transition: transform .12s, opacity .12s;
+        -webkit-tap-highlight-color: transparent;
+        position: relative;
+        overflow: hidden;
     }
     #ws-start-btn::after {
-        content:''; position:absolute;
-        top:-50%; left:-65%; width:38%; height:200%;
-        background:rgba(255,255,255,0.14);
-        transform:rotate(30deg);
-        animation:wsShimmer 3.5s ease-in-out infinite;
+        content: '';
+        position: absolute;
+        top: -50%; left: -70%;
+        width: 40%; height: 200%;
+        background: rgba(255,255,255,0.12);
+        transform: rotate(28deg);
+        animation: wsBtnShimmer 3s ease-in-out infinite;
     }
-    @keyframes wsShimmer { 0%,55%{left:-65%} 78%{left:135%} 100%{left:135%} }
-    #ws-start-btn:active { transform:scale(0.96); }
+    @keyframes wsBtnShimmer { 0%,60%{left:-70%} 80%{left:130%} 100%{left:130%} }
+    #ws-start-btn:active { transform: scale(0.96); opacity: .92; }
 
-    /* 次要按鈕 */
-    .ws-sub-row { display:flex; gap:10px; width:100%; }
-    .ws-sub-btn {
-        flex:1; padding:12px 4px; font-size:1.1rem;
-        border-radius:30px;
-        border:1px solid rgba(255,255,255,0.3);
-        background:rgba(255,255,255,0.07);
-        color:#ffffff; cursor:pointer;
-        font-family:"Microsoft JhengHei",sans-serif;
-        font-weight:700;
-        transition:all .18s;
-        backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
-        -webkit-tap-highlight-color:transparent;
-        text-shadow:0 0 10px rgba(120,210,255,0.5), 0 1px 4px rgba(0,0,0,0.5);
+    /* ── 左下角：簡介 + 教學 ── */
+    #ws-bottom-left {
+        position: absolute;
+        left: 12px;
+        bottom: 36px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        z-index: 30;
     }
-    .ws-sub-btn:active { transform:scale(0.95); background:rgba(255,255,255,0.14); }
+    .ws-sub-btn {
+        padding: 7px 13px;
+        border-radius: 14px;
+        border: 1px solid rgba(100,180,220,0.28);
+        background: rgba(4,14,30,0.82);
+        color: rgba(160,215,245,0.85);
+        font-size: .8rem;
+        font-weight: 700;
+        cursor: pointer;
+        font-family: "Microsoft JhengHei", sans-serif;
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        transition: all .18s;
+        white-space: nowrap;
+        -webkit-tap-highlight-color: transparent;
+    }
+    .ws-sub-btn:active { transform: scale(0.95); background: rgba(10,30,58,0.9); }
+
+    /* ── 版權列（永遠最底，不被遮蓋） ── */
+    #ws-copyright {
+        position: absolute;
+        bottom: 0; left: 0; right: 0;
+        height: 30px;
+        background: rgba(2, 8, 18, 0.88);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 40;
+        border-top: 1px solid rgba(40,100,160,0.15);
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+    #ws-copyright span {
+        font-size: .7rem;
+        color: rgba(100,160,200,0.5);
+        letter-spacing: .04em;
+    }
+    #ws-copyright a {
+        color: rgba(120,180,220,0.65);
+        cursor: pointer;
+        text-decoration: underline;
+        text-underline-offset: 2px;
+        text-decoration-color: rgba(120,180,220,0.3);
+    }
     </style>
 </head>
 <body>
@@ -304,123 +445,130 @@
 
 	<div id="welcome-screen" style="display:none;">
 
-		<!-- 光柱 -->
-		<div id="ws-rays">
-			<div class="ws-ray"></div>
-			<div class="ws-ray"></div>
-			<div class="ws-ray"></div>
-			<div class="ws-ray"></div>
+		<!-- ── 背景：台灣地圖 ── -->
+		<div id="ws-map-bg">
+			<img src="image/tw.png" alt="台灣地圖" draggable="false">
 		</div>
-		<!-- 暗角 -->
-		<div id="ws-vignette"></div>
-		<!-- 泡泡（JS 生成） -->
-		<div id="ws-bubbles"></div>
 
-		<div class="ws-container">
-
-			<!-- 標題 -->
-			<div class="ws-title-block">
-				<div class="ws-subtitle">準備開始</div>
+		<!-- ── 頂部列 ── -->
+		<div id="ws-topbar">
+			<div id="ws-top-title">
+				<div class="main">海紋守護團</div>
+				<div class="sub">台灣海線任務</div>
 			</div>
+			<div id="ws-top-icons">
+				<div class="ws-icon-btn" id="ws-sfx-btn" onclick="wsToggleSound()" title="音效・音樂">🔊</div>
+				<div class="ws-icon-btn" id="ws-rpt-btn" onclick="wsToggleReport()" title="結算報告">📊</div>
+			</div>
+		</div>
 
-			<!-- 設定卡片 -->
-			<div class="ws-card">
+		<!-- ── Toast 提示 ── -->
+		<div id="ws-toast"></div>
 
-				<!-- 守護員暱稱 -->
-				<div>
-					<div class="ws-field-label">守護員暱稱</div>
-					<input class="ws-name-input" id="ws-name-input"
-						type="text" placeholder="輸入你的暱稱…" maxlength="12">
+		<!-- ── 港口氣泡層（JS 定位） ── -->
+		<div id="ws-harbor-layer">
+			<!-- 基隆八斗子：東北角海岸 -->
+			<div class="ws-harbor" id="wsh-badouzi" data-id="badouzi" onclick="wsSelectHarbor('badouzi')">
+				<div class="ws-h-ring"></div>
+				<div class="ws-h-core"></div>
+				<div class="ws-h-label">八斗子</div>
+			</div>
+			<!-- 宜蘭南方澳：東岸中上 -->
+			<div class="ws-harbor" id="wsh-nanfangao" data-id="nanfangao" onclick="wsSelectHarbor('nanfangao')">
+				<div class="ws-h-ring"></div>
+				<div class="ws-h-core"></div>
+				<div class="ws-h-label">南方澳</div>
+			</div>
+			<!-- 苗栗龍鳳：西岸中上 -->
+			<div class="ws-harbor label-right" id="wsh-longfeng" data-id="longfeng" onclick="wsSelectHarbor('longfeng')">
+				<div class="ws-h-ring"></div>
+				<div class="ws-h-core"></div>
+				<div class="ws-h-label">龍鳳</div>
+			</div>
+			<!-- 台中梧棲：西岸中段 -->
+			<div class="ws-harbor label-right" id="wsh-wuqi" data-id="wuqi" onclick="wsSelectHarbor('wuqi')">
+				<div class="ws-h-ring"></div>
+				<div class="ws-h-core"></div>
+				<div class="ws-h-label">梧棲</div>
+			</div>
+			<!-- 台南安平：西南岸 -->
+			<div class="ws-harbor label-right" id="wsh-anping" data-id="anping" onclick="wsSelectHarbor('anping')">
+				<div class="ws-h-ring"></div>
+				<div class="ws-h-core"></div>
+				<div class="ws-h-label">安平</div>
+			</div>
+			<!-- 屏東東港：南端偏東 -->
+			<div class="ws-harbor" id="wsh-donggang" data-id="donggang" onclick="wsSelectHarbor('donggang')">
+				<div class="ws-h-ring"></div>
+				<div class="ws-h-core"></div>
+				<div class="ws-h-label">東港</div>
+			</div>
+		</div>
+
+		<!-- ── 小船 ── -->
+		<div id="ws-boat">⛵</div>
+
+		<!-- ── 右下角面板 ── -->
+		<div id="ws-panel">
+			<!-- 未選港狀態 -->
+			<div id="ws-panel-hint">👆 點選地圖上<br>的漁港出發</div>
+			<!-- 選港後內容 -->
+			<div id="ws-panel-content" style="display:none;">
+				<div id="ws-panel-harbor-name"></div>
+				<div id="ws-panel-badge"></div>
+				<div class="ws-panel-label">守護員暱稱</div>
+				<input id="ws-name-input" class="panel-input" type="text"
+					placeholder="輸入你的暱稱…" maxlength="12"
+					style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.07);border:1px solid rgba(60,140,200,0.3);border-radius:8px;padding:7px 9px;color:#e8f4ff;font-size:.85rem;font-family:'Microsoft JhengHei',sans-serif;outline:none;margin-bottom:9px;">
+				<div class="ws-panel-label">難度選擇</div>
+				<div class="ws-diff-row">
+					<button class="ws-diff-btn ws-active" onclick="wsSetDiff(0.4,this)">新手</button>
+					<button class="ws-diff-btn" onclick="wsSetDiff(0.7,this)">標準</button>
+					<button class="ws-diff-btn" onclick="wsSetDiff(0.9,this)">專業</button>
 				</div>
+				<button id="ws-start-btn" onclick="wsStartGame()">⚓ 守護漁港</button>
+			</div>
+		</div>
 
-				<!-- 難度 -->
-				<div>
-					<div class="ws-field-label">難度選擇</div>
-					<div class="ws-diff-row">
-						<button class="ws-diff-btn ws-active"
-							onclick="wsSetDiff(0.4,this)">新手</button>
-						<button class="ws-diff-btn"
-							onclick="wsSetDiff(0.7,this)">標準</button>
-						<button class="ws-diff-btn"
-							onclick="wsSetDiff(0.9,this)">專業</button>
+		<!-- ── 左下角：簡介 + 教學 ── -->
+		<div id="ws-bottom-left">
+			<button class="ws-sub-btn" onclick="openInfo()">簡介說明</button>
+			<button class="ws-sub-btn" onclick="startTutorial()">新手教學</button>
+		</div>
+
+		<!-- ── 版權列（永遠在最底，不被遮蓋） ── -->
+		<div id="ws-copyright">
+			<span>© 2026 海紋守護團 ·
+				<a onclick="openContact()">聯絡作者</a>
+			</span>
+		</div>
+
+		<!-- ── 聯絡我們彈窗 ── -->
+		<div id="contact-overlay" style="display:none;position:absolute;inset:0;z-index:100;background:rgba(0,0,0,.82);align-items:center;justify-content:center;font-family:'Microsoft JhengHei','PingFang TC',sans-serif;">
+			<div style="width:88%;max-width:360px;background:rgba(8,20,14,.96);border:1px solid rgba(100,200,150,.28);border-radius:20px;padding:28px 24px 24px;position:relative;">
+				<button onclick="closeContact()" style="position:absolute;top:14px;right:16px;background:none;border:none;cursor:pointer;font-size:20px;color:rgba(200,240,220,.55);">✕</button>
+				<div style="font-size:1.4rem;font-weight:900;color:rgba(200,245,220,.9);letter-spacing:1px;margin-bottom:4px;">聯絡作者</div>
+				<div style="font-size:13px;color:rgba(160,210,180,.55);margin-bottom:20px;">歡迎留下您的想法或回饋</div>
+				<iframe name="contact-iframe" style="display:none;"></iframe>
+				<form id="contact-form" action="https://formspree.io/f/mrevayqw" method="POST" target="contact-iframe" style="display:flex;flex-direction:column;gap:12px;">
+					<div>
+						<div style="font-size:13px;color:rgba(160,210,180,.6);margin-bottom:5px;">名字（選填）</div>
+						<input name="name" type="text" maxlength="30" placeholder="您的名字…" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,.08);border:1px solid rgba(100,200,150,.25);border-radius:10px;padding:10px 12px;color:rgba(220,245,230,.9);font-size:15px;font-family:inherit;outline:none;">
 					</div>
-				</div>
-
-				<!-- 任務地點 -->
-				<div>
-					<div class="ws-field-label">任務地點</div>
-					<select class="ws-location-select" id="ws-location-select" onchange="wsSetLocation(this.value)">
-						<option value="longfeng">苗栗龍鳳漁港 ★★★</option>
-						<option value="badouzi">基隆八斗子漁港 ★★★★</option>
-						<option value="nanfangao">宜蘭南方澳漁港 ★★★★★</option>
-						<option value="wuqi">台中梧棲漁港 ★</option>
-						<option value="anping">台南安平漁港 ★★</option>
-						<option value="donggang">屏東東港漁港 ★★★★</option>
-					</select>
-				</div>
-
-				<!-- 音效・音樂 -->
-				<div class="ws-sound-wrap">
-					<span class="ws-sound-label">
-						<span id="ws-sound-icon">🔊</span>音效・音樂
-					</span>
-					<div class="ws-toggle ws-on" id="ws-sound-toggle"
-						onclick="wsToggleSound()"></div>
-				</div>
-
-				<!-- 結算報告 -->
-				<div class="ws-sound-wrap">
-					<span class="ws-sound-label">
-						<span id="ws-report-icon">📊</span>結算報告
-					</span>
-					<div class="ws-toggle ws-on" id="ws-report-toggle"
-						onclick="wsToggleReport()"></div>
-				</div>
-
+					<div>
+						<div style="font-size:13px;color:rgba(160,210,180,.6);margin-bottom:5px;">聯絡方式（選填）</div>
+						<input name="contact_method" type="text" maxlength="100" placeholder="Email / Line / WhatsApp…" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,.08);border:1px solid rgba(100,200,150,.25);border-radius:10px;padding:10px 12px;color:rgba(220,245,230,.9);font-size:15px;font-family:inherit;outline:none;">
+					</div>
+					<div>
+						<div style="font-size:13px;color:rgba(160,210,180,.6);margin-bottom:5px;">留言內容（必填）</div>
+						<textarea name="message" required maxlength="500" placeholder="想說的話…" rows="4" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,.08);border:1px solid rgba(100,200,150,.25);border-radius:10px;padding:10px 12px;color:rgba(220,245,230,.9);font-size:15px;font-family:inherit;outline:none;resize:none;"></textarea>
+					</div>
+					<div id="contact-msg" style="font-size:12px;text-align:center;min-height:18px;color:rgba(120,220,160,.8);"></div>
+					<button type="submit" id="contact-submit-btn" style="width:100%;padding:14px;border-radius:50px;border:none;cursor:pointer;font-size:1rem;font-weight:900;font-family:inherit;background:linear-gradient(135deg,rgba(60,180,110,.9),rgba(30,140,80,.9));color:#fff;box-shadow:0 4px 16px rgba(40,160,90,.35);">送出留言</button>
+				</form>
 			</div>
-
-			<!-- 按鈕區 -->
-			<div style="width:100%;display:flex;flex-direction:column;gap:10px;">
-				<button id="ws-start-btn" onclick="wsStartGame()">⚓ 啟航冒險</button>
-				<div class="ws-sub-row">
-					<button class="ws-sub-btn" onclick="openInfo()">簡介說明</button>
-					<button class="ws-sub-btn" onclick="startTutorial()">新手教學</button>
-				</div>
-			</div>
-
-			<!-- 版權列 -->
-			<div style="margin-top:14px;text-align:center;font-size:13px;letter-spacing:.5px;color:rgba(180,220,255,.45);font-family:'Microsoft JhengHei','PingFang TC',sans-serif;">
-				© 2026 海紋守護團 ·
-				<span onclick="openContact()" style="cursor:pointer;text-decoration:underline;text-underline-offset:2px;text-decoration-color:rgba(180,220,255,.3);color:rgba(180,220,255,.6);">聯絡作者</span>
-			</div>
-
-			<!-- 聯絡我們彈窗（在 welcome-screen 內部，z-index 蓋過內容層）-->
-			<div id="contact-overlay" style="display:none;position:absolute;inset:0;z-index:10;background:rgba(0,0,0,.82);align-items:center;justify-content:center;font-family:'Microsoft JhengHei','PingFang TC',sans-serif;">
-				<div style="width:88%;max-width:360px;background:rgba(8,20,14,.96);border:1px solid rgba(100,200,150,.28);border-radius:20px;padding:28px 24px 24px;position:relative;">
-					<button onclick="closeContact()" style="position:absolute;top:14px;right:16px;background:none;border:none;cursor:pointer;font-size:20px;color:rgba(200,240,220,.55);">✕</button>
-					<div style="font-size:1.4rem;font-weight:900;color:rgba(200,245,220,.9);letter-spacing:1px;margin-bottom:4px;">聯絡作者</div>
-					<div style="font-size:13px;color:rgba(160,210,180,.55);margin-bottom:20px;">歡迎留下您的想法或回饋</div>
-					<iframe name="contact-iframe" style="display:none;"></iframe>
-					<form id="contact-form" action="https://formspree.io/f/mrevayqw" method="POST" target="contact-iframe" style="display:flex;flex-direction:column;gap:12px;">
-						<div>
-							<div style="font-size:13px;color:rgba(160,210,180,.6);margin-bottom:5px;">名字（選填）</div>
-							<input name="name" type="text" maxlength="30" placeholder="您的名字…" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,.08);border:1px solid rgba(100,200,150,.25);border-radius:10px;padding:10px 12px;color:rgba(220,245,230,.9);font-size:15px;font-family:inherit;outline:none;">
-						</div>
-						<div>
-							<div style="font-size:13px;color:rgba(160,210,180,.6);margin-bottom:5px;">聯絡方式（選填）</div>
-							<input name="contact_method" type="text" maxlength="100" placeholder="Email / Line / WhatsApp…" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,.08);border:1px solid rgba(100,200,150,.25);border-radius:10px;padding:10px 12px;color:rgba(220,245,230,.9);font-size:15px;font-family:inherit;outline:none;">
-						</div>
-						<div>
-							<div style="font-size:13px;color:rgba(160,210,180,.6);margin-bottom:5px;">留言內容（必填）</div>
-							<textarea name="message" required maxlength="500" placeholder="想說的話…" rows="4" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,.08);border:1px solid rgba(100,200,150,.25);border-radius:10px;padding:10px 12px;color:rgba(220,245,230,.9);font-size:15px;font-family:inherit;outline:none;resize:none;"></textarea>
-						</div>
-						<div id="contact-msg" style="font-size:12px;text-align:center;min-height:18px;color:rgba(120,220,160,.8);"></div>
-						<button type="submit" id="contact-submit-btn" style="width:100%;padding:14px;border-radius:50px;border:none;cursor:pointer;font-size:1rem;font-weight:900;font-family:inherit;background:linear-gradient(135deg,rgba(60,180,110,.9),rgba(30,140,80,.9));color:#fff;box-shadow:0 4px 16px rgba(40,160,90,.35);">送出留言</button>
-					</form>
-				</div>
-			</div>
-
 		</div>
+
 	</div>
 
 
@@ -429,7 +577,7 @@
     sessionStorage.removeItem('skipIntro');
     document.getElementById('intro-screen').remove();
     var _w=document.getElementById('welcome-screen');
-    _w.style.display='flex';
+    _w.style.display='block';
     _w.style.animation='welcomeFadeIn 1.5s ease-in-out forwards';
   }
   </script>
@@ -536,45 +684,172 @@
 	<script src="win-screen.js"></script>
 
 	<script>
-	/* ══ 歡迎頁邏輯 ══════════════════════════════════════ */
+	/* ══ 歡迎頁地圖邏輯 ══════════════════════════════════ */
 	(function(){
 
-		/* 泡泡 */
-		var _bubTimer = null;
-		function _mkBub(){
-			var wrap = document.getElementById('ws-bubbles');
-			if(!wrap) return;
-			var b = document.createElement('div');
-			b.className = 'ws-mbubble';
-			var s = 5 + Math.random()*12;
-			b.style.cssText =
-				'width:'+s+'px;height:'+s+'px;' +
-				'left:'+(Math.random()*88+5)+'%;' +
-				'bottom:-'+s+'px;' +
-				'animation-duration:'+(8+Math.random()*10)+'s;' +
-				'animation-delay:'+(Math.random()*4)+'s;';
-			wrap.appendChild(b);
-			setTimeout(function(){ b.remove(); }, 22000);
-		}
-		function _startBub(){
-			if(_bubTimer) return;
-			for(var i=0;i<8;i++) _mkBub();
-			_bubTimer = setInterval(_mkBub, 1800);
-		}
-		function _stopBub(){
-			if(_bubTimer){ clearInterval(_bubTimer); _bubTimer=null; }
+		/* ── 漁港資料（百分比座標對應 tw.png 原圖） ──
+		   tw.png 原圖尺寸約 760×1344。
+		   台灣島在圖中：北端約 top 14%、南端約 top 87%，
+		   西岸約 left 13%、東岸約 left 82%。
+		   以下座標 px/py 均為原圖百分比，JS 會換算為實際像素。
+		*/
+		var HARBORS = {
+			badouzi:  { px: 0.816, py: 0.165 }, /* 基隆八斗子：東北角海岸 */
+			nanfangao:{ px: 0.864, py: 0.289 }, /* 宜蘭南方澳：東岸中上   */
+			longfeng: { px: 0.416, py: 0.288 }, /* 苗栗龍鳳：西岸中上     */
+			wuqi:     { px: 0.316, py: 0.359 }, /* 台中梧棲：西岸中段     */
+			anping:   { px: 0.163, py: 0.645 }, /* 台南安平：西南岸       */
+			donggang: { px: 0.278, py: 0.755 }, /* 屏東東港 */
+		};
+
+		/* 徽章資料（配合 db.js locationDB） */
+		var HARBOR_INFO = {
+			badouzi:  { name:'基隆八斗子漁港', badge:'🏅 北岬海紋章'  },
+			nanfangao:{ name:'宜蘭南方澳漁港', badge:'🏅 洄光海紋章'  },
+			longfeng: { name:'苗栗龍鳳漁港',   badge:'🏅 龍鳳初航章'  },
+			wuqi:     { name:'台中梧棲漁港',   badge:'🏅 中港豐海章'  },
+			anping:   { name:'台南安平漁港',   badge:'🏅 安平豐海章'  },
+			donggang: { name:'屏東東港漁港',   badge:'🏅 黑潮守護章'  },
+		};
+
+		/* ── 取得 tw.png 在螢幕上的實際渲染矩形 ──
+		   img 是 object-fit:cover / object-position:center top
+		   cover：縮放到「短邊填滿容器」，長邊溢出裁切。
+		   用 window.innerWidth/Height，不依賴元素 offsetWidth（避免 display:none 時為 0）
+		*/
+		function getImgRect(){
+			var img = document.querySelector('#ws-map-bg img');
+			var cW  = window.innerWidth;
+			var cH  = window.innerHeight;
+			if(!img || !img.naturalWidth || !img.naturalHeight){
+				return {left:0, top:0, width:cW, height:cH};
+			}
+			var nW = img.naturalWidth, nH = img.naturalHeight;
+			var scale = Math.max(cW / nW, cH / nH); /* cover */
+			var rW = nW * scale, rH = nH * scale;
+			/* object-position: center top */
+			var left = (cW - rW) / 2;
+			var top  = 0;
+			return { left:left, top:top, width:rW, height:rH };
 		}
 
-		/* 監聽 welcome-screen display 變化，自動啟停泡泡 */
+		/* ── 將港口氣泡和小船定位到地圖正確座標 ── */
+		function positionHarbors(){
+			var r = getImgRect();
+			if(!r.width) return;
+			Object.keys(HARBORS).forEach(function(id){
+				var h  = HARBORS[id];
+				var el = document.getElementById('wsh-'+id);
+				if(!el) return;
+				var x = r.left + h.px * r.width;
+				var y = r.top  + h.py * r.height;
+				el.style.left = x + 'px';
+				el.style.top  = y + 'px';
+			});
+			/* 小船初始位置：圖片左側海面 */
+			var boat = document.getElementById('ws-boat');
+			if(boat && !window._wsBoatMoved){
+				boat.style.left = (r.left + 0.05 * r.width) + 'px';
+				boat.style.top  = (r.top  + 0.50 * r.height) + 'px';
+			}
+		}
+
+		/* ── 圖片確保載入後再定位 ── */
+		var _img = document.querySelector('#ws-map-bg img');
+		function _doPosition(){
+			requestAnimationFrame(function(){
+				positionHarbors();
+			});
+		}
+		if(_img){
+			if(_img.complete && _img.naturalWidth){
+				_doPosition();
+			} else {
+				_img.addEventListener('load', _doPosition);
+			}
+		}
+
+		/* ── fallback：welcome-screen 出現時確保定位 ──
+		   welcome-screen 從 display:none 變 display:block 時，
+		   用 MutationObserver 捕捉，再補一次定位。
+		*/
 		var _wsEl = document.getElementById('welcome-screen');
 		if(_wsEl){
 			new MutationObserver(function(){
-				if(_wsEl.style.display !== 'none'){ _startBub(); }
-				else { _stopBub(); }
-			}).observe(_wsEl, { attributes:true, attributeFilter:['style'] });
+				if(_wsEl.style.display !== 'none' && _wsEl.style.display !== ''){
+					/* 多層 fallback 確保執行 */
+					positionHarbors();
+					setTimeout(positionHarbors, 50);
+					setTimeout(positionHarbors, 200);
+				}
+			}).observe(_wsEl, { attributes:true, attributeFilter:['style','class'] });
 		}
 
-		/* 難度 */
+		/* ── 頁面載入後直接補觸發（應對各種初始顯示時機） ── */
+		setTimeout(positionHarbors, 100);
+		setTimeout(positionHarbors, 400);
+
+		/* ── resize 時重新定位 ── */
+		var _resizeTimer;
+		window.addEventListener('resize', function(){
+			clearTimeout(_resizeTimer);
+			_resizeTimer = setTimeout(positionHarbors, 80);
+		});
+
+		/* ── 選港 ── */
+		window.selectedLocationId = sessionStorage.getItem('selectedLocationId') || null;
+
+		window.wsSelectHarbor = function(id){
+			/* 取消舊選中 */
+			document.querySelectorAll('.ws-harbor').forEach(function(el){
+				el.classList.remove('ws-selected');
+			});
+			/* 設定新選中 */
+			var el = document.getElementById('wsh-'+id);
+			if(el) el.classList.add('ws-selected');
+
+			window.selectedLocationId = id;
+			sessionStorage.setItem('selectedLocationId', id);
+
+			/* 更新面板 */
+			var info = HARBOR_INFO[id] || {};
+			document.getElementById('ws-panel-harbor-name').textContent = info.name || id;
+			document.getElementById('ws-panel-badge').textContent       = info.badge || '';
+			document.getElementById('ws-panel-hint').style.display    = 'none';
+			document.getElementById('ws-panel-content').style.display = 'block';
+
+			/* 帶入上次暱稱 */
+			var nameEl = document.getElementById('ws-name-input');
+			if(nameEl && !nameEl.value){
+				var last = localStorage.getItem('lastPlayerName');
+				if(last) nameEl.value = last;
+			}
+
+			/* 移動小船 */
+			var r    = getImgRect();
+			var h    = HARBORS[id];
+			var boat = document.getElementById('ws-boat');
+			if(boat && h){
+				boat.style.left = (r.left + h.px * r.width)  + 'px';
+				boat.style.top  = (r.top  + h.py * r.height) + 'px';
+				window._wsBoatMoved = true;
+			}
+		};
+
+		/* 選港恢復由 MutationObserver 在 welcome-screen 顯示時統一處理 */
+
+		/* ── Toast ── */
+		var _toastTimer;
+		function wsShowToast(msg){
+			var t = document.getElementById('ws-toast');
+			if(!t) return;
+			t.textContent = msg;
+			t.classList.add('show');
+			clearTimeout(_toastTimer);
+			_toastTimer = setTimeout(function(){ t.classList.remove('show'); }, 1600);
+		}
+
+		/* ── 難度 ── */
 		window.wsSetDiff = function(val, btn){
 			if(typeof gameDifficulty !== 'undefined') gameDifficulty = val;
 			document.querySelectorAll('.ws-diff-btn')
@@ -582,97 +857,68 @@
 			btn.classList.add('ws-active');
 		};
 
-		window.selectedLocationId = window.selectedLocationId || 'longfeng';
-		window.wsSetLocation = function(id){
-			window.selectedLocationId = id || 'longfeng';
-			sessionStorage.setItem('selectedLocationId', window.selectedLocationId);
-		};
+		/* ── 音效・音樂 ── */
+		var _sfxOn = sessionStorage.getItem('sfxEnabled') !== 'false';
 		(function(){
-			var stored = sessionStorage.getItem('selectedLocationId');
-			if(stored){
-				window.selectedLocationId = stored;
-				var sel = document.getElementById('ws-location-select');
-				if(sel) sel.value = stored;
-			}
-			// 自動帶入上次暱稱
-			var lastName = localStorage.getItem('lastPlayerName');
-			if(lastName){
-				var nameEl = document.getElementById('ws-name-input');
-				if(nameEl) nameEl.value = lastName;
-			}
+			var btn = document.getElementById('ws-sfx-btn');
+			if(!btn) return;
+			if(!_sfxOn){ btn.textContent = '🔇'; btn.classList.add('ws-off'); }
 		})();
-
-		/* 音效・音樂開關 */
 		window.wsToggleSound = function(){
-			var toggle = document.getElementById('ws-sound-toggle');
-			var icon   = document.getElementById('ws-sound-icon');
-			var isOn   = toggle.classList.toggle('ws-on');
-			if(typeof sfxEnabled !== 'undefined') sfxEnabled = isOn;
-			sessionStorage.setItem('sfxEnabled', isOn ? 'true' : 'false');
-			icon.textContent = isOn ? '🔊' : '🔇';
+			_sfxOn = !_sfxOn;
+			var btn = document.getElementById('ws-sfx-btn');
+			if(btn){
+				btn.textContent = _sfxOn ? '🔊' : '🔇';
+				btn.classList.toggle('ws-off', !_sfxOn);
+			}
+			if(typeof sfxEnabled !== 'undefined') sfxEnabled = _sfxOn;
+			sessionStorage.setItem('sfxEnabled', _sfxOn ? 'true' : 'false');
 			var bgm = document.getElementById('bgm');
-			if(bgm){
-				if(isOn){ bgm.play().catch(function(){}); }
-				else    { bgm.pause(); }
-			}
+			if(bgm){ _sfxOn ? bgm.play().catch(function(){}) : bgm.pause(); }
+			wsShowToast(_sfxOn ? '🔊 音效已開啟' : '🔇 音效已關閉');
 		};
-		/* 初始化：讀取 sessionStorage */
-		(function(){
-			var stored = sessionStorage.getItem('sfxEnabled');
-			if(stored === 'false'){
-				if(typeof sfxEnabled !== 'undefined') sfxEnabled = false;
-				var t = document.getElementById('ws-sound-toggle');
-				var i = document.getElementById('ws-sound-icon');
-				if(t) t.classList.remove('ws-on');
-				if(i) i.textContent = '🔇';
-			}
-		})();
 
-		/* 結算報告開關 */
+		/* ── 結算報告 ── */
+		var _rptOn = sessionStorage.getItem('reportMode') !== 'false';
+		(function(){
+			var btn = document.getElementById('ws-rpt-btn');
+			if(!btn) return;
+			if(!_rptOn){ btn.classList.add('ws-off'); }
+		})();
 		window.wsToggleReport = function(){
-			var toggle = document.getElementById('ws-report-toggle');
-			var icon   = document.getElementById('ws-report-icon');
-			var isOn   = toggle.classList.toggle('ws-on');
-			if(typeof showSummaryMode !== 'undefined') showSummaryMode = isOn;
-			sessionStorage.setItem('reportMode', isOn ? 'true' : 'false');
-			if(icon) icon.style.filter = isOn ? '' : 'grayscale(1) opacity(0.35)';
+			_rptOn = !_rptOn;
+			var btn = document.getElementById('ws-rpt-btn');
+			if(btn) btn.classList.toggle('ws-off', !_rptOn);
+			if(typeof showSummaryMode !== 'undefined') showSummaryMode = _rptOn;
+			sessionStorage.setItem('reportMode', _rptOn ? 'true' : 'false');
+			wsShowToast(_rptOn ? '📊 結算報告已開啟' : '📊 結算報告已關閉');
 		};
-		/* 初始化：讀取 sessionStorage */
-		(function(){
-			var stored = sessionStorage.getItem('reportMode');
-			if(stored === 'false'){
-				if(typeof showSummaryMode !== 'undefined') showSummaryMode = false;
-				var t = document.getElementById('ws-report-toggle');
-				if(t) t.classList.remove('ws-on');
-				var icon = document.getElementById('ws-report-icon');
-				if(icon) icon.style.filter = 'grayscale(1) opacity(0.35)';
-			}
-		})();
 
-		/* 啟航冒險 */
+		/* ── 守護漁港（啟航） ── */
 		window.wsStartGame = function(){
+			if(!window.selectedLocationId){
+				wsShowToast('⚠️ 請先選擇出發漁港');
+				return;
+			}
 			var nameEl = document.getElementById('ws-name-input');
 			var typedName = nameEl && nameEl.value.trim();
-			// 有輸入暱稱才存入 localStorage
-			if (typedName) localStorage.setItem('lastPlayerName', typedName);
+			if(typedName) localStorage.setItem('lastPlayerName', typedName);
 			window.playerName = typedName || '守護員';
-			var locEl = document.getElementById('ws-location-select');
-			window.selectedLocationId = locEl ? locEl.value : (window.selectedLocationId || 'longfeng');
 			sessionStorage.setItem('selectedLocationId', window.selectedLocationId);
-			/* 同步結算報告狀態到 main.js 變數與遊戲中按鈕 */
-			var reportOn = document.getElementById('ws-report-toggle').classList.contains('ws-on');
-			if(typeof showSummaryMode !== 'undefined') showSummaryMode = reportOn;
+
+			/* 同步結算報告狀態到遊戲中按鈕 */
+			if(typeof showSummaryMode !== 'undefined') showSummaryMode = _rptOn;
 			var rBtn = document.getElementById('report-control');
 			if(rBtn){
-				if(reportOn){
+				if(_rptOn){
 					rBtn.style.opacity = '1';
 					rBtn.innerHTML = '📊';
 				} else {
 					rBtn.style.opacity = '0.85';
-					rBtn.innerHTML = '<span style="filter:grayscale(1);display:inline-block;">📊</span><span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:1.2em;font-weight:900;color:#ff2222;pointer-events:none;">✕</span>';
+					rBtn.innerHTML = '<span style="filter:grayscale(1);display:inline-block;">📊</span>' +
+						'<span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:1.2em;font-weight:900;color:#ff2222;pointer-events:none;">✕</span>';
 				}
 			}
-			_stopBub();
 			if(typeof initGame === 'function') initGame();
 		};
 
