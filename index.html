@@ -98,24 +98,32 @@
         pointer-events: none;
     }
 
-    /* ── intro 副標 subtitle.png：JS 動態對齊 intro-title 右下角 ── */
+    /* ── intro 底列：hint 左、subtitle 右，同行對齊標題寬度 ── */
+    #intro-bottom-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        max-width: max-content;   /* 跟 intro-title 同寬 */
+        margin-top: 1.3em;
+        gap: 1em;
+    }
+    /* 覆蓋 intro.js 的 hint margin-top（現在由 bottom-row 控制） */
+    #intro-hint {
+        margin-top: 0 !important;
+    }
     #intro-subtitle-wrap {
-        position: absolute;
         opacity: 0;
-        pointer-events: none;
-        z-index: 12;
-        transition: opacity .6s ease;
+        transition: opacity .8s ease;
+        flex-shrink: 0;
     }
-    #intro-subtitle-wrap.show {
-        opacity: 1;
-    }
+    #intro-subtitle-wrap.show { opacity: 1; }
     #intro-subtitle {
-        height: 42px;
+        height: 36px;
         width: auto;
         display: block;
         filter: drop-shadow(0 0 8px rgba(100,200,255,0.4));
     }
-    /* 移除舊的 intro-ts position:relative hack */
     #ws-top-icons {
         display: flex;
         gap: 8px;
@@ -463,12 +471,12 @@
 
     <div id="intro-ts">
       <div id="intro-title"></div>
-      <div id="intro-hint">點擊畫面開場</div>
-    </div>
-
-    <!-- subtitle.png：JS 動態對齊到標題右下角 -->
-    <div id="intro-subtitle-wrap">
-      <img src="image/subtitle.png" id="intro-subtitle" alt="台灣海線任務">
+      <div id="intro-bottom-row">
+        <div id="intro-hint">點擊畫面開場</div>
+        <div id="intro-subtitle-wrap">
+          <img src="image/subtitle.png" id="intro-subtitle" alt="台灣海線任務">
+        </div>
+      </div>
     </div>
 
     <div id="intro-cs">
@@ -1115,36 +1123,19 @@
   <script src="intro.js"></script>
 
   <script>
-  /* 預載 tw.png：頁面啟動時就開始快取，歡迎頁顯示更快 */
+  /* 預載 tw.png */
   (function(){ var p = new Image(); p.src = 'image/tw.png'; })();
 
-  /* subtitle.png 對齊 intro-title 右下角
-     intro-title 打字完成（加上 done class）後才顯示 */
+  /* subtitle：等 intro-title 打字完成（done class）後淡入 */
   (function(){
     var wrap  = document.getElementById('intro-subtitle-wrap');
-    var img   = document.getElementById('intro-subtitle');
     var title = document.getElementById('intro-title');
     if(!wrap || !title) return;
-
-    function alignSubtitle(){
-      var r = title.getBoundingClientRect();
-      if(!r.width) return;                     /* 標題還沒出現 */
-      /* 右側對齊標題右邊，垂直緊貼標題下方 */
-      wrap.style.left = (r.right - img.offsetWidth) + 'px';
-      wrap.style.top  = (r.bottom + 6) + 'px';
-    }
-
-    /* 監聽 intro-title 加上 done class（打字完成） */
     new MutationObserver(function(){
       if(title.classList.contains('done')){
-        alignSubtitle();
-        setTimeout(function(){
-          wrap.classList.add('show');
-        }, 200);
+        setTimeout(function(){ wrap.classList.add('show'); }, 200);
       }
     }).observe(title, { attributes:true, attributeFilter:['class'] });
-
-    window.addEventListener('resize', alignSubtitle);
   })();
   </script>
 
