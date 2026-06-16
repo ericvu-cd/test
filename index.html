@@ -113,7 +113,7 @@
     /* intro-ts 整體上移，視覺重心往上 */
     #intro-ts {
         justify-content: flex-start !important;
-        padding-top: 28vh !important;
+        padding-top: 32vh !important;
     }
     #ws-top-icons {
         display: flex;
@@ -1130,7 +1130,7 @@
 
       /* subtitle：緊貼 title 下方，右對齊 title 右側 */
       var w = tr.width * 0.65;
-      var subTop = tr.bottom + 13;
+      var subTop = tr.bottom + 12;
       sub.style.width  = w + 'px';
       sub.style.height = 'auto';
       sub.style.left   = (tr.right - w) + 'px';
@@ -1139,7 +1139,7 @@
       /* hint：subtitle 下方置中 */
       if(hint){
         var subH = sub.offsetHeight || 38;
-        var hintTop = subTop + subH + 14;
+        var hintTop = subTop + subH + 17;
         hint.style.position  = 'absolute';
         hint.style.top       = hintTop + 'px';
         hint.style.left      = '0';
