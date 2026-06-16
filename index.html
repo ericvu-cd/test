@@ -98,32 +98,18 @@
         pointer-events: none;
     }
 
-    /* ── intro 底列：hint 左、subtitle 右，同行對齊標題寬度 ── */
-    #intro-bottom-row {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        width: 100%;
-        max-width: max-content;   /* 跟 intro-title 同寬 */
-        margin-top: 1.3em;
-        gap: 1em;
-    }
-    /* 覆蓋 intro.js 的 hint margin-top（現在由 bottom-row 控制） */
-    #intro-hint {
-        margin-top: 0 !important;
-    }
-    #intro-subtitle-wrap {
-        opacity: 0;
-        transition: opacity .8s ease;
-        flex-shrink: 0;
-    }
-    #intro-subtitle-wrap.show { opacity: 1; }
+    /* ── intro subtitle.png：絕對定位，JS 設座標 ── */
     #intro-subtitle {
+        position: absolute;
+        z-index: 6;
         height: 36px;
         width: auto;
-        display: block;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity .8s ease;
         filter: drop-shadow(0 0 8px rgba(100,200,255,0.4));
     }
+    #intro-subtitle.show { opacity: 1; }
     #ws-top-icons {
         display: flex;
         gap: 8px;
@@ -471,13 +457,9 @@
 
     <div id="intro-ts">
       <div id="intro-title"></div>
-      <div id="intro-bottom-row">
-        <div id="intro-hint">點擊畫面開場</div>
-        <div id="intro-subtitle-wrap">
-          <img src="image/subtitle.png" id="intro-subtitle" alt="台灣海線任務">
-        </div>
-      </div>
+      <div id="intro-hint">點擊畫面開場</div>
     </div>
+    <img src="image/subtitle.png" id="intro-subtitle" alt="台灣海線任務">
 
     <div id="intro-cs">
       <img id="iimg-a" class="iimg" src="" alt="">
@@ -1126,16 +1108,54 @@
   /* 預載 tw.png */
   (function(){ var p = new Image(); p.src = 'image/tw.png'; })();
 
-  /* subtitle：等 intro-title 打字完成（done class）後淡入 */
+  /* subtitle 排版：
+     行1：#intro-title 置中（intro.js 原有）
+     行2：subtitle，右側對齊 title 右側，寬 = title 寬 × 65%
+     行3：#intro-hint 水平置中（保持原有動畫）
+  */
   (function(){
-    var wrap  = document.getElementById('intro-subtitle-wrap');
+    var sub   = document.getElementById('intro-subtitle');
     var title = document.getElementById('intro-title');
-    if(!wrap || !title) return;
+    var hint  = document.getElementById('intro-hint');
+    if(!sub || !title) return;
+
+    function place(){
+      var tr = title.getBoundingClientRect();
+      if(!tr.width) return;
+
+      /* subtitle：緊貼 title 下方，右對齊 title 右側 */
+      var w = tr.width * 0.65;
+      var subTop = tr.bottom + 10;
+      sub.style.width  = w + 'px';
+      sub.style.height = 'auto';
+      sub.style.left   = (tr.right - w) + 'px';
+      sub.style.top    = subTop + 'px';
+
+      /* hint：subtitle 下方置中 */
+      if(hint){
+        var subH = sub.offsetHeight || 38;
+        var hintTop = subTop + subH + 14;
+        hint.style.position  = 'absolute';
+        hint.style.top       = hintTop + 'px';
+        hint.style.left      = '0';
+        hint.style.right     = '0';
+        hint.style.textAlign = 'center';
+        hint.style.marginTop = '0';
+      }
+    }
+
     new MutationObserver(function(){
       if(title.classList.contains('done')){
-        setTimeout(function(){ wrap.classList.add('show'); }, 200);
+        setTimeout(function(){
+          place();
+          sub.classList.add('show');
+        }, 300);
       }
     }).observe(title, { attributes:true, attributeFilter:['class'] });
+
+    window.addEventListener('resize', function(){
+      if(sub.classList.contains('show')) place();
+    });
   })();
   </script>
 
