@@ -985,16 +985,16 @@
 				/* 計算 transform-origin：以港口為縮放中心 */
 				var ox = (dotX / cW * 100).toFixed(1) + '%';
 				var oy = (dotY / cH * 100).toFixed(1) + '%';
-				wsEl.style.transition        = 'transform 0.85s cubic-bezier(.4,0,.2,1), opacity 0.85s ease';
+				wsEl.style.transition        = 'transform 1s cubic-bezier(.4,0,.2,1), opacity 0.8s ease';
 				wsEl.style.transformOrigin   = ox + ' ' + oy;
-				wsEl.style.transform         = 'scale(3.5)';
+				wsEl.style.transform         = 'scale(2.5)';
 				wsEl.style.opacity           = '0';
 				setTimeout(function(){
 					wsEl.style.transition      = '';
 					wsEl.style.transform       = '';
 					wsEl.style.transformOrigin = '';
 					if(typeof initGame === 'function') initGame();
-				}, 880);
+				}, 1050);
 			} else {
 				if(typeof initGame === 'function') initGame();
 			}
@@ -1182,6 +1182,18 @@
         }, 300);
       }
     }).observe(title, { attributes:true, attributeFilter:['class'] });
+
+    /* intro 開始播放時（intro-screen 被點擊，intro-cs 變可見）隱藏 subtitle */
+    var introScreen = document.getElementById('intro-screen');
+    if(introScreen){
+      introScreen.addEventListener('click', function(){
+        setTimeout(function(){
+          sub.style.transition = 'opacity 0.4s ease';
+          sub.style.opacity    = '0';
+          sub.classList.remove('show');
+        }, 100);
+      }, { once: true });
+    }
 
     window.addEventListener('resize', function(){
       if(sub.classList.contains('show')) place();
