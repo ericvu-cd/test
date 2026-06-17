@@ -262,7 +262,7 @@
         right: 12px;
         bottom: 36px; /* 版權列高度上方 */
         width: 162px;
-        background: rgba(4, 14, 30, 0.9);
+        background: rgba(4, 14, 30, 0.8);
         border: 1px solid rgba(60,140,200,0.25);
         border-radius: 16px;
         padding: 12px;
@@ -310,7 +310,6 @@
         font-size: .85rem;
         font-family: "Microsoft JhengHei", sans-serif;
         outline: none;
-        margin-bottom: 9px;
         -webkit-user-select: text;
         user-select: text;
         transition: border-color .2s;
@@ -326,13 +325,30 @@
         border: 1px solid rgba(60,140,200,0.25);
         background: rgba(255,255,255,0.05);
         color: rgba(160,210,240,0.8);
-        font-size: .75rem;
+        font-size: .825rem;
         cursor: pointer;
         transition: all .18s;
         font-family: "Microsoft JhengHei", sans-serif;
         -webkit-tap-highlight-color: transparent;
         text-align: center;
     }
+
+    /* ── 左上角：守護員暱稱輸入框 ── */
+    #ws-name-box {
+        position: absolute;
+        left: 12px;
+        top: 64px; /* 頂部列高度下方 */
+        width: 150px;
+        background: rgba(4,14,30,0.8);
+        border: 1px solid rgba(60,140,200,0.25);
+        border-radius: 14px;
+        padding: 10px 12px;
+        z-index: 30;
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        box-shadow: 0 8px 32px rgba(0,0,0,0.35);
+    }
+    #ws-name-box .ws-panel-label { margin-bottom: 6px; }
     .ws-diff-btn:active { transform: scale(0.94); }
     .ws-diff-btn.ws-active {
         background: rgba(255,183,77,0.15);
@@ -553,10 +569,6 @@
 			<div id="ws-panel-content" style="display:none;">
 				<div id="ws-panel-harbor-name"></div>
 				<div id="ws-panel-badge"></div>
-				<div class="ws-panel-label">守護員暱稱</div>
-				<input id="ws-name-input" class="panel-input" type="text"
-					placeholder="輸入你的暱稱…" maxlength="12"
-					style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.07);border:1px solid rgba(60,140,200,0.3);border-radius:8px;padding:7px 9px;color:#e8f4ff;font-size:.85rem;font-family:'Microsoft JhengHei',sans-serif;outline:none;margin-bottom:9px;">
 				<div class="ws-panel-label">難度選擇</div>
 				<div class="ws-diff-row">
 					<button class="ws-diff-btn ws-active" onclick="wsSetDiff(0.4,this)">新手</button>
@@ -565,6 +577,13 @@
 				</div>
 				<button id="ws-start-btn" onclick="wsStartGame()">⚓ 守護漁港</button>
 			</div>
+		</div>
+
+		<!-- ── 左上角：守護員暱稱輸入 ── -->
+		<div id="ws-name-box">
+			<div class="ws-panel-label">守護員暱稱</div>
+			<input id="ws-name-input" type="text"
+				placeholder="輸入你的暱稱…" maxlength="12">
 		</div>
 
 		<!-- ── 左下角：簡介 + 教學 ── -->
@@ -741,12 +760,12 @@
 
 		/* 徽章資料（配合 db.js locationDB） */
 		var HARBOR_INFO = {
-			badouzi:  { name:'基隆八斗子漁港', badge:'🏅 北岬海紋章'  },
-			nanfangao:{ name:'宜蘭南方澳漁港', badge:'🏅 洄光海紋章'  },
-			longfeng: { name:'苗栗龍鳳漁港',   badge:'🏅 龍鳳初航章'  },
-			wuqi:     { name:'台中梧棲漁港',   badge:'🏅 中港豐海章'  },
-			anping:   { name:'台南安平漁港',   badge:'🏅 安平豐海章'  },
-			donggang: { name:'屏東東港漁港',   badge:'🏅 黑潮守護章'  },
+			badouzi:  { name:'基隆八斗子漁港', badge:'北岬海紋章', stars:'★★★★'   },
+			nanfangao:{ name:'宜蘭南方澳漁港', badge:'洄光海紋章', stars:'★★★★★'  },
+			longfeng: { name:'苗栗龍鳳漁港',   badge:'龍鳳初航章', stars:'★★★'     },
+			wuqi:     { name:'台中梧棲漁港',   badge:'中港豐海章', stars:'★'        },
+			anping:   { name:'台南安平漁港',   badge:'安平豐海章', stars:'★★'       },
+			donggang: { name:'屏東東港漁港',   badge:'黑潮守護章', stars:'★★★★'   },
 		};
 
 		/* ── 取得 tw.png 在螢幕上的實際渲染矩形 ──
@@ -846,8 +865,8 @@
 
 			/* 更新面板 */
 			var info = HARBOR_INFO[id] || {};
-			document.getElementById('ws-panel-harbor-name').textContent = info.name || id;
-			document.getElementById('ws-panel-badge').textContent       = info.badge || '';
+			document.getElementById('ws-panel-harbor-name').textContent = (info.name || id) + ' ' + (info.stars || '');
+			document.getElementById('ws-panel-badge').textContent = '🏅 ' + (info.badge || '');
 			document.getElementById('ws-panel-hint').style.display    = 'none';
 			document.getElementById('ws-panel-content').style.display = 'block';
 
@@ -985,7 +1004,7 @@
 				/* 計算 transform-origin：以港口為縮放中心 */
 				var ox = (dotX / cW * 100).toFixed(1) + '%';
 				var oy = (dotY / cH * 100).toFixed(1) + '%';
-				wsEl.style.transition        = 'transform 1s cubic-bezier(.4,0,.2,1), opacity 0.8s ease';
+				wsEl.style.transition        = 'transform 2s cubic-bezier(.4,0,.2,1), opacity 0.8s ease';
 				wsEl.style.transformOrigin   = ox + ' ' + oy;
 				wsEl.style.transform         = 'scale(2.5)';
 				wsEl.style.opacity           = '0';
@@ -994,7 +1013,7 @@
 					wsEl.style.transform       = '';
 					wsEl.style.transformOrigin = '';
 					if(typeof initGame === 'function') initGame();
-				}, 1050);
+				}, 2050);
 			} else {
 				if(typeof initGame === 'function') initGame();
 			}
