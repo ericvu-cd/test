@@ -870,13 +870,6 @@
 			document.getElementById('ws-panel-hint').style.display    = 'none';
 			document.getElementById('ws-panel-content').style.display = 'block';
 
-			/* 帶入上次暱稱 */
-			var nameEl = document.getElementById('ws-name-input');
-			if(nameEl && !nameEl.value){
-				var last = localStorage.getItem('lastPlayerName');
-				if(last) nameEl.value = last;
-			}
-
 			/* 移動小船 */
 			var r    = getImgRect();
 			var h    = HARBORS[id];
@@ -889,6 +882,14 @@
 		};
 
 		/* 選港恢復由 MutationObserver 在 welcome-screen 顯示時統一處理 */
+
+		/* ── 自動帶入上次暱稱（頁面載入時即執行，不依賴選港） ── */
+		(function(){
+			var nameEl = document.getElementById('ws-name-input');
+			if(!nameEl) return;
+			var last = localStorage.getItem('lastPlayerName');
+			if(last) nameEl.value = last;
+		})();
 
 		/* ── Toast ── */
 		var _toastTimer;
