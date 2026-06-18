@@ -261,13 +261,13 @@
         position: absolute;
         right: 12px;
         bottom: 36px; /* 版權列高度上方 */
-        width: 162px;
+        width: 170px;
         max-height: calc(100vh - 36px - 64px); /* 扣掉頂部列與版權列，避免溢出螢幕 */
         overflow-y: auto;
         background: rgba(4, 14, 30, 0.8);
         border: 1px solid rgba(60,140,200,0.25);
         border-radius: 16px;
-        padding: 12px;
+        padding: 12px 8px;
         z-index: 30;
         backdrop-filter: blur(16px);
         -webkit-backdrop-filter: blur(16px);
@@ -278,7 +278,7 @@
         color: rgba(255,255,255,0.92);
         font-size: .82rem;
         line-height: 1.6;
-        padding: 12px 4px;
+        padding: 12px 2px;
     }
     #ws-panel-harbor-info {
         display: none;
@@ -813,12 +813,12 @@
 
 		/* 徽章資料（配合 db.js locationDB） */
 		var HARBOR_INFO = {
-			badouzi:  { name:'基隆八斗子漁港', badge:'北岬海紋章', stars:'★★★★'   },
-			nanfangao:{ name:'宜蘭南方澳漁港', badge:'洄光海紋章', stars:'★★★★★'  },
-			longfeng: { name:'苗栗龍鳳漁港',   badge:'龍鳳初航章', stars:'★★★'     },
-			wuqi:     { name:'台中梧棲漁港',   badge:'中港豐海章', stars:'★'        },
-			anping:   { name:'台南安平漁港',   badge:'安平豐海章', stars:'★★'       },
-			donggang: { name:'屏東東港漁港',   badge:'黑潮守護章', stars:'★★★★'   },
+			badouzi:  { name:'基隆八斗子漁港', shortName:'八斗子漁港', badge:'北岬海紋章', stars:'★★★★'   },
+			nanfangao:{ name:'宜蘭南方澳漁港', shortName:'南方澳漁港', badge:'洄光海紋章', stars:'★★★★★'  },
+			longfeng: { name:'苗栗龍鳳漁港',   shortName:'龍鳳漁港',   badge:'龍鳳初航章', stars:'★★★'     },
+			wuqi:     { name:'台中梧棲漁港',   shortName:'梧棲漁港',   badge:'中港豐海章', stars:'★'        },
+			anping:   { name:'台南安平漁港',   shortName:'安平漁港',   badge:'安平豐海章', stars:'★★'       },
+			donggang: { name:'屏東東港漁港',   shortName:'東港漁港',   badge:'黑潮守護章', stars:'★★★★'   },
 		};
 
 		/* ── 取得 tw.png 在螢幕上的實際渲染矩形 ──
@@ -969,7 +969,7 @@
 				if(!isOpen){
 					var info = HARBOR_INFO[id] || {};
 					var reason = result.closedByEvent[id] || result.weather.name;
-					closedList.push((info.name || id) + '（' + reason + '）');
+					closedList.push((info.shortName || info.name || id) + '（' + reason + '）');
 				}
 			});
 
