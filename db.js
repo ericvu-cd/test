@@ -271,56 +271,56 @@ const weatherDB = [
 const eventDB = [
     {
         id: "dock_repair",
-        name: "🔧 碼頭整修",
+        name: "碼頭整修",
         desc: "港區工程施工，暫停漁船進出。",
         weight: 10,
         ports: { badouzi:"pick", nanfangao:"pick", longfeng:"pick", wuqi:"pick", anping:"pick", donggang:"pick" }
     },
     {
         id: "dolphin",
-        name: "🐳 鯨豚出沒",
+        name: "鯨豚出沒",
         desc: "保育警戒！鯨豚群現蹤，自願停航。",
         weight: 10,
         ports: { badouzi:"pick", nanfangao:"pick", longfeng:"open", wuqi:"open", anping:"open", donggang:"open" }
     },
     {
         id: "jellyfish",
-        name: "🪼 水母大爆發",
+        name: "水母大爆發",
         desc: "大量水母侵港，漁網損毀風險高。",
         weight: 10,
         ports: { badouzi:"pick", nanfangao:"pick", longfeng:"pick", wuqi:"pick", anping:"pick", donggang:"pick" }
     },
     {
         id: "oil_spill",
-        name: "🛢️ 油污事件",
+        name: "油污事件",
         desc: "海面發現油污擴散，禁止漁船出港。",
         weight: 10,
         ports: { badouzi:"pick", nanfangao:"pick", longfeng:"pick", wuqi:"pick", anping:"pick", donggang:"pick" }
     },
     {
         id: "fishery_control",
-        name: "🐟 漁業管制",
+        name: "漁業管制",
         desc: "漁業署保育公告管制，漁場暫停作業。",
         weight: 10,
         ports: { badouzi:"pick", nanfangao:"pick", longfeng:"pick", wuqi:"pick", anping:"pick", donggang:"pick" }
     },
     {
         id: "cargo_jam",
-        name: "🚢 貨輪塞港",
+        name: "貨輪塞港",
         desc: "大型貨輪出港，航道時管制，漁船無法出海。",
         weight: 10,
         ports: { badouzi:"open", nanfangao:"open", longfeng:"open", wuqi:"pick", anping:"pick", donggang:"open" }
     },
     {
         id: "silt",
-        name: "🌪️ 港口淤沙",
+        name: "港口淤沙",
         desc: "泥沙堆積影響水深不足，漁船暫停進出。",
         weight: 10,
         ports: { badouzi:"open", nanfangao:"open", longfeng:"pick", wuqi:"pick", anping:"pick", donggang:"pick" }
     },
     {
         id: "festival",
-        name: "🎉 節慶祭典",
+        name: "節慶祭典",
         desc: "今日漁港節慶，漁民祈福不出港。",
         weight: 30,
         ports: { badouzi:"pick", nanfangao:"pick", longfeng:"pick", wuqi:"pick", anping:"pick", donggang:"pick" }
