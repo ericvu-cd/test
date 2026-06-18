@@ -262,6 +262,8 @@
         right: 12px;
         bottom: 36px; /* 版權列高度上方 */
         width: 162px;
+        max-height: calc(100vh - 36px - 64px); /* 扣掉頂部列與版權列，避免溢出螢幕 */
+        overflow-y: auto;
         background: rgba(4, 14, 30, 0.8);
         border: 1px solid rgba(60,140,200,0.25);
         border-radius: 16px;
@@ -273,9 +275,9 @@
     }
     #ws-panel-hint {
         text-align: center;
-        color: rgba(100,170,210,0.75);
+        color: rgba(255,255,255,0.92);
         font-size: .82rem;
-        line-height: 1.5;
+        line-height: 1.6;
         padding: 12px 4px;
     }
     #ws-panel-harbor-info {
@@ -370,6 +372,12 @@
         transition: opacity .5s ease, transform .5s ease;
     }
     #ws-weather-box.show { opacity: 1; transform: translateY(0); }
+    #ws-weather-label {
+        font-size: .66rem;
+        letter-spacing: .12em;
+        color: rgba(160,210,240,0.65);
+        margin-bottom: 3px;
+    }
     #ws-weather-name {
         font-size: .88rem;
         font-weight: 700;
@@ -378,12 +386,13 @@
         line-height: 1.4;
     }
 
-    /* ── 港口關閉狀態：整體變暗，不疊加任何圖示 ── */
+    /* ── 港口關閉狀態：圓點變灰，文字維持原色清晰可讀 ── */
     .ws-harbor.ws-closed {
         pointer-events: none;
-        opacity: .42;
     }
     .ws-harbor.ws-closed .ws-h-core {
+        background: #888;
+        border-color: rgba(180,180,180,0.5);
         animation: none;
     }
     .ws-harbor.ws-closed .ws-h-ring { display: none; }
@@ -626,6 +635,7 @@
 
 		<!-- ── 天氣海象卡片（只顯示當天天氣） ── -->
 		<div id="ws-weather-box">
+			<div id="ws-weather-label">今日天氣</div>
 			<div id="ws-weather-name"></div>
 		</div>
 
