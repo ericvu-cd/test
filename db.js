@@ -160,7 +160,174 @@ const locationDB = [
     }
 ];
 
-function checkS(fs, ts) { 
+// ══════════════════════════════════════════════════════════════
+//  天氣海象系統資料庫
+//  每次進入歡迎頁時，依 weight（天氣機率%）抽出一種天氣，
+//  該天氣決定 6 個漁港「各自獨立」的開放機率（ports 物件，單位 %）。
+//  eventChance：在此天氣下，「是否觸發突發事件」的機率（%）。
+// ══════════════════════════════════════════════════════════════
+const weatherDB = [
+    {
+        id: "sunny",
+        name: "☀️ 晴空萬里",
+        desc: "風平浪靜，適合出海。",
+        season: null,
+        weight: 32,        // 天氣機率 (%)
+        eventChance: 80,   // 觸發事件機率 (%)
+        ports: { badouzi:100, nanfangao:100, longfeng:100, wuqi:100, anping:100, donggang:100 }
+    },
+    {
+        id: "cloudy",
+        name: "🌤️ 多雲微浪",
+        desc: "雲層遮日，浪況平穩。",
+        season: null,
+        weight: 27,
+        eventChance: 70,
+        ports: { badouzi:100, nanfangao:100, longfeng:100, wuqi:100, anping:100, donggang:100 }
+    },
+    {
+        id: "ne_monsoon",
+        name: "🌊 東北季風",
+        desc: "東北風強勁，東北角浪高 3～4m。",
+        season: "冬",
+        weight: 15,
+        eventChance: 50,
+        ports: { badouzi:10, nanfangao:10, longfeng:90, wuqi:100, anping:100, donggang:100 }
+    },
+    {
+        id: "sw_flow",
+        name: "🌧️ 西南氣流",
+        desc: "西南氣流帶雨，西岸浪湧漸增。",
+        season: "夏",
+        weight: 7,
+        eventChance: 30,
+        ports: { badouzi:100, nanfangao:100, longfeng:100, wuqi:20, anping:10, donggang:100 }
+    },
+    {
+        id: "fog",
+        name: "🌫️ 海霧瀰漫",
+        desc: "能見度不足 200m，西部航行危險。",
+        season: "春",
+        weight: 7,
+        eventChance: 20,
+        ports: { badouzi:80, nanfangao:100, longfeng:50, wuqi:70, anping:50, donggang:100 }
+    },
+    {
+        id: "rainstorm",
+        name: "🌧️ 暴雨警告",
+        desc: "豪雨不斷，漁船出港風險升高。",
+        season: "夏",
+        weight: 4,
+        eventChance: 20,
+        ports: { badouzi:80, nanfangao:80, longfeng:90, wuqi:30, anping:30, donggang:100 }
+    },
+    {
+        id: "cold_front",
+        name: "❄️ 寒流來襲",
+        desc: "強冷氣團南下，中北部港口封閉。",
+        season: "冬",
+        weight: 3,
+        eventChance: 0,
+        ports: { badouzi:10, nanfangao:10, longfeng:60, wuqi:80, anping:90, donggang:100 }
+    },
+    {
+        id: "typhoon_east",
+        name: "🌀 颱風來襲",
+        desc: "颱風沿東岸北上，東側海域封閉。",
+        season: "秋",
+        weight: 2,
+        eventChance: 0,
+        ports: { badouzi:0, nanfangao:0, longfeng:60, wuqi:80, anping:100, donggang:100 }
+    },
+    {
+        id: "typhoon_cross",
+        name: "🌀 颱風來襲",
+        desc: "颱風穿越台灣，風浪強烈。",
+        season: "夏",
+        weight: 1,
+        eventChance: 0,
+        ports: { badouzi:70, nanfangao:20, longfeng:0, wuqi:0, anping:10, donggang:100 }
+    },
+    {
+        id: "typhoon_south",
+        name: "🌀 颱風來襲",
+        desc: "颱風南部登陸，南部海域封閉。",
+        season: "夏",
+        weight: 2,
+        eventChance: 0,
+        ports: { badouzi:100, nanfangao:90, longfeng:80, wuqi:50, anping:0, donggang:0 }
+    }
+];
+
+// ══════════════════════════════════════════════════════════════
+//  突發事件系統資料庫
+//  天氣判定後，若觸發事件（依該天氣的 eventChance），
+//  再依 weight（發生機率%）抽出一種事件。
+//  ports 物件值意義：
+//    "open"     → 該港不受此事件影響（維持天氣判定結果）
+//    "pickN"    → 標示為候選港，所有 "pickN" 中的港口只抽 1 個關閉，其餘維持原狀
+//                 （N 僅為設計表的提示文字，實際以「同一事件下所有 pickN 候選只抽 1 個」處理）
+// ══════════════════════════════════════════════════════════════
+const eventDB = [
+    {
+        id: "dock_repair",
+        name: "🔧 碼頭整修",
+        desc: "港區工程施工，暫停漁船進出。",
+        weight: 10,
+        ports: { badouzi:"pick", nanfangao:"pick", longfeng:"pick", wuqi:"pick", anping:"pick", donggang:"pick" }
+    },
+    {
+        id: "dolphin",
+        name: "🐳 鯨豚出沒",
+        desc: "保育警戒！鯨豚群現蹤，自願停航。",
+        weight: 10,
+        ports: { badouzi:"pick", nanfangao:"pick", longfeng:"open", wuqi:"open", anping:"open", donggang:"open" }
+    },
+    {
+        id: "jellyfish",
+        name: "🪼 水母大爆發",
+        desc: "大量水母侵港，漁網損毀風險高。",
+        weight: 10,
+        ports: { badouzi:"pick", nanfangao:"pick", longfeng:"pick", wuqi:"pick", anping:"pick", donggang:"pick" }
+    },
+    {
+        id: "oil_spill",
+        name: "🛢️ 油污事件",
+        desc: "海面發現油污擴散，禁止漁船出港。",
+        weight: 10,
+        ports: { badouzi:"pick", nanfangao:"pick", longfeng:"pick", wuqi:"pick", anping:"pick", donggang:"pick" }
+    },
+    {
+        id: "fishery_control",
+        name: "🐟 漁業管制",
+        desc: "漁業署保育公告管制，漁場暫停作業。",
+        weight: 10,
+        ports: { badouzi:"pick", nanfangao:"pick", longfeng:"pick", wuqi:"pick", anping:"pick", donggang:"pick" }
+    },
+    {
+        id: "cargo_jam",
+        name: "🚢 貨輪塞港",
+        desc: "大型貨輪出港，航道時管制，漁船無法出海。",
+        weight: 10,
+        ports: { badouzi:"open", nanfangao:"open", longfeng:"open", wuqi:"pick", anping:"pick", donggang:"open" }
+    },
+    {
+        id: "silt",
+        name: "🌪️ 港口淤沙",
+        desc: "泥沙堆積影響水深不足，漁船暫停進出。",
+        weight: 10,
+        ports: { badouzi:"open", nanfangao:"open", longfeng:"pick", wuqi:"pick", anping:"pick", donggang:"pick" }
+    },
+    {
+        id: "festival",
+        name: "🎉 節慶祭典",
+        desc: "今日漁港節慶，漁民祈福不出港。",
+        weight: 30,
+        ports: { badouzi:"pick", nanfangao:"pick", longfeng:"pick", wuqi:"pick", anping:"pick", donggang:"pick" }
+    }
+];
+
+function checkS(fs, ts) {
     return fs.includes("全年") || fs.includes(ts); 
 }
 

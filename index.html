@@ -262,7 +262,7 @@
         right: 12px;
         bottom: 36px; /* 版權列高度上方 */
         width: 162px;
-        background: rgba(4, 14, 30, 0.9);
+        background: rgba(4, 14, 30, 0.8);
         border: 1px solid rgba(60,140,200,0.25);
         border-radius: 16px;
         padding: 12px;
@@ -310,7 +310,6 @@
         font-size: .85rem;
         font-family: "Microsoft JhengHei", sans-serif;
         outline: none;
-        margin-bottom: 9px;
         -webkit-user-select: text;
         user-select: text;
         transition: border-color .2s;
@@ -326,13 +325,108 @@
         border: 1px solid rgba(60,140,200,0.25);
         background: rgba(255,255,255,0.05);
         color: rgba(160,210,240,0.8);
-        font-size: .75rem;
+        font-size: .825rem;
         cursor: pointer;
         transition: all .18s;
         font-family: "Microsoft JhengHei", sans-serif;
         -webkit-tap-highlight-color: transparent;
         text-align: center;
     }
+
+    /* ── 左上角：守護員暱稱輸入框 ── */
+    #ws-name-box {
+        position: absolute;
+        left: 12px;
+        top: 64px; /* 頂部列高度下方 */
+        width: 150px;
+        background: rgba(4,14,30,0.8);
+        border: 1px solid rgba(60,140,200,0.25);
+        border-radius: 14px;
+        padding: 10px 12px;
+        z-index: 30;
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        box-shadow: 0 8px 32px rgba(0,0,0,0.35);
+    }
+    #ws-name-box .ws-panel-label { margin-bottom: 6px; }
+
+    /* ── 天氣海象卡片（暱稱框下方） ── */
+    #ws-weather-box {
+        position: absolute;
+        left: 12px;
+        top: 142px; /* 暱稱框下方 */
+        width: 150px;
+        background: rgba(4,14,30,0.8);
+        border: 1px solid rgba(60,140,200,0.25);
+        border-radius: 14px;
+        padding: 10px 12px;
+        z-index: 30;
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        box-shadow: 0 8px 32px rgba(0,0,0,0.35);
+        opacity: 0;
+        transform: translateY(-6px);
+        transition: opacity .5s ease, transform .5s ease;
+    }
+    #ws-weather-box.show { opacity: 1; transform: translateY(0); }
+    #ws-weather-name {
+        font-size: .88rem;
+        font-weight: 700;
+        color: #e8f4ff;
+        margin-bottom: 4px;
+        line-height: 1.3;
+    }
+    #ws-weather-desc {
+        font-size: .72rem;
+        color: rgba(160,210,240,0.75);
+        line-height: 1.5;
+    }
+    #ws-event-name {
+        margin-top: 7px;
+        padding-top: 7px;
+        border-top: 1px solid rgba(60,140,200,0.2);
+        font-size: .76rem;
+        font-weight: 700;
+        color: #ffb347;
+        display: none;
+    }
+    #ws-event-name.show { display: block; }
+
+    /* ── 港口關閉狀態 ── */
+    .ws-harbor.ws-closed {
+        pointer-events: none;
+        filter: grayscale(1) brightness(.75);
+    }
+    .ws-harbor.ws-closed .ws-h-core {
+        animation: none;
+        opacity: .55;
+    }
+    .ws-harbor.ws-closed .ws-h-ring { display: none; }
+    .ws-harbor.ws-closed .ws-h-label {
+        color: rgba(200,200,200,0.7);
+    }
+    .ws-harbor .ws-h-lock {
+        position: absolute;
+        top: -16px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: .85rem;
+        display: none;
+        filter: drop-shadow(0 1px 3px rgba(0,0,0,0.9));
+    }
+    .ws-harbor.ws-closed .ws-h-lock { display: block; }
+    .ws-harbor .ws-h-event-tag {
+        position: absolute;
+        top: 30px;
+        left: 50%;
+        transform: translateX(-50%);
+        white-space: nowrap;
+        font-size: .62rem;
+        color: #ffb347;
+        text-shadow: 0 1px 4px rgba(0,0,0,0.95);
+        display: none;
+    }
+    .ws-harbor.ws-closed .ws-h-event-tag.show { display: block; }
     .ws-diff-btn:active { transform: scale(0.94); }
     .ws-diff-btn.ws-active {
         background: rgba(255,183,77,0.15);
@@ -506,39 +600,51 @@
 		<div id="ws-harbor-layer">
 			<!-- 基隆八斗子：東北角海岸 -->
 			<div class="ws-harbor" id="wsh-badouzi" data-id="badouzi" onclick="wsSelectHarbor('badouzi')">
+				<div class="ws-h-lock">🔒</div>
 				<div class="ws-h-ring"></div>
 				<div class="ws-h-core"></div>
 				<div class="ws-h-label">八斗子</div>
+				<div class="ws-h-event-tag"></div>
 			</div>
 			<!-- 宜蘭南方澳：東岸中上 -->
 			<div class="ws-harbor" id="wsh-nanfangao" data-id="nanfangao" onclick="wsSelectHarbor('nanfangao')">
+				<div class="ws-h-lock">🔒</div>
 				<div class="ws-h-ring"></div>
 				<div class="ws-h-core"></div>
 				<div class="ws-h-label">南方澳</div>
+				<div class="ws-h-event-tag"></div>
 			</div>
 			<!-- 苗栗龍鳳：西岸中上 -->
 			<div class="ws-harbor label-right" id="wsh-longfeng" data-id="longfeng" onclick="wsSelectHarbor('longfeng')">
+				<div class="ws-h-lock">🔒</div>
 				<div class="ws-h-ring"></div>
 				<div class="ws-h-core"></div>
 				<div class="ws-h-label">龍鳳</div>
+				<div class="ws-h-event-tag"></div>
 			</div>
 			<!-- 台中梧棲：西岸中段 -->
 			<div class="ws-harbor label-right" id="wsh-wuqi" data-id="wuqi" onclick="wsSelectHarbor('wuqi')">
+				<div class="ws-h-lock">🔒</div>
 				<div class="ws-h-ring"></div>
 				<div class="ws-h-core"></div>
 				<div class="ws-h-label">梧棲</div>
+				<div class="ws-h-event-tag"></div>
 			</div>
 			<!-- 台南安平：西南岸 -->
 			<div class="ws-harbor label-right" id="wsh-anping" data-id="anping" onclick="wsSelectHarbor('anping')">
+				<div class="ws-h-lock">🔒</div>
 				<div class="ws-h-ring"></div>
 				<div class="ws-h-core"></div>
 				<div class="ws-h-label">安平</div>
+				<div class="ws-h-event-tag"></div>
 			</div>
 			<!-- 屏東東港：南端偏東 -->
 			<div class="ws-harbor" id="wsh-donggang" data-id="donggang" onclick="wsSelectHarbor('donggang')">
+				<div class="ws-h-lock">🔒</div>
 				<div class="ws-h-ring"></div>
 				<div class="ws-h-core"></div>
 				<div class="ws-h-label">東港</div>
+				<div class="ws-h-event-tag"></div>
 			</div>
 		</div>
 
@@ -553,10 +659,6 @@
 			<div id="ws-panel-content" style="display:none;">
 				<div id="ws-panel-harbor-name"></div>
 				<div id="ws-panel-badge"></div>
-				<div class="ws-panel-label">守護員暱稱</div>
-				<input id="ws-name-input" class="panel-input" type="text"
-					placeholder="輸入你的暱稱…" maxlength="12"
-					style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.07);border:1px solid rgba(60,140,200,0.3);border-radius:8px;padding:7px 9px;color:#e8f4ff;font-size:.85rem;font-family:'Microsoft JhengHei',sans-serif;outline:none;margin-bottom:9px;">
 				<div class="ws-panel-label">難度選擇</div>
 				<div class="ws-diff-row">
 					<button class="ws-diff-btn ws-active" onclick="wsSetDiff(0.4,this)">新手</button>
@@ -565,6 +667,20 @@
 				</div>
 				<button id="ws-start-btn" onclick="wsStartGame()">⚓ 守護漁港</button>
 			</div>
+		</div>
+
+		<!-- ── 左上角：守護員暱稱輸入 ── -->
+		<div id="ws-name-box">
+			<div class="ws-panel-label">守護員暱稱</div>
+			<input id="ws-name-input" type="text"
+				placeholder="輸入你的暱稱…" maxlength="12">
+		</div>
+
+		<!-- ── 天氣海象卡片 ── -->
+		<div id="ws-weather-box">
+			<div id="ws-weather-name"></div>
+			<div id="ws-weather-desc"></div>
+			<div id="ws-event-name"></div>
 		</div>
 
 		<!-- ── 左下角：簡介 + 教學 ── -->
@@ -741,12 +857,12 @@
 
 		/* 徽章資料（配合 db.js locationDB） */
 		var HARBOR_INFO = {
-			badouzi:  { name:'基隆八斗子漁港', badge:'🏅 北岬海紋章'  },
-			nanfangao:{ name:'宜蘭南方澳漁港', badge:'🏅 洄光海紋章'  },
-			longfeng: { name:'苗栗龍鳳漁港',   badge:'🏅 龍鳳初航章'  },
-			wuqi:     { name:'台中梧棲漁港',   badge:'🏅 中港豐海章'  },
-			anping:   { name:'台南安平漁港',   badge:'🏅 安平豐海章'  },
-			donggang: { name:'屏東東港漁港',   badge:'🏅 黑潮守護章'  },
+			badouzi:  { name:'基隆八斗子漁港', badge:'北岬海紋章', stars:'★★★★'   },
+			nanfangao:{ name:'宜蘭南方澳漁港', badge:'洄光海紋章', stars:'★★★★★'  },
+			longfeng: { name:'苗栗龍鳳漁港',   badge:'龍鳳初航章', stars:'★★★'     },
+			wuqi:     { name:'台中梧棲漁港',   badge:'中港豐海章', stars:'★'        },
+			anping:   { name:'台南安平漁港',   badge:'安平豐海章', stars:'★★'       },
+			donggang: { name:'屏東東港漁港',   badge:'黑潮守護章', stars:'★★★★'   },
 		};
 
 		/* ── 取得 tw.png 在螢幕上的實際渲染矩形 ──
@@ -829,10 +945,125 @@
 			_resizeTimer = setTimeout(positionHarbors, 80);
 		});
 
+		/* ══════════════════════════════════════════════
+		   天氣海象 + 突發事件系統
+		   每次 welcome-screen 顯示時重新抽選一次
+		   ══════════════════════════════════════════════ */
+		var PORT_IDS = ['badouzi','nanfangao','longfeng','wuqi','anping','donggang'];
+
+		/* 依 weight 加權隨機抽 1 筆 */
+		function weightedPick(arr){
+			var total = arr.reduce(function(s,o){ return s + o.weight; }, 0);
+			var r = Math.random() * total;
+			for(var i=0;i<arr.length;i++){
+				r -= arr[i].weight;
+				if(r <= 0) return arr[i];
+			}
+			return arr[arr.length-1];
+		}
+
+		/* 主運算：回傳 { weather, event, portStatus:{id:true/false}, closedByEvent:{id:eventName} } */
+		function rollWeatherAndEvents(){
+			var weather = weightedPick(weatherDB);
+
+			/* 1. 依天氣機率，每港獨立丟骰 */
+			var portStatus = {};
+			PORT_IDS.forEach(function(id){
+				var chance = (weather.ports && weather.ports[id] != null) ? weather.ports[id] : 100;
+				portStatus[id] = (Math.random() * 100 < chance);
+			});
+
+			/* 2. 判定是否觸發事件 */
+			var event = null;
+			var closedByEvent = {};
+			var triggered = Math.random() * 100 < (weather.eventChance || 0);
+			if(triggered && typeof eventDB !== 'undefined' && eventDB.length){
+				event = weightedPick(eventDB);
+				/* 收集所有標 "pick" 的候選港口（無論天氣判定是否已關閉，pick 候選池都看事件表本身） */
+				var candidates = PORT_IDS.filter(function(id){
+					return event.ports && event.ports[id] === 'pick';
+				});
+				if(candidates.length){
+					var chosen = candidates[Math.floor(Math.random() * candidates.length)];
+					portStatus[chosen] = false;
+					closedByEvent[chosen] = event.name;
+				}
+			}
+
+			return { weather: weather, event: event, portStatus: portStatus, closedByEvent: closedByEvent };
+		}
+
+		/* 套用結果到 DOM */
+		function applyWeatherToUI(result){
+			window._wsWeatherResult = result;
+
+			/* 天氣卡片 */
+			var wBox = document.getElementById('ws-weather-box');
+			var wName = document.getElementById('ws-weather-name');
+			var wDesc = document.getElementById('ws-weather-desc');
+			var eName = document.getElementById('ws-event-name');
+			if(wName) wName.textContent = result.weather.name;
+			if(wDesc) wDesc.textContent = result.weather.desc;
+			if(eName){
+				if(result.event){
+					eName.textContent = result.event.name + '：' + result.event.desc;
+					eName.classList.add('show');
+				} else {
+					eName.textContent = '';
+					eName.classList.remove('show');
+				}
+			}
+			if(wBox) requestAnimationFrame(function(){ wBox.classList.add('show'); });
+
+			/* 港口開放/關閉 */
+			PORT_IDS.forEach(function(id){
+				var el = document.getElementById('wsh-'+id);
+				if(!el) return;
+				var isOpen = result.portStatus[id];
+				el.classList.toggle('ws-closed', !isOpen);
+				var tag = el.querySelector('.ws-h-event-tag');
+				if(tag){
+					if(!isOpen && result.closedByEvent[id]){
+						tag.textContent = result.closedByEvent[id];
+						tag.classList.add('show');
+					} else {
+						tag.textContent = '';
+						tag.classList.remove('show');
+					}
+				}
+			});
+
+			/* 若先前選的港口這次被關閉，清除選擇並提示 */
+			if(window.selectedLocationId && result.portStatus[window.selectedLocationId] === false){
+				window.selectedLocationId = null;
+				sessionStorage.removeItem('selectedLocationId');
+				document.querySelectorAll('.ws-harbor').forEach(function(el){ el.classList.remove('ws-selected'); });
+				var hint = document.getElementById('ws-panel-hint');
+				var content = document.getElementById('ws-panel-content');
+				if(hint) hint.style.display = 'block';
+				if(content) content.style.display = 'none';
+				wsShowToast('⚠️ 原出發漁港今日封港，請重新選擇');
+			}
+		}
+
+		function rollAndApplyWeather(){
+			if(typeof weatherDB === 'undefined' || typeof eventDB === 'undefined'){
+				return; /* db.js 尚未載入或不存在，略過 */
+			}
+			var result = rollWeatherAndEvents();
+			applyWeatherToUI(result);
+		}
+
 		/* ── 選港 ── */
 		window.selectedLocationId = sessionStorage.getItem('selectedLocationId') || null;
 
 		window.wsSelectHarbor = function(id){
+			/* 保險檢查：已關閉的港口不可選 */
+			var elCheck = document.getElementById('wsh-'+id);
+			if(elCheck && elCheck.classList.contains('ws-closed')){
+				wsShowToast('⛔ 此港口今日封港');
+				return;
+			}
 			/* 取消舊選中 */
 			document.querySelectorAll('.ws-harbor').forEach(function(el){
 				el.classList.remove('ws-selected');
@@ -846,17 +1077,10 @@
 
 			/* 更新面板 */
 			var info = HARBOR_INFO[id] || {};
-			document.getElementById('ws-panel-harbor-name').textContent = info.name || id;
-			document.getElementById('ws-panel-badge').textContent       = info.badge || '';
+			document.getElementById('ws-panel-harbor-name').textContent = (info.name || id) + ' ' + (info.stars || '');
+			document.getElementById('ws-panel-badge').textContent = '🏅 ' + (info.badge || '');
 			document.getElementById('ws-panel-hint').style.display    = 'none';
 			document.getElementById('ws-panel-content').style.display = 'block';
-
-			/* 帶入上次暱稱 */
-			var nameEl = document.getElementById('ws-name-input');
-			if(nameEl && !nameEl.value){
-				var last = localStorage.getItem('lastPlayerName');
-				if(last) nameEl.value = last;
-			}
 
 			/* 移動小船 */
 			var r    = getImgRect();
@@ -870,6 +1094,14 @@
 		};
 
 		/* 選港恢復由 MutationObserver 在 welcome-screen 顯示時統一處理 */
+
+		/* ── 自動帶入上次暱稱（頁面載入時即執行，不依賴選港） ── */
+		(function(){
+			var nameEl = document.getElementById('ws-name-input');
+			if(!nameEl) return;
+			var last = localStorage.getItem('lastPlayerName');
+			if(last) nameEl.value = last;
+		})();
 
 		/* ── Toast ── */
 		var _toastTimer;
@@ -953,6 +1185,12 @@
 				wsShowToast('⚠️ 請先選擇出發漁港');
 				return;
 			}
+			/* 保險檢查：避免殘留選擇繞過已封港的港口 */
+			var elCheck2 = document.getElementById('wsh-'+window.selectedLocationId);
+			if(elCheck2 && elCheck2.classList.contains('ws-closed')){
+				wsShowToast('⛔ 此港口今日封港，請重新選擇');
+				return;
+			}
 			var nameEl = document.getElementById('ws-name-input');
 			var typedName = nameEl && nameEl.value.trim();
 			if(typedName) localStorage.setItem('lastPlayerName', typedName);
@@ -985,16 +1223,16 @@
 				/* 計算 transform-origin：以港口為縮放中心 */
 				var ox = (dotX / cW * 100).toFixed(1) + '%';
 				var oy = (dotY / cH * 100).toFixed(1) + '%';
-				wsEl.style.transition        = 'transform 0.85s cubic-bezier(.4,0,.2,1), opacity 0.85s ease';
+				wsEl.style.transition        = 'transform 2s cubic-bezier(.4,0,.2,1), opacity 0.8s ease';
 				wsEl.style.transformOrigin   = ox + ' ' + oy;
-				wsEl.style.transform         = 'scale(3.5)';
+				wsEl.style.transform         = 'scale(2.5)';
 				wsEl.style.opacity           = '0';
 				setTimeout(function(){
 					wsEl.style.transition      = '';
 					wsEl.style.transform       = '';
 					wsEl.style.transformOrigin = '';
 					if(typeof initGame === 'function') initGame();
-				}, 880);
+				}, 2050);
 			} else {
 				if(typeof initGame === 'function') initGame();
 			}
@@ -1104,7 +1342,7 @@
 			window._wsStopWaves  = stopWaves;
 		})();
 
-		/* ── 統一 MutationObserver：welcome-screen 顯示時同時定位港口＋啟動波浪 ── */
+		/* ── 統一 MutationObserver：welcome-screen 顯示時同時定位港口＋啟動波浪＋抽天氣事件 ── */
 		var _wsEl = document.getElementById('welcome-screen');
 		if(_wsEl){
 			new MutationObserver(function(){
@@ -1114,10 +1352,16 @@
 					setTimeout(positionHarbors, 50);
 					setTimeout(positionHarbors, 200);
 					if(window._wsStartWaves) window._wsStartWaves();
+					rollAndApplyWeather();
 				} else {
 					if(window._wsStopWaves) window._wsStopWaves();
 				}
 			}).observe(_wsEl, { attributes:true, attributeFilter:['style','class'] });
+		}
+
+		/* 頁面首次載入時，若 welcome-screen 一開始就是可見狀態，也要抽一次 */
+		if(_wsEl && _wsEl.style.display !== 'none' && _wsEl.style.display !== ''){
+			rollAndApplyWeather();
 		}
 
 	})();
@@ -1182,6 +1426,18 @@
         }, 300);
       }
     }).observe(title, { attributes:true, attributeFilter:['class'] });
+
+    /* intro 開始播放時（intro-screen 被點擊，intro-cs 變可見）隱藏 subtitle */
+    var introScreen = document.getElementById('intro-screen');
+    if(introScreen){
+      introScreen.addEventListener('click', function(){
+        setTimeout(function(){
+          sub.style.transition = 'opacity 0.4s ease';
+          sub.style.opacity    = '0';
+          sub.classList.remove('show');
+        }, 100);
+      }, { once: true });
+    }
 
     window.addEventListener('resize', function(){
       if(sub.classList.contains('show')) place();
