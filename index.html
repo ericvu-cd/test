@@ -350,7 +350,7 @@
     }
     #ws-name-box .ws-panel-label { margin-bottom: 6px; }
 
-    /* ── 天氣海象卡片（暱稱框下方） ── */
+    /* ── 天氣海象卡片（暱稱框下方，只顯示當天天氣） ── */
     #ws-weather-box {
         position: absolute;
         left: 12px;
@@ -377,56 +377,16 @@
         white-space: nowrap;
         line-height: 1.4;
     }
-    #ws-event-name {
-        margin-top: 4px;
-        padding-top: 4px;
-        border-top: 1px solid rgba(60,140,200,0.2);
-        font-size: .82rem;
-        font-weight: 700;
-        color: #ffb347;
-        white-space: nowrap;
-        display: none;
-    }
-    #ws-event-name.show { display: block; }
 
-    /* ── 港口關閉狀態 ──
-       filter 只套用在核心圓點上，不影響文字標籤的可讀性 */
+    /* ── 港口關閉狀態：整體變暗，不疊加任何圖示 ── */
     .ws-harbor.ws-closed {
         pointer-events: none;
+        opacity: .42;
     }
     .ws-harbor.ws-closed .ws-h-core {
-        background: #888;
         animation: none;
-        opacity: .6;
-        filter: grayscale(1);
     }
     .ws-harbor.ws-closed .ws-h-ring { display: none; }
-    .ws-harbor.ws-closed .ws-h-label {
-        color: rgba(220,220,220,0.85);
-    }
-    .ws-harbor .ws-h-lock {
-        position: absolute;
-        top: -20px;
-        left: 50%;
-        transform: translateX(-50%);
-        font-size: .9rem;
-        display: none;
-        filter: drop-shadow(0 1px 3px rgba(0,0,0,0.9));
-        z-index: 2;
-    }
-    .ws-harbor.ws-closed .ws-h-lock { display: block; }
-    .ws-harbor .ws-h-event-tag {
-        position: absolute;
-        top: 30px;
-        left: 50%;
-        transform: translateX(-50%);
-        white-space: nowrap;
-        font-size: .62rem;
-        color: #ffb347;
-        text-shadow: 0 1px 4px rgba(0,0,0,0.95);
-        display: none;
-    }
-    .ws-harbor.ws-closed .ws-h-event-tag.show { display: block; }
     .ws-diff-btn:active { transform: scale(0.94); }
     .ws-diff-btn.ws-active {
         background: rgba(255,183,77,0.15);
@@ -600,51 +560,39 @@
 		<div id="ws-harbor-layer">
 			<!-- 基隆八斗子：東北角海岸 -->
 			<div class="ws-harbor" id="wsh-badouzi" data-id="badouzi" onclick="wsSelectHarbor('badouzi')">
-				<div class="ws-h-lock">🔒</div>
 				<div class="ws-h-ring"></div>
 				<div class="ws-h-core"></div>
 				<div class="ws-h-label">八斗子</div>
-				<div class="ws-h-event-tag"></div>
 			</div>
 			<!-- 宜蘭南方澳：東岸中上 -->
 			<div class="ws-harbor" id="wsh-nanfangao" data-id="nanfangao" onclick="wsSelectHarbor('nanfangao')">
-				<div class="ws-h-lock">🔒</div>
 				<div class="ws-h-ring"></div>
 				<div class="ws-h-core"></div>
 				<div class="ws-h-label">南方澳</div>
-				<div class="ws-h-event-tag"></div>
 			</div>
 			<!-- 苗栗龍鳳：西岸中上 -->
 			<div class="ws-harbor label-right" id="wsh-longfeng" data-id="longfeng" onclick="wsSelectHarbor('longfeng')">
-				<div class="ws-h-lock">🔒</div>
 				<div class="ws-h-ring"></div>
 				<div class="ws-h-core"></div>
 				<div class="ws-h-label">龍鳳</div>
-				<div class="ws-h-event-tag"></div>
 			</div>
 			<!-- 台中梧棲：西岸中段 -->
 			<div class="ws-harbor label-right" id="wsh-wuqi" data-id="wuqi" onclick="wsSelectHarbor('wuqi')">
-				<div class="ws-h-lock">🔒</div>
 				<div class="ws-h-ring"></div>
 				<div class="ws-h-core"></div>
 				<div class="ws-h-label">梧棲</div>
-				<div class="ws-h-event-tag"></div>
 			</div>
 			<!-- 台南安平：西南岸 -->
 			<div class="ws-harbor label-right" id="wsh-anping" data-id="anping" onclick="wsSelectHarbor('anping')">
-				<div class="ws-h-lock">🔒</div>
 				<div class="ws-h-ring"></div>
 				<div class="ws-h-core"></div>
 				<div class="ws-h-label">安平</div>
-				<div class="ws-h-event-tag"></div>
 			</div>
 			<!-- 屏東東港：南端偏東 -->
 			<div class="ws-harbor" id="wsh-donggang" data-id="donggang" onclick="wsSelectHarbor('donggang')">
-				<div class="ws-h-lock">🔒</div>
 				<div class="ws-h-ring"></div>
 				<div class="ws-h-core"></div>
 				<div class="ws-h-label">東港</div>
-				<div class="ws-h-event-tag"></div>
 			</div>
 		</div>
 
@@ -676,10 +624,9 @@
 				placeholder="輸入你的暱稱…" maxlength="12">
 		</div>
 
-		<!-- ── 天氣海象卡片 ── -->
+		<!-- ── 天氣海象卡片（只顯示當天天氣） ── -->
 		<div id="ws-weather-box">
 			<div id="ws-weather-name"></div>
-			<div id="ws-event-name"></div>
 		</div>
 
 		<!-- ── 左下角：簡介 + 教學 ── -->
@@ -996,46 +943,42 @@
 		function applyWeatherToUI(result){
 			window._wsWeatherResult = result;
 
-			/* 天氣卡片 */
+			/* 天氣卡片：只顯示當天天氣名稱 */
 			var wBox = document.getElementById('ws-weather-box');
 			var wName = document.getElementById('ws-weather-name');
-			var eName = document.getElementById('ws-event-name');
 			if(wName) wName.textContent = result.weather.name;
-			if(eName){
-				if(result.event){
-					eName.textContent = result.event.name;
-					eName.classList.add('show');
-				} else {
-					eName.textContent = '';
-					eName.classList.remove('show');
-				}
-			}
 			if(wBox) requestAnimationFrame(function(){ wBox.classList.add('show'); });
 
-			/* 港口開放/關閉 */
+			/* 港口開放/關閉：只變暗，不疊加圖示 */
+			var closedList = [];
 			PORT_IDS.forEach(function(id){
 				var el = document.getElementById('wsh-'+id);
 				if(!el) return;
 				var isOpen = result.portStatus[id];
 				el.classList.toggle('ws-closed', !isOpen);
-				var tag = el.querySelector('.ws-h-event-tag');
-				if(tag){
-					if(!isOpen && result.closedByEvent[id]){
-						tag.textContent = result.closedByEvent[id];
-						tag.classList.add('show');
-					} else {
-						tag.textContent = '';
-						tag.classList.remove('show');
-					}
+				if(!isOpen){
+					var info = HARBOR_INFO[id] || {};
+					var reason = result.closedByEvent[id] || result.weather.name;
+					closedList.push((info.name || id) + '（' + reason + '）');
 				}
 			});
+
+			/* 右下角面板提示：開場時列出所有封港原因
+			   （玩家點選任一漁港後，此提示會被面板內容取代，消失即可，無需另外處理） */
+			var hint = document.getElementById('ws-panel-hint');
+			if(hint){
+				if(closedList.length){
+					hint.innerHTML = '⚓ 今日封港：<br>' + closedList.join('<br>');
+				} else {
+					hint.innerHTML = '👆 點選地圖上<br>的漁港出發';
+				}
+			}
 
 			/* 若先前選的港口這次被關閉，清除選擇並提示 */
 			if(window.selectedLocationId && result.portStatus[window.selectedLocationId] === false){
 				window.selectedLocationId = null;
 				sessionStorage.removeItem('selectedLocationId');
 				document.querySelectorAll('.ws-harbor').forEach(function(el){ el.classList.remove('ws-selected'); });
-				var hint = document.getElementById('ws-panel-hint');
 				var content = document.getElementById('ws-panel-content');
 				if(hint) hint.style.display = 'block';
 				if(content) content.style.display = 'none';
