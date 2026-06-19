@@ -226,10 +226,12 @@
 		transition: left 1.13s cubic-bezier(.2,.85,.2,1),
 					top  1.13s cubic-bezier(.2,.85,.2,1);
 		z-index: 11;
-		pointer-events: none;
+		pointer-events: auto;
+		cursor: pointer;
 		filter: drop-shadow(0 0 6px rgba(255,255,255,0.5));
 		animation: wsBoatFloat 2.8s ease-in-out infinite;
 	}
+	#ws-boat:active { transform: translate(-50%, -50%) scale(0.9); }
 	@keyframes wsBoatFloat {
 		0%,100% { margin-top: 0; }
 		50%      { margin-top: -3px; }
@@ -333,6 +335,21 @@
 		box-shadow: 0 8px 32px rgba(0,0,0,0.35);
 	}
 	#ws-name-box .ws-panel-label { margin-bottom: 6px; color: #ffffff; }
+	#ws-name-box .ws-panel-label {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+	}
+	#ws-collection-badge {
+		font-size: 1.05rem;
+		line-height: 1;
+		cursor: pointer;
+		filter: none;
+		transition: filter .18s ease, transform .12s ease;
+		-webkit-tap-highlight-color: transparent;
+	}
+	#ws-collection-badge:active { transform: scale(0.85); }
+	#ws-collection-badge.ws-badge-empty { filter: grayscale(1) opacity(0.5); }
 
 	/* ── 天氣海象卡片（暱稱框下方，只顯示當天天氣） ── */
 	#ws-weather-box {
@@ -554,7 +571,7 @@
 		</div>
 
 		<!-- ── 小船 ── -->
-		<div id="ws-boat">⛵</div>
+		<div id="ws-boat" onclick="wsBoatClick()">⛵</div>
 
 		<!-- ── 右下角面板 ── -->
 		<div id="ws-panel">
@@ -576,7 +593,10 @@
 
 		<!-- ── 左上角：守護員暱稱輸入 ── -->
 		<div id="ws-name-box">
-			<div class="ws-panel-label">守護員暱稱</div>
+			<div class="ws-panel-label">
+				<span>守護員暱稱</span>
+				<span id="ws-collection-badge" class="ws-badge-empty" onclick="wsOpenCollection()" title="我的海紋收集">🏅</span>
+			</div>
 			<input id="ws-name-input" type="text"
 				placeholder="輸入你的暱稱…" maxlength="12">
 		</div>
@@ -698,16 +718,16 @@
 			el.style.left = x + 'px';
 			el.style.top  = y + 'px';
 		});
-		/* 小船初始位置：右下角面板附近（台灣島南端右側海域） */
+		/* 小船初始位置：守護員暱稱輸入框旁邊 */
 		var boat = document.getElementById('ws-boat');
 		if(boat && !window._wsBoatMoved){
-			var panelEl = document.getElementById('ws-panel');
-			var px = panelEl
-				? (panelEl.offsetLeft - 28) / window.innerWidth
-				: 0.82;
-			var py = panelEl
-				? (panelEl.offsetTop + panelEl.offsetHeight * 0.3) / window.innerHeight
-				: 0.72;
+			var nameBoxEl = document.getElementById('ws-name-box');
+			var px = nameBoxEl
+				? (nameBoxEl.offsetLeft + nameBoxEl.offsetWidth + 22) / window.innerWidth
+				: 0.46;
+			var py = nameBoxEl
+				? (nameBoxEl.offsetTop + nameBoxEl.offsetHeight * 0.5) / window.innerHeight
+				: 0.1;
 			boat.style.transition = 'none'; /* 初始定位不要動畫 */
 			boat.style.left = (px * window.innerWidth)  + 'px';
 			boat.style.top  = (py * window.innerHeight) + 'px';
@@ -794,12 +814,40 @@
 
 	/* 選港恢復由 MutationObserver 在 welcome-screen 顯示時統一處理 */
 
+	/* ── 守護員暱稱徽章：依是否已輸入暱稱切換灰階 ── */
+	function wsUpdateCollectionBadge(){
+		var nameEl = document.getElementById('ws-name-input');
+		var badge  = document.getElementById('ws-collection-badge');
+		if(!badge) return;
+		var hasName = !!(nameEl && nameEl.value.trim().length);
+		badge.classList.toggle('ws-badge-empty', !hasName);
+	}
+
+	/* ── 點擊徽章：開啟「我的海紋收集」（依目前輸入框暱稱） ── */
+	window.wsOpenCollection = function(){
+		var nameEl = document.getElementById('ws-name-input');
+		var typed  = nameEl && nameEl.value.trim();
+		window.playerName = typed || '守護員';
+		if(typeof openCollection === 'function'){
+			openCollection();
+		} else {
+			wsShowToast('⚠️ 收集功能尚未載入');
+		}
+	};
+
+	/* ── 點擊小船：提示可點選漁港出發 ── */
+	window.wsBoatClick = function(){
+		wsShowToast('💡 可以點擊漁港出發', 2000);
+	};
+
 	/* ── 自動帶入上次暱稱（頁面載入時即執行，不依賴選港） ── */
 	(function(){
 		var nameEl = document.getElementById('ws-name-input');
 		if(!nameEl) return;
 		var last = localStorage.getItem('lastPlayerName');
 		if(last) nameEl.value = last;
+		wsUpdateCollectionBadge();
+		nameEl.addEventListener('input', wsUpdateCollectionBadge);
 	})();
 
 	/* ── Toast ── */

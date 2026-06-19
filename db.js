@@ -169,7 +169,7 @@ const locationDB = [
 const weatherDB = [
     {
         id: "sunny",
-        name: "☀️ 晴空萬里",
+        name: "晴空萬里",
         desc: "風平浪靜，適合出海。",
         season: null,
         weight: 32,        // 天氣機率 (%)
@@ -178,7 +178,7 @@ const weatherDB = [
     },
     {
         id: "cloudy",
-        name: "🌤️ 多雲微浪",
+        name: "多雲微浪",
         desc: "雲層遮日，浪況平穩。",
         season: null,
         weight: 27,
@@ -187,7 +187,7 @@ const weatherDB = [
     },
     {
         id: "ne_monsoon",
-        name: "🌊 東北季風",
+        name: "東北季風",
         desc: "東北風強勁，東北角浪高 3～4m。",
         season: "冬",
         weight: 15,
@@ -196,7 +196,7 @@ const weatherDB = [
     },
     {
         id: "sw_flow",
-        name: "🌧️ 西南氣流",
+        name: "西南氣流",
         desc: "西南氣流帶雨，西岸浪湧漸增。",
         season: "夏",
         weight: 7,
@@ -205,7 +205,7 @@ const weatherDB = [
     },
     {
         id: "fog",
-        name: "🌫️ 海霧瀰漫",
+        name: "海霧瀰漫",
         desc: "能見度不足 200m，西部航行危險。",
         season: "春",
         weight: 7,
@@ -214,7 +214,7 @@ const weatherDB = [
     },
     {
         id: "rainstorm",
-        name: "🌧️ 暴雨警告",
+        name: "暴雨警告",
         desc: "豪雨不斷，漁船出港風險升高。",
         season: "夏",
         weight: 4,
@@ -223,7 +223,7 @@ const weatherDB = [
     },
     {
         id: "cold_front",
-        name: "❄️ 寒流來襲",
+        name: "寒流來襲",
         desc: "強冷氣團南下，中北部港口封閉。",
         season: "冬",
         weight: 3,
@@ -232,7 +232,7 @@ const weatherDB = [
     },
     {
         id: "typhoon_east",
-        name: "🌀 颱風來襲",
+        name: "颱風來襲",
         desc: "颱風沿東岸北上，東側海域封閉。",
         season: "秋",
         weight: 2,
@@ -241,7 +241,7 @@ const weatherDB = [
     },
     {
         id: "typhoon_cross",
-        name: "🌀 颱風來襲",
+        name: "颱風來襲",
         desc: "颱風穿越台灣，風浪強烈。",
         season: "夏",
         weight: 1,
@@ -250,7 +250,7 @@ const weatherDB = [
     },
     {
         id: "typhoon_south",
-        name: "🌀 颱風來襲",
+        name: "颱風來襲",
         desc: "颱風南部登陸，南部海域封閉。",
         season: "夏",
         weight: 2,
