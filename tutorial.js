@@ -502,15 +502,15 @@ const SUMMON_MAZU = {
 function setupTutorialCards() {
     players[0].hand = TUTOR_HAND_TPL.map(f => ({ ...f, m:[...f.m] }));
     players[1].hand = [
-        { n:"鮭魚", d:"遠洋", l:2, m:["延繩釣"], h:"洄游性", s:"秋冬" },
-        { n:"鯖魚", d:"近海", l:2, m:["圍網"],   h:"洄游性", s:"夏秋" }
+        { n:"秋刀魚", d:"遠洋", l:2, m:["延繩釣"], h:"洄游性", s:"秋冬" },
+        { n:"台灣鯖魚", d:"近海", l:2, m:["圍網"],   h:"洄游性", s:"夏秋" }
     ];
     players[2].hand = [
-        { n:"石斑魚", d:"養殖", l:1, m:["養殖"],  h:"定棲性", s:"全年" }
+        { n:"野生石斑", d:"養殖", l:1, m:["養殖"],  h:"定棲性", s:"全年" }
     ];
     players[3].hand = [
         { n:"旗魚", d:"遠洋", l:3, m:["一支釣"], h:"洄游性", s:"春夏" },
-        { n:"鱸魚", d:"養殖", l:1, m:["養殖"],   h:"定棲性", s:"全年" }
+        { n:"養殖鱸魚", d:"養殖", l:1, m:["養殖"],   h:"定棲性", s:"全年" }
     ];
     table      = [];
     roundCount = 0;
@@ -552,8 +552,8 @@ async function tutorAfterPlay1(fishPlayed) {
 
     await sleep(800);
 
-    // 海龜出石斑魚（養殖，成功）
-    const c1 = { n:"石斑魚", d:"養殖", l:1, m:["養殖"], h:"定棲性", s:"全年" };
+    // 海龜出野生石斑（養殖，成功）
+    const c1 = { n:"野生石斑", d:"養殖", l:1, m:["養殖"], h:"定棲性", s:"全年" };
     table.push({ pIdx:2, card:c1 });
     if (typeof playCardFlyAnimation === "function")
         playCardFlyAnimation(c1, document.getElementById("ai-2"), () => renderTable());
@@ -605,7 +605,7 @@ function startPractice2() {
 
         await sleep(2000);
 
-        // 章魚船長出鮭魚（洄游性）
+        // 章魚船長出秋刀魚（洄游性）
         const aiCard = players[1].hand.splice(0,1)[0];
         if (aiCard) {
             table.push({ pIdx:1, card:aiCard });
@@ -617,7 +617,7 @@ function startPractice2() {
         await sleep(1800);
 
         tutorSay(
-            "👀 對手出了「洄游性」的鮭魚 => 條件可能和洄游性有關？\n這次故意讓你出【吳郭魚】，看看出錯了會發生什麼事!\n點亮起（金色）的牌！",
+            "👀 對手出了「洄游性」的秋刀魚 => 條件可能和洄游性有關？\n這次故意讓你出【吳郭魚】，看看出錯了會發生什麼事!\n點亮起（金色）的牌！",
             false
         );
 
@@ -637,7 +637,7 @@ async function tutorAfterPlay2(fishPlayed) {
     await sleep(800);
 
     // 海龜跟牌（洄游性，成功）
-    const c3 = { n:"鯖魚", d:"近海", l:2, m:["圍網"], h:"洄游性", s:"夏秋" };
+    const c3 = { n:"台灣鯖魚", d:"近海", l:2, m:["圍網"], h:"洄游性", s:"夏秋" };
     table.push({ pIdx:2, card:c3 });
     if (typeof playCardFlyAnimation === "function")
         playCardFlyAnimation(c3, document.getElementById("ai-2"), () => renderTable());
@@ -679,12 +679,12 @@ function startPracticeMazu() {
     sumEl.innerText = "【神明指示】\n" + SUMMON_MAZU.t;
     sumEl.classList.add("mazu-glow");
 
-    players[1].hand = [{ n:"鯖魚",   d:"近海", l:2, m:["圍網"],   h:"洄游性", s:"夏秋" }];
+    players[1].hand = [{ n:"台灣鯖魚",   d:"近海", l:2, m:["圍網"],   h:"洄游性", s:"夏秋" }];
     players[2].hand = [
-        { n:"石斑魚", d:"養殖", l:1, m:["養殖"], h:"定棲性", s:"全年" },
-        { n:"烏魚",   d:"近海", l:2, m:["刺網"], h:"洄游性", s:"冬"  }
+        { n:"野生石斑", d:"養殖", l:1, m:["養殖"], h:"定棲性", s:"全年" },
+        { n:"養殖烏魚",   d:"近海", l:2, m:["刺網"], h:"洄游性", s:"冬"  }
     ];
-    players[3].hand = [{ n:"鱸魚",   d:"養殖", l:1, m:["養殖"],   h:"定棲性", s:"全年" }];
+    players[3].hand = [{ n:"養殖鱸魚",   d:"養殖", l:1, m:["養殖"],   h:"定棲性", s:"全年" }];
 
     renderUI();
 
