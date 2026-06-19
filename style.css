@@ -37,13 +37,13 @@ body {
     background: transparent;
 }
 /* 讓 body 底下的所有東西預設先消失 */
-body > *:not(#welcome-screen):not(#intro-screen) {
+body > *:not(#welcome-screen):not(#intro-screen):not(#collection-modal):not(#collection-zoom-overlay) {
     visibility: hidden;
     opacity: 0;
 }
 
 /* 當遊戲開始，給 body 加一個類別，讓內容顯現 */
-body.game-started > *:not(#welcome-screen):not(#intro-screen) {
+body.game-started > *:not(#welcome-screen):not(#intro-screen):not(#collection-modal):not(#collection-zoom-overlay) {
     visibility: visible;
     opacity: 1;
     transition: opacity 1s ease;

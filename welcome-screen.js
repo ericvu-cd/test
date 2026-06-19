@@ -341,15 +341,24 @@
 		justify-content: space-between;
 	}
 	#ws-collection-badge {
-		font-size: 1.05rem;
+		width: 26px;
+		height: 26px;
+		border-radius: 50%;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		flex-shrink: 0;
+		font-size: .92rem;
 		line-height: 1;
 		cursor: pointer;
+		background: rgba(255,255,255,0.07);
+		border: 1px solid rgba(80,160,220,0.3);
 		filter: none;
-		transition: filter .18s ease, transform .12s ease;
+		transition: filter .18s ease, transform .12s ease, background .18s ease;
 		-webkit-tap-highlight-color: transparent;
 	}
-	#ws-collection-badge:active { transform: scale(0.85); }
-	#ws-collection-badge.ws-badge-empty { filter: grayscale(1) opacity(0.5); }
+	#ws-collection-badge:active { transform: scale(0.85); background: rgba(255,255,255,0.14); }
+	#ws-collection-badge.ws-badge-empty { filter: grayscale(1) opacity(0.55); }
 
 	/* ── 天氣海象卡片（暱稱框下方，只顯示當天天氣） ── */
 	#ws-weather-box {
