@@ -1,7 +1,7 @@
 /* ══ 歡迎頁模組（welcome-screen.js）══
    包含：CSS 樣式注入、HTML 結構注入、歡迎頁所有邏輯
    依賴：db.js（weatherDB, eventDB）、weather-event.js（rollAndApplyWeather）
-========================================== */
+========================================= */
 (function(){
 
 	/* ── 注入歡迎頁 CSS ── */

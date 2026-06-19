@@ -1,5 +1,5 @@
 // ======================
-// 🐟 新手教學模組 tutorial.js（修正版 v2）
+// 🐟 新手教學模組 tutorial.js
 // ======================
 
 let tutorialMode  = false;
