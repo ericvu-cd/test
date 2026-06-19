@@ -1135,8 +1135,16 @@ function scheduleSprintFish() {
     }, delay);
 }
 
+function initChatLayer() {
+    if (document.getElementById("chat-layer")) return;
+    const layer = document.createElement("div");
+    layer.id = "chat-layer";
+    document.body.appendChild(layer);
+}
+
 function initGame() {
 	initOceanCaustics();
+	initChatLayer();
 	startFish();    // ← 遊戲開始才啟動魚
 	startBubbles(); // ← 遊戲開始才啟動氣泡
 	document.body.classList.add('game-started');
@@ -2228,7 +2236,7 @@ function aiChooseCard(p) {
 function showChat(p, msg) {
     const layer = document.getElementById("chat-layer");
     const el = document.getElementById(p.id);
-    if (!el) return;
+    if (!layer || !el) return;
 
     const rect = el.getBoundingClientRect();
 
