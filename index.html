@@ -81,7 +81,7 @@
         align-items: center;
     }
     #ws-title-text {
-        font-family: 'Noto Serif TC', 'Microsoft JhengHei', serif;
+        font-family: "Microsoft JhengHei", "PingFang TC", sans-serif;
         font-size: clamp(.95rem, 3.5vw, 1.15rem);
         font-weight: 900;
         color: #e0f0ff;
@@ -290,6 +290,9 @@
         margin-bottom: 1px;
         text-shadow: 0 0 10px rgba(80,180,255,0.5);
     }
+    #ws-panel-harbor-name .ws-stars {
+        color: #5ab0ff;
+    }
     #ws-panel-badge {
         font-size: .72rem;
         color: #f5c842;
@@ -308,7 +311,7 @@
         border: 1px solid rgba(60,140,200,0.3);
         border-radius: 8px;
         padding: 7px 9px;
-        color: #e8f4ff;
+        color: #ffffff;
         font-size: .85rem;
         font-family: "Microsoft JhengHei", sans-serif;
         outline: none;
@@ -372,6 +375,7 @@
         transition: opacity .5s ease, transform .5s ease;
     }
     #ws-weather-box.show { opacity: 1; transform: translateY(0); }
+    #ws-weather-box { cursor: pointer; }
     #ws-weather-label {
         font-size: .66rem;
         letter-spacing: .12em;
@@ -633,8 +637,8 @@
 				placeholder="輸入你的暱稱…" maxlength="12">
 		</div>
 
-		<!-- ── 天氣海象卡片（只顯示當天天氣） ── -->
-		<div id="ws-weather-box">
+		<!-- ── 天氣海象卡片（只顯示當天天氣，點擊顯示說明） ── -->
+		<div id="ws-weather-box" onclick="wsShowWeatherDesc()">
 			<div id="ws-weather-label">今日天氣</div>
 			<div id="ws-weather-name"></div>
 		</div>
@@ -1008,10 +1012,19 @@
 		window.selectedLocationId = sessionStorage.getItem('selectedLocationId') || null;
 
 		window.wsSelectHarbor = function(id){
-			/* 保險檢查：已關閉的港口不可選 */
+			/* 保險檢查：已關閉的港口不可選，改顯示原因說明 2 秒 */
 			var elCheck = document.getElementById('wsh-'+id);
 			if(elCheck && elCheck.classList.contains('ws-closed')){
-				wsShowToast('⛔ 此港口今日封港');
+				var r = window._wsWeatherResult;
+				var msg = '⛔ 此港口今日封港';
+				if(r){
+					if(r.closedByEvent && r.closedByEvent[id] && r.event){
+						msg = '⛔ ' + r.event.name + '：' + r.event.desc;
+					} else if(r.weather){
+						msg = '⛔ ' + r.weather.name + '：' + r.weather.desc;
+					}
+				}
+				wsShowToast(msg, 2000);
 				return;
 			}
 			/* 取消舊選中 */
@@ -1027,7 +1040,7 @@
 
 			/* 更新面板 */
 			var info = HARBOR_INFO[id] || {};
-			document.getElementById('ws-panel-harbor-name').textContent = (info.name || id) + ' ' + (info.stars || '');
+			document.getElementById('ws-panel-harbor-name').innerHTML = (info.name || id) + ' <span class="ws-stars">' + (info.stars || '') + '</span>';
 			document.getElementById('ws-panel-badge').textContent = '🏅 ' + (info.badge || '');
 			document.getElementById('ws-panel-hint').style.display    = 'none';
 			document.getElementById('ws-panel-content').style.display = 'block';
@@ -1055,14 +1068,21 @@
 
 		/* ── Toast ── */
 		var _toastTimer;
-		function wsShowToast(msg){
+		function wsShowToast(msg, duration){
 			var t = document.getElementById('ws-toast');
 			if(!t) return;
 			t.textContent = msg;
 			t.classList.add('show');
 			clearTimeout(_toastTimer);
-			_toastTimer = setTimeout(function(){ t.classList.remove('show'); }, 1600);
+			_toastTimer = setTimeout(function(){ t.classList.remove('show'); }, duration || 1600);
 		}
+
+		/* 點擊天氣框，顯示天氣說明 2 秒 */
+		window.wsShowWeatherDesc = function(){
+			var r = window._wsWeatherResult;
+			if(!r || !r.weather) return;
+			wsShowToast(r.weather.name + '：' + r.weather.desc, 2000);
+		};
 
 		/* ── 難度 ── */
 		window.wsSetDiff = function(val, btn){
