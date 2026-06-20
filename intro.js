@@ -49,35 +49,23 @@
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       z-index: 5;
     }
-    #intro-title {
-      font-size: clamp(1.75rem, 5vw, 4rem);
-      font-weight: 900; letter-spacing: .08em;
-      font-family: 'Noto Serif TC', Georgia, serif;
-      color: #dff0ff;
-      text-shadow:
-        0 0 22px rgba(100,200,255,.95),
-        0 0 55px rgba(80,170,255,.55),
-        0 0 110px rgba(60,140,255,.28);
-      white-space: nowrap;
-      display: flex; gap: .12em;
-    }
-    .i-char {
-      display: inline-block;
+    #intro-logo {
+      max-width: min(82vw, 720px);
+      width: 100%;
+      height: auto;
       opacity: 0;
-      animation: iImpact .38s cubic-bezier(.22,.61,.36,1) forwards;
+      transform: scale(.94);
+      filter: drop-shadow(0 0 28px rgba(80,170,255,.45));
+      transition: opacity 1.1s cubic-bezier(.4,0,.2,1), transform 1.1s cubic-bezier(.22,.61,.36,1);
     }
-    @keyframes iImpact {
-      0%   { opacity:0; transform: scale(1.55) translateY(-8px); filter: brightness(2.5); }
-      45%  { opacity:1; transform: scale(.92) translateY(3px);  filter: brightness(1.4); }
-      70%  { transform: scale(1.04) translateY(-1px); filter: brightness(1.1); }
-      100% { opacity:1; transform: scale(1) translateY(0);      filter: brightness(1); }
+    #intro-logo.show {
+      opacity: 1;
+      transform: scale(1);
+      animation: iLogoPulse 3s ease-in-out 1.1s infinite;
     }
-    #intro-title.done {
-      animation: iPulse 3s ease-in-out infinite;
-    }
-    @keyframes iPulse {
-      0%,100%{ text-shadow:0 0 22px rgba(100,200,255,.95),0 0 55px rgba(80,170,255,.55); }
-      50%    { text-shadow:0 0 38px rgba(100,200,255,1),0 0 95px rgba(80,170,255,.9),0 0 160px rgba(60,140,255,.5); }
+    @keyframes iLogoPulse {
+      0%,100%{ filter: drop-shadow(0 0 28px rgba(80,170,255,.45)); }
+      50%    { filter: drop-shadow(0 0 46px rgba(80,170,255,.7)); }
     }
     #intro-hint {
       margin-top: 1.3em;
@@ -338,25 +326,13 @@ if (sessionStorage.getItem('skipIntro') !== '1') {
       }, dt);
     }
 
-    /* 撞擊式打字機（144ms/字） */
-    var TITLE = '海紋守護團', ti = 0;
-    var titleEl = document.getElementById('intro-title');
-    var hintEl  = document.getElementById('intro-hint');
-    function typeImpact() {
-      if (ti < TITLE.length) {
-        var span = document.createElement('span');
-        span.className = 'i-char';
-        span.textContent = TITLE[ti];
-        span.style.animationDelay = '0s';
-        titleEl.appendChild(span);
-        ti++;
-        setTimeout(typeImpact, 144);
-      } else {
-        titleEl.classList.add('done');
-        setTimeout(function () { hintEl.classList.add('show'); }, 600);
-      }
-    }
-    setTimeout(typeImpact, 900);
+    /* LOGO 淡入顯示 */
+    var logoEl = document.getElementById('intro-logo');
+    var hintEl = document.getElementById('intro-hint');
+    setTimeout(function () {
+      if (logoEl) logoEl.classList.add('show');
+      setTimeout(function () { if (hintEl) hintEl.classList.add('show'); }, 1100);
+    }, 600);
 
     var introScr = document.getElementById('intro-screen');
     introScr.addEventListener('click', startComic, { once: true });

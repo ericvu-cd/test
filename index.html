@@ -50,10 +50,9 @@
     <div id="fx-ripple3"></div>
 
     <div id="intro-ts">
-      <div id="intro-title"></div>
+      <img src="image/LOGO.png" id="intro-logo" alt="海紋守護團 台灣海線任務">
       <div id="intro-hint">點擊畫面開場</div>
     </div>
-    <img src="image/subtitle.png" id="intro-subtitle" alt="台灣海線任務">
 
     <div id="intro-cs">
       <img id="iimg-a" class="iimg" src="" alt="">
@@ -197,68 +196,8 @@
   <script>
   /* 預載 tw.png */
   (function(){ var p = new Image(); p.src = 'image/tw.png'; })();
-
-  /* subtitle 排版：
-     行1：#intro-title 置中（intro.js 原有）
-     行2：subtitle，右側對齊 title 右側，寬 = title 寬 × 65%
-     行3：#intro-hint 水平置中（保持原有動畫）
-  */
-  (function(){
-    var sub   = document.getElementById('intro-subtitle');
-    var title = document.getElementById('intro-title');
-    var hint  = document.getElementById('intro-hint');
-    if(!sub || !title) return;
-
-    function place(){
-      var tr = title.getBoundingClientRect();
-      if(!tr.width) return;
-
-      /* subtitle：緊貼 title 下方，右對齊 title 右側 */
-      var w = tr.width * 0.65;
-      var subTop = tr.bottom + 12;
-      sub.style.width  = w + 'px';
-      sub.style.height = 'auto';
-      sub.style.left   = (tr.right - w) + 'px';
-      sub.style.top    = subTop + 'px';
-
-      /* hint：subtitle 下方置中 */
-      if(hint){
-        var subH = sub.offsetHeight || 38;
-        var hintTop = subTop + subH + 20;
-        hint.style.position  = 'absolute';
-        hint.style.top       = hintTop + 'px';
-        hint.style.left      = '0';
-        hint.style.right     = '0';
-        hint.style.textAlign = 'center';
-        hint.style.marginTop = '0';
-      }
-    }
-
-    new MutationObserver(function(){
-      if(title.classList.contains('done')){
-        setTimeout(function(){
-          place();
-          sub.classList.add('show');
-        }, 300);
-      }
-    }).observe(title, { attributes:true, attributeFilter:['class'] });
-
-    /* intro 開始播放時（intro-screen 被點擊，intro-cs 變可見）隱藏 subtitle */
-    var introScreen = document.getElementById('intro-screen');
-    if(introScreen){
-      introScreen.addEventListener('click', function(){
-        setTimeout(function(){
-          sub.style.transition = 'opacity 0.4s ease';
-          sub.style.opacity    = '0';
-          sub.classList.remove('show');
-        }, 100);
-      }, { once: true });
-    }
-
-    window.addEventListener('resize', function(){
-      if(sub.classList.contains('show')) place();
-    });
-  })();
+  /* 預載 LOGO.png */
+  (function(){ var p = new Image(); p.src = 'image/LOGO.png'; })();
   </script>
 
 </body>
