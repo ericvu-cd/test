@@ -1,7 +1,28 @@
-/* ══ 歡迎頁模組（welcome-screen.js）══
-   包含：CSS 樣式注入、HTML 結構注入、歡迎頁所有邏輯
-   依賴：db.js（weatherDB, eventDB）、weather-event.js（rollAndApplyWeather）
-========================================= */
+/* ══════════════════════════════════════════════════════════════════════
+   歡迎頁模組（welcome-screen.js）
+   遊戲開場後、正式進入遊戲前的「選漁港 + 設難度 + 啟航」畫面。
+
+   本檔案結構（由上到下）：
+     1. CSS 樣式注入（document.head.appendChild(_style)）
+        地圖背景、頂部列、漁港氣泡、右下角面板、暱稱框、天氣卡、版權列…
+     2. HTML 結構注入（插在 #intro-screen 之後），含整個歡迎頁 DOM
+        以及「聯絡作者」表單彈窗
+     3. 歡迎頁地圖邏輯（IIFE 內的所有 function，由本檔自行管理狀態）：
+          - 依視窗大小換算 tw.png 地圖的實際渲染範圍，把 6 個漁港氣泡與
+            小船定位到地圖上正確的座標（getImgRect / positionHarbors）
+          - 選擇漁港、顯示右下角資訊面板、移動小船（wsSelectHarbor）
+          - 暱稱輸入、收集圖鑑徽章、音效開關、結算報告開關
+          - 按下「⚓ 守護漁港」後，畫面以選中漁港為中心縮放淡出，
+            轉場結束才呼叫 main.js 的 initGame() 正式開局（wsStartGame）
+          - Canvas 海浪波紋背景動畫（島嶼邊緣隨機冒出擴散圓圈）
+          - 用 MutationObserver 偵測 #welcome-screen 何時被顯示/隱藏，
+            統一觸發「重新定位港口、啟動波浪動畫、抽當日天氣與封港事件」
+
+   依賴：
+     db.js           — weatherDB、eventDB、locationDB（漁港顯示用的徽章/星等資訊另存於本檔 HARBOR_INFO）
+     weather-event.js — window.rollAndApplyWeather()（依天氣決定哪些漁港今日封港）
+     main.js         — initGame()、openCollection()、gameDifficulty、sfxEnabled、showSummaryMode
+   ══════════════════════════════════════════════════════════════════════ */
 (function(){
 
 	/* ── 注入歡迎頁 CSS ── */
@@ -698,6 +719,12 @@
 	}
 
 	/* ── 將港口氣泡和小船定位到地圖正確座標 ── */
+	/**
+	 * 依目前地圖實際渲染範圍（getImgRect），把 HARBORS 設定的百分比座標
+	 * 換算成螢幕像素，套用到每個漁港氣泡的 left/top。
+	 * 小船第一次定位（尚未被玩家選過港口時）會放在暱稱輸入框右側，
+	 * 且暫時關閉 transition，避免畫面剛載入時出現「滑過去」的位移動畫。
+	 */
 	function positionHarbors(){
 		var r = getImgRect();
 		if(!r.width) return;
@@ -757,8 +784,16 @@
 	});
 
 	/* ── 選港 ── */
+	/* 玩家選港狀態存進 sessionStorage：同一個分頁重新整理（例如切換難度後）
+	   仍會記得上次選的漁港，不必重選。 */
 	window.selectedLocationId = sessionStorage.getItem('selectedLocationId') || null;
 
+	/**
+	 * 玩家點擊地圖上某個漁港氣泡時呼叫。
+	 * @param {string} id 漁港代碼（對應 HARBORS / HARBOR_INFO 的 key）
+	 * 流程：若該港今日已被天氣／事件關閉則彈出原因提示並中止；
+	 * 否則切換選中樣式、更新右下角資訊面板內容、把小船移動過去。
+	 */
 	window.wsSelectHarbor = function(id){
 		/* 保險檢查：已關閉的港口不可選，改顯示原因說明 2 秒 */
 		var elCheck = document.getElementById('wsh-'+id);
@@ -844,6 +879,11 @@
 
 	/* ── Toast ── */
 	var _toastTimer;
+	/**
+	 * 在畫面右上角顯示一則短暫提示訊息。
+	 * @param {string} msg 顯示文字
+	 * @param {number} [duration=1600] 顯示毫秒數，超過後自動淡出
+	 */
 	function wsShowToast(msg, duration){
 		var t = document.getElementById('ws-toast');
 		if(!t) return;
@@ -899,6 +939,7 @@
 
 	/* ── 結算報告 ── */
 	var _rptOn = sessionStorage.getItem('reportMode') !== 'false';
+	// 依目前 _rptOn 開關狀態重繪結算報告按鈕圖示（關閉時疊加一個紅色 ✕）。
 	function _updateRptBtn(){
 		var btn = document.getElementById('ws-rpt-btn');
 		if(!btn) return;
@@ -928,6 +969,14 @@
 	};
 
 	/* ── 守護漁港（啟航） ── */
+	/**
+	 * 玩家按下「⚓ 守護漁港」後的啟航流程：
+	 *   1. 檢查是否已選港口、該港口是否仍開放（避免選完後天氣事件才把它關閉的競態狀況）
+	 *   2. 記住暱稱（localStorage）、把目前設定（暱稱/結算報告開關）同步給 main.js
+	 *   3. 視覺效果：以選中漁港的螢幕座標為縮放中心（transform-origin），
+	 *      把整個 welcome-screen 放大 2.5 倍並淡出，製造「鏡頭推近港口」的轉場感
+	 *   4. 轉場動畫結束（2.05 秒）後才呼叫 main.js 的 initGame() 正式開局
+	 */
 	window.wsStartGame = function(){
 		if(!window.selectedLocationId){
 			wsShowToast('⚠️ 請先選擇出發漁港');
@@ -1014,6 +1063,7 @@
 			};
 		}
 
+		// 在 randIslandEdge() 算出的隨機島嶼邊緣座標上，新增一個半徑會逐漸放大、透明度逐漸降低的波紋物件。
 		function addRipple(){
 			var pt = randIslandEdge();
 			if(!pt) return;
@@ -1040,6 +1090,12 @@
 		window.addEventListener('resize', resize);
 
 		var _rafId;
+		/**
+		 * 波紋動畫主迴圈（requestAnimationFrame 持續呼叫）：
+		 * 每顆波紋依 life（0~1 進度）畫出一圈逐漸放大、逐漸透明的圓圈，
+		 * 進度過 0.2 後會疊加畫第二圈（半徑、出現時機都稍微落後第一圈），
+		 * 製造出雙圈漣漪的視覺效果；life 到 1 或完全透明就從陣列移除。
+		 */
 		function draw(){
 			ctx.clearRect(0, 0, cv.width, cv.height);
 			for(var i = ripples.length - 1; i >= 0; i--){
@@ -1091,6 +1147,10 @@
 	})();
 
 	/* ── 統一 MutationObserver：welcome-screen 顯示時同時定位港口＋啟動波浪＋抽天氣事件 ── */
+	/* welcome-screen 的顯示/隱藏是由外部（index.html / main.js）直接改 style.display
+	   或切換 class 來控制，本檔並不知道何時會被顯示，所以用 MutationObserver
+	   監看它的 style/class 屬性變化，一旦偵測到「變成可見」就統一處理：
+	   重新定位漁港座標（畫面尺寸可能已變）、啟動海浪動畫、重新抽一次當日天氣與封港事件。 */
 	var _wsEl = document.getElementById('welcome-screen');
 	if(_wsEl){
 		new MutationObserver(function(){

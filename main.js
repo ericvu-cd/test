@@ -1,6 +1,44 @@
-﻿let gameDifficulty = 0.4;
+﻿/* ═══════════════════════════════════════════════════════════════════════
+   main.js — 遊戲核心邏輯
+   《海紋守護團：台灣海線任務》卡牌遊戲主程式
+
+   本檔案負責的功能（依出現順序）：
+     1. 對話佇列 / 玩家收集進度（localStorage）與成就勳章系統
+     2. 開場故事、圖鑑說明、收集圖鑑等彈窗 UI
+     3. 卡牌預覽、手牌與桌面渲染（renderUI / renderTable）
+     4. 海洋背景特效（魚群、氣泡、海底光束動畫）
+     5. 核心遊戲流程：抽召喚卡 → 玩家出牌 → AI 跟牌 → 結算 → 下一回合
+     6. 媽祖贈牌（特殊事件卡）邏輯
+     7. AI 出牌策略（依難度與角色個性調整出牌正確率）
+     8. 出牌 / 退牌 / 贈牌的飛行動畫與回合結算彈窗
+     9. 手機版手牌抽屜（Drawer）手勢與渲染
+    10. 聯絡我們表單
+
+   重要全域狀態（於檔案中段宣告，遊戲執行期間會持續被修改）：
+     players      — 所有玩家陣列；players[0] 固定是真人玩家，其餘為 AI
+     deckS        — 召喚卡牌堆（一般召喚卡 summonDB ＋ 媽祖卡 mazuCards 混合洗牌）
+     table        — 本回合已出的牌，格式為 [{ pIdx, card }, ...]
+     currentS     — 本回合抽到的召喚卡物件，currentS.c(fish) 可判斷某張魚是否符合條件
+     callerIdx    — 本回合「召喚者」是 players 陣列中的第幾位（index）
+     phase        — 遊戲狀態機，可能值：
+                      "WAIT"         AI 抽到神秘召喚，等待揭曉
+                      "PLAYER_TURN"  輪到玩家依召喚條件出牌
+                      "PLAYER_MAZU"  輪到玩家依媽祖指示挑一張牌送人
+                      "AI_FOLLOWING" 玩家出牌後，等待其餘 AI 跟牌
+                      "RESULT"       本回合出牌已完成，等待結算畫面
+
+   依賴的外部資料／函式（定義於同目錄其他檔案，需先於本檔載入）：
+     db.js       — fishDB（魚卡資料）、summonDB／mazuCards（召喚卡）、
+                   characterDB（AI 角色）、locationDB（漁港）、dialogueDB（AI 台詞）
+     sfx.js      — SFX 音效物件
+     win-screen.js — showWinScreen()
+   ═══════════════════════════════════════════════════════════════════════ */
+
+let gameDifficulty = 0.4;
 
 // ── 對話排隊系統 ────────────────────────
+// 同時間可能有多個 AI 想講話，若直接全部顯示會疊在畫面上互相覆蓋。
+// 這裡用一個簡單佇列，依序「push 進來」→「每隔 _interval 毫秒顯示下一句」。
 const chatQueue = {
     _q: [],
     _timer: null,
@@ -25,6 +63,9 @@ const chatQueue = {
 };
 
 // ── 玩家收集進度系統 ──────────────────────────
+// 以「玩家暱稱」為 key，將收集進度（漁港章／魚紋章／難度章／同伴章／行為勳章）
+// 存進 localStorage，讓玩家下次重新整理或再玩一次時仍保留收集紀錄。
+// 注意：暱稱是「守護員」（預設值／未輸入）時一律不記錄，避免大家共用同一筆資料。
 const progress = {
     _key(name) { return "progress_" + name; },
 
@@ -100,6 +141,10 @@ let handFlipTimers = [];     // 手牌翻轉計時器
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 // 預載圖片功能
+/**
+ * 依編號批次預載圖片（例如 prefix="P" → image/P1.jpg ~ image/P{count}.jpg）。
+ * 用 decode() 在背景先解碼好，之後真正顯示這張圖時就不會卡頓。
+ */
 function preloadImages(prefix, count) {
     for (let i = 1; i <= count; i++) {
         const img = new Image();
@@ -109,6 +154,8 @@ function preloadImages(prefix, count) {
 }
 
 // DOMContentLoaded 即刻預載（比 load 早，不等 BGM/大圖載完）
+// DOMContentLoaded 比 window.onload 更早觸發（不必等 BGM、大圖等資源全部載完），
+// 在這裡就先把開場故事圖、說明圖鑑、所有魚卡圖片都預先載入快取。
 document.addEventListener('DOMContentLoaded', () => {
     preloadImages('P', 9);  // 預載故事 P1-P9
     preloadImages('F', 18); // 預載說明 F1-F18
@@ -117,6 +164,8 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // 預載魚圖片
+// 把 fishDB 裡每一種魚的卡圖（fishdb/魚名.png）全部預先載入，
+// 確保遊戲中第一次翻牌、抽屜開啟時圖片是「秒顯示」不延遲。
 function preloadFishImages() {
     if (typeof fishDB === "undefined") return;
     fishDB.forEach(f => {
@@ -138,11 +187,15 @@ infoBGM.loop = true; // 設定循環播放
 let touchStartX = 0;
 let touchEndX = 0;
 
+// 故事/圖鑑共用的「上一頁」邏輯：先停止自動翻頁計時器，
+// 確認還有上一頁才切換，切換完再重新啟動自動翻頁倒數。
 function prevStory() {
     stopStoryTimer();
     if (storyIdx > 1) { storyIdx--; updateStory(); startStoryTimer(); }
 }
 
+// 依手指滑動的水平距離判斷方向：往左滑（diff 為負）→ 下一頁；往右滑 → 上一頁。
+// 50px 是滑動判定的最小距離門檻，避免誤觸。
 function handleSwipe() {
     const diff = touchEndX - touchStartX;
     if (diff < -50) nextStory();
@@ -157,17 +210,23 @@ let infoTouchStartX = 0;
 let infoTouchEndX = 0;
 
 // 判斷滑動方向（左滑下一頁，右滑上一頁）
+// 圖鑑說明版的「上一頁」，邏輯與 prevStory() 相同。
 function prevInfo() {
     stopInfoTimer();
     if (infoIdx > 1) { infoIdx--; updateInfo(); startInfoTimer(); }
 }
 
+// 圖鑑說明版的滑動方向判斷，邏輯與 handleSwipe() 相同。
 function handleSwipeInfo() {
     const diff = infoTouchEndX - infoTouchStartX;
     if (diff < -50) nextInfo();
     else if (diff > 50) prevInfo();
 }
 
+/**
+ * 開啟圖鑑說明全螢幕頁面：重置頁碼為第 1 頁、切換背景音樂為 infoBGM、
+ * 啟動自動翻頁計時器，並綁定觸控滑動事件以支援手動切頁。
+ */
 function openInfo() {
     infoIdx = 1;
     updateInfo();
@@ -194,11 +253,13 @@ function openInfo() {
     };
 }
 
+// 依目前 infoIdx 換上對應的說明圖片（image/F{idx}.jpg）並更新頁碼文字。
 function updateInfo() {
     document.getElementById("info-img").src = `image/F${infoIdx}.jpg`;
     document.getElementById("info-page-num").innerText = `${infoIdx} / ${totalInfo}`;
 }
 
+// 切換到下一頁說明圖；若已是最後一頁則直接關閉整個說明視窗。
 function nextInfo() {
     stopInfoTimer();
     if (infoIdx < totalInfo) {
@@ -210,6 +271,7 @@ function nextInfo() {
     }
 }
 
+// 啟動「10 秒自動換下一頁」的計時器；每次換頁都會重新呼叫此函式重新倒數。
 function startInfoTimer() {
     stopInfoTimer();
     infoTimer = setTimeout(() => {
@@ -223,10 +285,12 @@ function startInfoTimer() {
     }, 10000); // 10秒自動換頁
 }
 
+// 清除自動換頁計時器（玩家手動切換頁面、或關閉視窗時呼叫）。
 function stopInfoTimer() {
     if (infoTimer) clearTimeout(infoTimer);
 }
 
+// 關閉圖鑑說明視窗：停止自動換頁、隱藏 overlay、暫停 infoBGM。
 function closeInfo() {
     stopInfoTimer();
     document.getElementById("info-overlay").style.display = "none";
@@ -234,13 +298,21 @@ function closeInfo() {
 }
 
 // 日誌視窗功能
+// 開啟「出牌紀錄」視窗（內容由 addLog() 持續累積）。
 function openLog() {
     document.getElementById("log-modal").style.display = "flex";
 }
+// 關閉「出牌紀錄」視窗。
 function closeLog() {
     document.getElementById("log-modal").style.display = "none";
 }
 
+/**
+ * 開啟「我的海紋收集」彈窗，彙整玩家目前已解鎖的五大類收藏：
+ *   漁港章（造訪過的漁港）、難度章（玩過的難度）、同伴章（遇過的 AI 角色）、
+ *   魚紋章（出過的魚卡）、神祕任務章（達成的行為型勳章）。
+ * 內部會就地宣告 5 個排版小函式（xxxBadgeBlock），各自畫出一塊「進度條 + 格子」UI。
+ */
 function openCollection() {
     const name = window.playerName && window.playerName !== '守護員' ? window.playerName : null;
     const data = name ? (progress.load(name) || { badges: [], fish: [], difficulty: [], companions: [] }) : { badges: [], fish: [], difficulty: [], companions: [] };
@@ -490,6 +562,8 @@ function openCollection() {
 }
 
 // 收集頁魚卡放大：先把 card-preview-overlay 拉到最上層再顯示
+// 收集圖鑑裡點擊「已解鎖的魚卡」→ 用 showCardPreview() 放大顯示。
+// 先把預覽層的 z-index 拉到比收集圖鑑更高，避免被收集視窗蓋住。
 function showCollectionFishPreview(dbIdx) {
     if (typeof fishDB === 'undefined' || !fishDB[dbIdx]) return;
     const ov = document.getElementById('card-preview-overlay');
@@ -498,6 +572,7 @@ function showCollectionFishPreview(dbIdx) {
 }
 
 // 收集頁放大檢視（漁港章、難度章）
+// 收集圖鑑裡點擊「已解鎖的漁港章／難度章」→ 全螢幕放大顯示該張圖片＋標籤文字。
 function showCollectionZoom(imgSrc, label) {
     const existing = document.getElementById('collection-zoom-overlay');
     if (existing) existing.remove();
@@ -521,6 +596,7 @@ function showCollectionZoom(imgSrc, label) {
 }
 
 // 收集頁放大檢視（同伴章：圓形）
+// 收集圖鑑裡點擊「已解鎖的同伴章」→ 全螢幕放大顯示圓形大頭貼＋角色名稱。
 function showCompanionZoom(imgSrc, label) {
     const existing = document.getElementById('collection-zoom-overlay');
     if (existing) existing.remove();
@@ -543,6 +619,7 @@ function showCompanionZoom(imgSrc, label) {
     document.body.appendChild(ov);
 }
 
+// 關閉「我的海紋收集」彈窗。
 function closeCollection() {
     const modal = document.getElementById('collection-modal');
     if (modal) modal.remove();
@@ -552,6 +629,11 @@ let players = [], deckS = [], table = [], currentS = null, callerIdx = 0, phase 
 let initialHands = []; // 各局開始時的初始手牌快照，遊戲結束時寫入 LOG
 
 // 真正均勻的 Fisher-Yates 洗牌（取代有偏的 sort+random）
+/**
+ * Fisher-Yates 洗牌演算法（原地洗牌，回傳同一個陣列）。
+ * 比起常見的「sort(() => Math.random()-0.5)」寫法，這個演算法的
+ * 每種排列出現機率是真正均勻的，不會有特定順序被洗到的機率偏高。
+ */
 function shuffle(arr) {
     for (let i = arr.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -561,16 +643,21 @@ function shuffle(arr) {
 }
 
 // UI 鎖定：等待動畫/AI計算時，攔截所有使用者觸控
+// 鎖住整個操作層（顯示一個全螢幕透明遮罩攔截所有觸控），
+// 用在「動畫播放中」或「AI 計算中」等不希望玩家亂點打斷流程的時刻。
 function lockUI() {
     const el = document.getElementById("ui-lock");
     if (el) el.style.display = "block";
 }
+// 解除 lockUI() 的鎖定，恢復玩家可操作狀態。
 function unlockUI() {
     const el = document.getElementById("ui-lock");
     if (el) el.style.display = "none";
 }
 
 // --- 標籤生成邏輯 ---
+// 產生卡片正面要顯示的特性標籤 HTML（季節／漁法／洄游或定棲／產地）。
+// 漁法標籤會依是否屬於友善漁法（ecoMethods 清單）分別套用綠色／警示色樣式。
 function getFishTags(f) {
     let html = '<div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 1px;">';
     
@@ -601,6 +688,8 @@ function getFishTags(f) {
 }
 
 // 手牌反面標籤：輸出純 span 串，由 .card-back-tags 容器排版
+// 與 getFishTags() 邏輯相同，差別是只回傳 <span> 標籤本身（不含外層 div 容器），
+// 給手牌「反面」版面（.card-back-tags）直接排版用。
 function getHandBackTags(f) {
     let html = "";
     const ecoMethods = ["一支釣", "定置", "養殖", "手釣", "棒受網", "籠具", "釣具", "標槍"];
@@ -704,6 +793,7 @@ function showCardPreview(idx, fish, isHand = true) {
     previewTimeout = setTimeout(closePreview, isHand ? 6000 : 4000);
 }
 
+// 關閉卡片放大預覽層，並清空內容、還原 z-index。
 function closePreview() {
     if (previewTimeout) clearTimeout(previewTimeout);
     const ov = document.getElementById("card-preview-overlay");
@@ -713,6 +803,14 @@ function closePreview() {
 }
 
 // --- 遊戲運行邏輯與 UI 渲染 ---
+/**
+ * 重新渲染整個遊戲畫面：
+ *   - AI 頭像區（含手牌剩餘張數圖示，最後一張時會有警示閃爍動畫）
+ *   - 牌堆剩餘次數（剩 5 次以下會閃爍提示）
+ *   - 玩家手牌（含正反面翻轉動畫、是否符合本回合召喚的綠點提示）
+ *   - 是否輪到玩家操作（套用 .my-turn 樣式高亮手牌區）
+ * 幾乎每個遊戲狀態改變後都會呼叫這個函式來同步畫面。
+ */
 function renderUI() {
 
     players.forEach((p, i) => { 
@@ -800,6 +898,8 @@ function renderUI() {
     updateDrawerArrow(isMyTurn);
 }
 
+// 手牌可能超出可視寬度需要左右滑動瀏覽，這裡依目前捲動位置
+// 顯示／隱藏左右兩側的「還能繼續滑」箭頭提示。
 function updateHandArrows() {
     const hand = document.getElementById('player-hand');
     const leftArrow  = document.getElementById('arrow-left');
@@ -824,6 +924,7 @@ document.getElementById("card-preview-overlay").onclick = (e) => {
     }
 };
 
+// 重新渲染「海洋桌面」上目前已出的牌（table 陣列），最新一張會套用出牌動畫樣式。
 function renderTable() {
     const zone = document.getElementById("table");
     zone.innerHTML = "";
@@ -847,6 +948,12 @@ function renderTable() {
 
 let logPlainText = []; // 純文字 log，供複製分析用
 
+/**
+ * 新增一筆訊息到「出牌紀錄」面板（同時保留一份純文字版供複製）。
+ * @param {string} m    要顯示的訊息（可含 HTML）
+ * @param {string} type 樣式類型："cmd"（系統指令）/"secret"（神祕資訊）/"success"（成功）
+ * 最新訊息永遠插入在最上方（insertAdjacentHTML 'afterbegin'）。
+ */
 function addLog(m, type="") {
     const l = document.getElementById("log-messages");
     let className = "log-entry";
@@ -861,6 +968,8 @@ function addLog(m, type="") {
     l.insertAdjacentHTML('afterbegin', `<div class="${className}">> ${prefix}${m}</div>`);
 }
 
+// 將純文字版出牌紀錄複製到剪貼簿；若瀏覽器不支援 clipboard API（常見於部分手機瀏覽器），
+// fallback 成跳出一個可手動長按選取全文的 textarea。
 function copyLog() {
     const text = logPlainText.join("\n");
     const btn = document.getElementById("log-copy-btn");
@@ -889,6 +998,7 @@ function copyLog() {
     });
 }
 
+// 切換背景音樂播放／暫停，同時更新 sfxEnabled 旗標與音樂按鈕的圖示樣式。
 function toggleMusic() {
     const music = document.getElementById("bgm");
     const btn = document.getElementById("music-control");
@@ -911,6 +1021,7 @@ const BUBBLE_MAX = 6;       // 同時最多幾顆
 const BUBBLE_INTERVAL = 1200; // 每 1200ms 嘗試生一顆
 let _bubbleTimer = null;
 
+// 在 #bubbles 容器內產生一顆隨機大小、隨機飄移方向的氣泡，動畫結束後自動移除。
 function createBubble() {
     const container = document.getElementById("bubbles");
     if (!container) return;
@@ -930,11 +1041,13 @@ function createBubble() {
     setTimeout(() => b.remove(), duration * 1000);
 }
 
+// 啟動氣泡產生計時器（每 BUBBLE_INTERVAL 毫秒嘗試生一顆，重複呼叫不會疊加計時器）。
 function startBubbles() {
     if (_bubbleTimer) return;
     _bubbleTimer = setInterval(createBubble, BUBBLE_INTERVAL);
 }
 
+// 停止氣泡產生計時器（背景分頁/離開遊戲畫面時呼叫，節省效能）。
 function stopBubbles() {
     if (_bubbleTimer) { clearInterval(_bubbleTimer); _bubbleTimer = null; }
 }
@@ -942,6 +1055,8 @@ function stopBubbles() {
 // =============================================
 // 🐟 魚體調色盤（每種魚有亮色/中色/暗色三層）
 // =============================================
+// 背景魚群的配色組合：每組含高光(hi)／中間色(mid)／陰影(lo)／尾鰭(tail)／
+// 胸鰭(fin)／發光暈染(glow) 六種顏色，createFish() 會隨機挑一組套用在魚身漸層上。
 const fishPalettes = [
     // 海藍色
     { hi: "rgba(190,235,255,1)", mid: "rgba(100,185,255,0.95)", lo: "rgba(40,110,200,0.9)",  tail: "rgba(60,140,220,0.95)", fin: "rgba(80,160,235,0.8)",  glow: "rgba(100,190,255,0.45)" },
@@ -964,6 +1079,7 @@ const fishPalettes = [
 // =============================================
 // 🌊 海洋光束初始化（只執行一次）
 // =============================================
+// 在海洋容器最底層插入 5 道光束（caustic-beam），模擬海面灑落的光影效果；只會初始化一次。
 function initOceanCaustics() {
     const ocean = document.getElementById("ocean");
     if (!ocean || document.getElementById("ocean-caustics")) return;
@@ -981,6 +1097,14 @@ function initOceanCaustics() {
 // =============================================
 // 🐟 魚體建立（完整強化版）
 // =============================================
+/**
+ * 動態建立一條會從畫面右側游到左側的背景裝飾魚。
+ * @param {boolean} forceSprint 是否強制建立「衝刺魚」（近景、速度快、發光較強的特殊魚）
+ *
+ * 依隨機深度（depth 0~2，由 cfg 陣列決定大小／透明度／速度等參數）模擬遠中近三層視差，
+ * 越靠近鏡頭（depth 2）的魚越大、越不透明、游得越慢、擺動幅度越大。
+ * 魚游完整段動畫後（setTimeout 對齊 speed 秒數）會自動從 DOM 移除，避免記憶體持續增加。
+ */
 function createFish(forceSprint = false) {
     const palette = fishPalettes[Math.floor(Math.random() * fishPalettes.length)];
 
@@ -1092,6 +1216,7 @@ const FISH_INTERVAL = 4500;
 let _fishTimer = null;
 let _sprintTimer = null;
 
+// 啟動背景魚群生成（固定間隔嘗試生一條一般魚，並另外排程不定期的衝刺魚）。
 function startFish() {
     if (_fishTimer) return;
     _fishTimer = setInterval(() => {
@@ -1101,12 +1226,15 @@ function startFish() {
     scheduleSprintFish();
 }
 
+// 停止所有背景魚群生成計時器（一般魚與衝刺魚都會停止）。
 function stopFish() {
     if (_fishTimer)  { clearInterval(_fishTimer);  _fishTimer  = null; }
     if (_sprintTimer){ clearTimeout(_sprintTimer); _sprintTimer = null; }
 }
 
 // ── Page Visibility API：背景時暫停動畫省電 ──────────────
+// Page Visibility API：分頁切到背景時暫停魚群／氣泡動畫與背景音樂以節省效能與電力，
+// 切回前景時若先前在遊戲中則恢復動畫，並視 sfxEnabled 狀態決定是否恢復播放音樂。
 document.addEventListener('visibilitychange', () => {
     const inGame = document.body.classList.contains('game-started');
     if (document.hidden) {
@@ -1126,6 +1254,7 @@ document.addEventListener('visibilitychange', () => {
 });
 
 // 衝刺魚：每 15-25 秒強制產生一條近景快魚
+// 每隔 15~25 秒隨機排程一次「衝刺魚」（近景、快速通過畫面的特殊魚），並遞迴排下一次。
 function scheduleSprintFish() {
     const delay = 15000 + Math.random() * 10000;
     _sprintTimer = setTimeout(() => {
@@ -1135,6 +1264,7 @@ function scheduleSprintFish() {
     }, delay);
 }
 
+// 建立一個固定定位的圖層，專門用來放置 AI 角色頭頂彈出的對話泡泡（showChat 會用到）。
 function initChatLayer() {
     if (document.getElementById("chat-layer")) return;
     const layer = document.createElement("div");
@@ -1142,6 +1272,11 @@ function initChatLayer() {
     document.body.appendChild(layer);
 }
 
+/**
+ * 玩家點擊「開始遊戲」後的進場流程：
+ *   啟動背景特效（光束／魚群／氣泡）、淡出歡迎畫面、顯示遊戲內 UI 按鈕（音樂/紀錄/收集等）、
+ *   嘗試播放背景音樂，並在 3.5 秒淡出轉場結束後呼叫 startGame() 正式開局。
+ */
 function initGame() {
 	initOceanCaustics();
 	initChatLayer();
@@ -1185,6 +1320,18 @@ function initGame() {
     }, 3500); // 保留 3.5 秒的淡出過渡效果
 }
 
+/**
+ * 建立一局新遊戲的初始狀態：
+ *   1. 從 characterDB 隨機抽 3 位 AI 角色組隊（並解鎖對應同伴章）
+ *   2. 依選擇的漁港（locationDB）篩選該海域的魚池，洗牌後發牌
+ *      - 新手難度：玩家優先拿到「容易」等級（e:1）的魚，AI 則從剩餘牌池隨機抽
+ *      - 標準/專業難度：完全隨機發牌，不分難易度
+ *   3. 混合一般召喚卡與媽祖卡洗牌成 deckS 牌堆
+ *   4. 新手保護機制：確保玩家前兩次抽到召喚卡時，手牌裡一定至少有一張能用的牌
+ *      （透過交換 deckS 末端兩個位置的卡，避免新手一開局就卡關）
+ *   5. 記錄初始手牌快照（供結束時寫入 LOG 分析）、重置行為勳章追蹤器
+ *   6. 渲染畫面並在 2 秒後呼叫 autoStep() 開始第一回合
+ */
 function startGame() {
 // 1. 從資料庫中隨機挑選 3 個角色
     let aiPool = shuffle([...characterDB]).slice(0, 3);
@@ -1300,6 +1447,8 @@ function startGame() {
     setTimeout(autoStep, 2000);
 }
 
+// 在畫面上高亮目前的「召喚者」（玩家或某位 AI），
+// 並只在輪到玩家操作（PLAYER_TURN／PLAYER_MAZU）時讓海底光束全開，增加聚焦感。
 function updateCallerHighlight() {
     players.forEach((p, idx) => {
         let el = (idx === 0) ? document.getElementById("player-zone") : document.getElementById(p.id);
@@ -1318,6 +1467,11 @@ function updateCallerHighlight() {
 
 let summonFocusTimer = null;
 
+/**
+ * 顯示「召喚聚焦」遮罩：把本回合召喚文字放大置中顯示幾秒鐘，
+ * 讓玩家／畫面有時間消化召喚內容，duration 毫秒後自動淡出並執行 callback。
+ * 媽祖召喚會套用特殊樣式（mazu-style）。
+ */
 function showSummonFocus(duration, callback) {
     const overlay = document.getElementById("summon-focus-overlay");
     const box     = document.getElementById("summon-focus-box");
@@ -1360,6 +1514,14 @@ function showSummonFocus(duration, callback) {
     }, duration);
 }
 
+/**
+ * 每回合開始時呼叫：抽一張召喚卡，並依抽牌者是玩家或 AI 分流處理。
+ *   - 牌堆已抽完（deckS.length===0）→ 比較所有人剩餘手牌數，最少的人獲勝，直接結束遊戲。
+ *   - 召喚者是玩家 → 直接公開召喚內容，切換 phase 為 PLAYER_TURN／PLAYER_MAZU。
+ *   - 召喚者是 AI → 召喚內容對玩家保密（"WAIT"），需等大家出牌後才會揭曉（見 showResult）。
+ * 教學模式（tutorialMode）會跳過聚焦動畫直接往下執行；
+ * 一般模式則會先顯示 1.5 秒的「召喚聚焦」遮罩，結束後才解鎖讓玩家／AI 行動。
+ */
 function autoStep() {
     lockUI(); // 每回合開始立刻鎖定
     if (deckS.length === 0) { 
@@ -1450,6 +1612,13 @@ function autoStep() {
     });
 }
 
+/**
+ * 處理「AI 抽到媽祖卡」的贈牌流程：
+ *   AI 會從自己手牌隨機挑一張卡，並選擇一位贈送對象——
+ *   70% 機率送給「目前手牌最少的人」（多人並列時隨機選一位，鼓勵幫助快獲勝的人），
+ *   30% 機率完全隨機選一位。新手難度下 AI 不會把牌送給真人玩家（避免變相洩漏優勢）。
+ *   接著播放贈牌飛行動畫與雙方對話泡泡，最後才把牌真正加入對方手牌並進入下一回合。
+ */
 function handleMazuAI(caller) {
     document.getElementById("summon-display").innerText = "【神明庇佑揭曉】\n" + currentS.t;
     addLog(`揭曉神明召喚：${currentS.t.replace(/\n/g, " ")}`, "cmd");
@@ -1508,6 +1677,7 @@ function handleMazuAI(caller) {
 }
 
 // 媽祖贈牌：選擇對象
+// 玩家抽到媽祖卡時，彈出「要把這張卡送給誰」的選擇清單（排除玩家自己）。
 function showMazuTargetSelect(cardIdx) {
     const existing = document.getElementById("mazu-target-overlay");
     if (existing) existing.remove();
@@ -1543,6 +1713,8 @@ function showMazuTargetSelect(cardIdx) {
 }
 
 // 媽祖贈牌：確認送出
+// 玩家確認媽祖贈牌對象後：把卡從玩家手牌移除、播放贈牌動畫、
+// 加入對方手牌、記錄行為勳章（mazuCompleted），最後進入結算流程。
 function confirmMazuGift(cardIdx, target) {
     const card = players[0].hand.splice(cardIdx, 1)[0];
 
@@ -1571,6 +1743,10 @@ function confirmMazuGift(cardIdx, target) {
 // =============================================
 // 🎴 出牌飛行動畫
 // =============================================
+/**
+ * 出牌飛行動畫：建立一張卡片的 DOM 分身，從 fromEl（出牌者位置）飛到桌面區，
+ * 動畫結束（1.55 秒）後自動移除分身並執行 callback（通常是 renderTable()）。
+ */
 function playCardFlyAnimation(card, fromEl, callback) {
     const tableEl = document.getElementById("table");
     const oceanEl = document.getElementById("ocean");
@@ -1625,6 +1801,18 @@ function playCardFlyAnimation(card, fromEl, callback) {
     }, 1550);
 }
 
+/**
+ * 玩家點擊／確認出某一張手牌時的主要處理函式。
+ * @param {number} idx 該張牌在 players[0].hand 中的索引
+ *
+ * - phase 為 PLAYER_MAZU：代表這是媽祖贈牌流程，改呼叫 showMazuTargetSelect() 選對象。
+ * - phase 為 PLAYER_TURN：正常出牌流程——
+ *     1. 把牌從手牌移到桌面，鎖定 UI 防止重複操作
+ *     2. 播放出牌飛行動畫
+ *     3. 隨機讓 1~2 位 AI 對這張牌做出反應（受每回合對話上限 roundChatCount 限制）
+ *     4. 依序讓其餘所有 AI（非召喚者）跟牌出牌（aiMove），中間穿插延遲製造節奏感
+ *     5. 全部出完後解鎖 UI 並呼叫 showResult() 進入結算判定
+ */
 async function playerAction(idx) {
     if (navigator.vibrate) navigator.vibrate(30);
 
@@ -1673,6 +1861,10 @@ async function playerAction(idx) {
     }
 }
 
+/**
+ * 執行某位 AI（players[pI]）出第 cI 張手牌的動作：
+ * 從手牌移除該卡、播放飛行動畫、更新畫面，並依機率安排該 AI／其他旁觀 AI 講話。
+ */
 function aiMove(pI, cI) {
     const p = players[pI];
 	if (!p.hand[cI]) return;
@@ -1709,6 +1901,10 @@ function aiMove(pI, cI) {
 // =============================================
 // 🔙 退牌飛行動畫（ocean → 手牌區）
 // =============================================
+/**
+ * 退牌飛行動畫：與 playCardFlyAnimation() 方向相反，
+ * 把卡片從桌面區飛回原本出牌者的位置（toEl），用於「不符合召喚條件」的牌被退回手牌時。
+ */
 function playCardReturnAnimation(card, toEl, callback) {
     const tableEl = document.getElementById("table");
     const oceanEl = document.getElementById("ocean");
@@ -1771,6 +1967,14 @@ function playCardReturnAnimation(card, toEl, callback) {
 let pendingReturns = [];
 let roundCount = 0;
 
+/**
+ * 本回合所有人都出牌完畢後呼叫：逐一比對桌面上每張牌是否符合本回合召喚條件（currentS.c），
+ *   - AI 是召喚者時，揭曉原本保密的召喚文字
+ *   - 符合條件 → 記錄成功；不符合 → 暫存進 pendingReturns，結算畫面關閉後才播放退牌動畫
+ *   - 同時依召喚條件文字關鍵字（燈號／漁法／產地／季節／棲地…）推斷要顯示哪些特徵標籤
+ *   - 判斷此回合是否已經有人手牌出完（exclude 仍在退牌動畫中的人）→ 是則直接結束遊戲
+ *   - 否則等待倒數氣泡後，依 showSummaryMode 開關決定要不要顯示完整結算彈窗
+ */
 function showResult() {
     phase = "RESULT";
     roundReport = [];
@@ -1881,6 +2085,7 @@ function showResult() {
     }, 1000);
 }
 
+// 顯示一個會自動倒數的提示泡泡（例如「N 秒後進入結算」），倒數結束後執行 callback。
 function showCountdownBubble(seconds, callback) {
     const layer = document.getElementById("chat-layer");
     const ocean = document.getElementById("ocean");
@@ -1914,6 +2119,7 @@ function showCountdownBubble(seconds, callback) {
     tick();
 }
 
+// 檢查是否已經有玩家手牌清空（獲勝），若有則顯示勝利畫面；否則進入下一回合。
 function finishRound() {
     let win = players.find(p => p.hand.length === 0);
     if (win) {
@@ -1926,6 +2132,8 @@ function finishRound() {
 }
 
 // 新增：處理下一回合的邏輯轉換
+// 切換到下一回合：重新洗牌每位 AI 的手牌順序（避免 AI 因陣列順序固定而每次都選同一張牌），
+// 召喚者輪替到下一位玩家／AI，重置狀態為 WAIT 並呼叫 autoStep() 開始新回合。
 function proceedToNextRound() {
     // 每回合結束後重排所有玩家手牌，避免 AI 因陣列順序固定而每次選同一張
     players.forEach(p => { if (p.isAI) shuffle(p.hand); });
@@ -1935,6 +2143,8 @@ function proceedToNextRound() {
 }
 
 // 結算頁關閉後，同時播所有退牌動畫，全部結束後才加入手牌
+// 結算彈窗關閉後，把本回合所有「不符合條件而需退回」的牌同時播放退牌動畫，
+// 等全部動畫播完才真正把牌加回各自手牌並執行 callback（通常是 proceedToNextRound）。
 function playPendingReturns(callback) {
     if (pendingReturns.length === 0) { if (callback) callback(); return; }
 
@@ -1957,6 +2167,11 @@ function playPendingReturns(callback) {
 }
 
 // 新增：彈出視窗函式
+/**
+ * 顯示本回合結算彈窗：列出每張出牌的玩家／魚名／是否成功，並用屬性條（buildAttrBars）
+ * 視覺化呈現該張牌符合或違反的具體特徵；同時顯示本次召喚條件原文與生態小知識。
+ * 玩家按下「整理魚獲，繼續冒險」後才會關閉彈窗並播放退牌動畫、進入下一回合。
+ */
 function showRoundSummary() {
 
     if (!showSummaryMode) {
@@ -2115,6 +2330,23 @@ function showRoundSummary() {
     };
 }
 
+/**
+ * AI 出牌策略核心：依玩家當下難度設定（gameDifficulty）與該 AI 的個性
+ * （smart 提高難度／chaotic、tricky 降低難度）算出最終 difficulty 值，
+ * 再分兩種情境決定要出哪張牌：
+ *
+ *   情境 A：AI 是「召喚者」（自己先出牌，桌面是空的）
+ *     依 correctChance 機率決定要不要刻意出符合召喚條件的牌，
+ *     若手上根本沒有符合的牌則直接記錄到 log 並隨機出牌。
+ *
+ *   情境 B：AI 是「跟牌者」（桌面已有其他人出的牌，需推測召喚條件）
+ *     比對手牌與桌面已出牌的共同特徵（燈號／棲地／產地／季節／漁法）算出吻合分數，
+ *     再依 difficulty 換算出的機率，從「最佳匹配」「部分匹配」「完全不匹配」三組牌池中
+ *     抽一張出牌——difficulty 越高，越常抽到「最佳匹配」（代表 AI 推測得越準）。
+ *
+ * @param {object} p 該位 AI 的 players[] 物件
+ * @returns {number} 要出的牌在 p.hand 中的索引
+ */
 function aiChooseCard(p) {
     let difficulty = gameDifficulty;
 
@@ -2233,6 +2465,8 @@ function aiChooseCard(p) {
     }
 }
 
+// 在某位角色（p）頭頂上方彈出一個對話泡泡，顯示 msg 文字，
+// 會自動依角色位置置中並限制在畫面寬度內，3 秒後自動移除。
 function showChat(p, msg) {
     const layer = document.getElementById("chat-layer");
     const el = document.getElementById(p.id);
@@ -2266,6 +2500,12 @@ function showChat(p, msg) {
 }
 
 // 組合台詞並加入 queue
+/**
+ * 依角色個性（dialogueDB[persona]）與出牌情境挑選一句合適的台詞並排進對話佇列。
+ * @param {object} p 講話的 AI
+ * @param {object} card 該次出的牌（用來判斷紅燈/綠燈/養殖等特殊台詞池）
+ * @param {boolean|null} isCorrectGuess 若已知這張牌出錯（false）會優先使用「出錯」專屬台詞
+ */
 function queueAITalk(p, card, isCorrectGuess) {
     const persona = p.personality;
     const db = dialogueDB[persona];
@@ -2286,16 +2526,19 @@ function queueAITalk(p, card, isCorrectGuess) {
 }
 
 // 保留 aiTalk 作為向後相容（目前已無直接呼叫，備用）
+// 舊版函式名稱，目前程式內已無直接呼叫，保留作為對外相容介面（內部直接轉呼叫 queueAITalk）。
 function aiTalk(p, card, isCorrectGuess = null) {
     queueAITalk(p, card, isCorrectGuess);
 }
 
+// 媽祖贈牌時，「贈送者」AI 說一句對應的台詞（dialogueDB[persona].mazuGive）。
 function aiTalkMazuGive(p, target, card) {
     const lines = dialogueDB[p.personality].mazuGive;
     const msg = lines[Math.floor(Math.random() * lines.length)];
     chatQueue.push(p, msg);
 }
 
+// 媽祖贈牌時，「接收者」AI 說一句對應的台詞（dialogueDB[persona].mazuReceive）。
 function aiTalkMazuReceive(p, from, card) {
     const lines = dialogueDB[p.personality].mazuReceive;
     const msg = lines[Math.floor(Math.random() * lines.length)];
@@ -2305,6 +2548,11 @@ function aiTalkMazuReceive(p, from, card) {
 
 
 
+/**
+ * 播放媽祖贈牌的完整視覺效果：卡片從贈送者飛向接收者（CSS 動畫，經由 --fly-x/--fly-y
+ * 等自訂屬性控制弧線路徑），動畫播完 2 秒後再彈出「OO 分享了【魚名】給 OO」橫幅，
+ * 橫幅停留 3 秒後淡出移除。
+ */
 function showMazuGiftEffect(fromName, toName, card, targetEl, fromEl) {
     const flyLayer = document.createElement("div");
     flyLayer.id = "mazu-gift-effect";
@@ -2386,12 +2634,17 @@ function showMazuGiftEffect(fromName, toName, card, targetEl, fromEl) {
 
 let drawerOpen = false;
 
+// 顯示／隱藏「上滑開啟抽屜」的提示箭頭；若提示被隱藏但抽屜還開著，順便關閉抽屜。
 function updateDrawerArrow(show) {
     const arrow = document.getElementById("drawer-up-arrow");
     if (arrow) arrow.style.display = show ? "block" : "none";
     if (!show && drawerOpen) closeDrawer();
 }
 
+/**
+ * 開啟手機版「手牌抽屜」（從畫面底部滑出的手牌格狀檢視，方便小螢幕快速選牌出牌）。
+ * 第一次開啟時會動態建立 DOM 並綁定下滑關閉的觸控事件，之後重複呼叫只需重新渲染內容。
+ */
 function openDrawer() {
     if (drawerOpen) return;
     drawerOpen = true;
@@ -2418,6 +2671,7 @@ function openDrawer() {
     });
 }
 
+// 關閉手牌抽屜（先位移出畫面，280ms 動畫結束後才真正隱藏，避免動畫被切斷）。
 function closeDrawer() {
     if (!drawerOpen) return;
     drawerOpen = false;
@@ -2427,6 +2681,9 @@ function closeDrawer() {
     setTimeout(() => { if (!drawerOpen) drawer.style.display = "none"; }, 280);
 }
 
+// 重新渲染抽屜內的卡牌格狀清單；若現在輪到玩家的一般出牌回合，
+// 符合本回合召喚條件的卡片會加上 .drawer-valid 樣式與綠點提示。
+// 點擊卡片會先關閉抽屜，再呼叫 playerAction() 出牌。
 function renderDrawer(drawer) {
     const isNormalTask = currentS && !currentS.isMazu && phase === "PLAYER_TURN" && callerIdx === 0;
 
@@ -2474,6 +2731,11 @@ function renderDrawer(drawer) {
 
 // 初始化手牌區的上滑手勢偵測
 let drawerGestureInited = false;
+/**
+ * 在手牌區（#player-zone）綁定「往上滑動」手勢偵測，用來開啟手牌抽屜。
+ * 透過比較垂直/水平位移量判斷使用者是否為「刻意垂直上滑」（而非左右瀏覽手牌），
+ * 一旦判定為上滑且輪到玩家操作，才會呼叫 openDrawer()。只會初始化一次。
+ */
 function initDrawerGesture() {
     if (drawerGestureInited) return;
     drawerGestureInited = true;
@@ -2521,6 +2783,7 @@ function initDrawerGesture() {
 }
 
 // 點抽屜外背景關閉
+// 點擊抽屜以外的區域（背景）時自動關閉抽屜；若勝利畫面已開啟則直接關閉抽屜不做其他判斷。
 document.addEventListener("touchstart", (e) => {
     if (!drawerOpen) return;
     if (document.getElementById("win-overlay")) { closeDrawer(); return; }
@@ -2528,6 +2791,8 @@ document.addEventListener("touchstart", (e) => {
     if (drawer && !drawer.contains(e.target)) closeDrawer();
 }, { passive: true });
 
+// 切換「是否顯示回合結算彈窗」(showSummaryMode) 開關，按鈕圖示會疊加一個紅色 ✕ 表示已關閉。
+// 關閉當下若剛好有結算彈窗開著，會直接移除並接著播放退牌動畫、進入下一回合。
 function toggleReportMode() {
     showSummaryMode = !showSummaryMode;
     const btn = document.getElementById("report-control");
@@ -2547,6 +2812,9 @@ function toggleReportMode() {
 }
 
 // ── 行為型勳章追蹤（每局重置）────────────────
+// 行為型勳章（例如「百發百中」「浴火重生」）需要追蹤整局的出牌歷程，
+// 因此用這個物件記錄「玩家本局出過的每張牌與成功與否」「被退牌次數」「是否完成媽祖贈牌」等，
+// 每次 startGame() 開新局時都會被重新初始化（見 startGame 內的重置邏輯）。
 let badgeTracker = {
     playerCards: [],      // 本局玩家出過的每張牌 {card, isSuccess}
     returnCount: 0,       // 被退牌次數
@@ -2555,6 +2823,11 @@ let badgeTracker = {
 };
 
 // ── 聯絡我們 ──
+/**
+ * 開啟「聯絡我們」表單彈窗：重置表單欄位與送出按鈕狀態，
+ * 並監聽隱藏 iframe 的 onload 事件來判斷表單是否已成功送出
+ *（用隱藏 iframe 接收表單 submit 結果，可避免頁面整個重新整理）。
+ */
 function openContact() {
     var overlay = document.getElementById("contact-overlay");
     overlay.style.display = "flex";
@@ -2592,6 +2865,7 @@ function openContact() {
         };
     }
 }
+// 關閉「聯絡我們」表單彈窗，並重置 iframe 的送出旗標，避免下次誤判為已送出。
 function closeContact() {
     document.getElementById("contact-overlay").style.display = "none";
     var iframe = document.querySelector('iframe[name="contact-iframe"]');
