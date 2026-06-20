@@ -77,23 +77,6 @@
 		pointer-events: none;
 	}
 
-	/* ── intro subtitle.png：絕對定位，JS 設座標 ── */
-	#intro-subtitle {
-		position: absolute;
-		z-index: 6;
-		height: 36px;
-		width: auto;
-		opacity: 0;
-		pointer-events: none;
-		transition: opacity .8s ease;
-		filter: drop-shadow(0 0 8px rgba(100,200,255,0.4));
-	}
-	#intro-subtitle.show { opacity: 1; }
-	/* intro-ts 整體上移，視覺重心往上 */
-	#intro-ts {
-		justify-content: flex-start !important;
-		padding-top: 32vh !important;
-	}
 	#ws-top-icons {
 		display: flex;
 		gap: 8px;

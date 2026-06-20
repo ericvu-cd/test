@@ -60,12 +60,6 @@ body.game-started > *:not(#welcome-screen):not(#intro-screen):not(#collection-mo
     justify-content: center;
     align-items: center;
 
-    /* 步驟 2: 確保背景圖片屬性完整 */
-    background: 
-        linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.4)),
-        url('image/bgi.png') no-repeat center center;
-    background-size: cover;
-
     /* 步驟 3: 設定初始透明度為 0，並執行淡入動畫 */
     opacity: 0;
     animation: welcomeFadeIn 1.5s ease-in-out forwards;
@@ -826,8 +820,6 @@ body.game-started > *:not(#welcome-screen):not(#intro-screen):not(#collection-mo
     padding: 4px 10px;
 }
 
-.sub-btn:active { transform: scale(0.95); }
-
 .ctrl-btn { padding: 5px 10px; background: rgba(255,255,255,0.6); border: none; border-radius: 20px; font-weight: bold; cursor: pointer; font-size: 1rem; }
 #info-overlay { display: none; }
 
@@ -1026,7 +1018,6 @@ body.game-started > *:not(#welcome-screen):not(#intro-screen):not(#collection-mo
 .card-n { font-size: 0.8rem; padding: 4px 1px; border-bottom-width: 1px; }
 .card-i { padding: 2px; }
 .tag { font-size: 0.6rem; padding: 2px 4px; border-radius: 4px; margin: 1px; line-height: 1.1; }
-#real-start-btn { padding: 15px 40px; font-size: 1.8rem; }
 
 @keyframes playCardAnim {
     0% { transform: translateY(100px) scale(0.5); opacity: 0; }
@@ -1083,125 +1074,6 @@ body.game-started > *:not(#welcome-screen):not(#intro-screen):not(#collection-mo
 @keyframes countdownBreathe {
     0%, 100% { box-shadow: 0 4px 10px rgba(119,217,168,0.3); }
     50%       { box-shadow: 0 4px 28px rgba(119,217,168,0.9), 0 0 0 4px rgba(119,217,168,0.15); }
-}
-
-.game-title {
-    font-size: 3rem;
-    font-weight: 900;
-    color: white;
-    text-align: center;
-    text-shadow: 
-        0 0 10px rgba(255,255,255,0.8),
-        0 0 20px rgba(79,195,247,0.8),
-        0 0 40px rgba(3,169,244,0.8);
-    margin-bottom: 10px;
-}
-
-.subtitle {
-    font-size: 1rem;
-    opacity: 0.8;
-    letter-spacing: 3px;
-}
-
-#real-start-btn {
-    padding: 15px 40px;
-    font-size: 1.8rem;
-    border-radius: 50px;
-    border: none;
-
-    background: linear-gradient(135deg, #ffb74d, #ff7043);
-    color: white;
-
-    box-shadow:
-        0 5px 15px rgba(0,0,0,0.3),
-        0 0 20px rgba(255,183,77,0.6);
-
-    transition: all 0.2s;
-}
-
-#real-start-btn:active {
-    transform: scale(0.95);
-}
-
-.sub-menu {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 20px;
-    justify-content: center;
-    margin-top: 20px;
-}
-
-.sub-btn {
-    padding: 10px 30px;
-    font-size: 1.2rem;
-
-    border-radius: 30px;
-    border: 2px solid rgba(255,255,255,0.5);
-
-    background: rgba(255,255,255,0.35);
-    color: white;
-
-    transition: 0.2s;
-}
-
-.mbubble {
-    position: absolute;
-    bottom: -100px;
-    width: 20px;
-    height: 20px;
-    background: rgba(255,255,255,0.3);
-    border-radius: 50%;
-    animation: floatUp 10s infinite ease-in;
-}
-
-.mbubble:nth-child(1) {
-    left: 20%;
-    animation-duration: 8s;
-}
-.mbubble:nth-child(2) {
-    left: 50%;
-    animation-duration: 12s;
-}
-.mbubble:nth-child(3) {
-    left: 80%;
-    animation-duration: 10s;
-}
-
-@keyframes floatUp {
-    0% {
-        transform: translateY(0);
-        opacity: 0.5;
-    }
-    100% {
-        transform: translateY(-120vh);
-        opacity: 0;
-    }
-}
-
-.welcome-container {
-    position: relative;
-    z-index: 2;
-    text-align: center;
-}
-
-.difficulty-select {
-    margin-bottom: 25px;
-    text-align: center;
-}
-
-.diff-title {
-    color: white;
-    margin-bottom: 10px;
-    font-weight: bold;
-    letter-spacing: 2px;
-	font-size: 1.8rem;
-}
-
-.diff-options {
-    display: flex;
-    gap: 10px;
-    justify-content: center;
 }
 
 .tutorial-highlight {
