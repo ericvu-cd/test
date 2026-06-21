@@ -2479,8 +2479,10 @@ function aiChooseCard(p) {
 
         // 問題3：手上沒有符合牌時，記錄到 log 讓玩家知道
         if (validCards.length === 0) {
+            // 先靜默記錄，不立刻 renderLog()：避免玩家在結算揭曉前就從畫面/紀錄面板
+            // 搶先看到「召喚者沒有符合牌」這個提示，提早推測出召喚條件的嚴苛程度。
+            // 真正顯示的時機交給 showResult() 揭曉召喚內容時統一 renderLog()。
             getRoundBucket(roundCount).notes.push(`⚠ ${p.n}沒有符合牌，隨機出牌`);
-            renderLog();
             return Math.floor(Math.random() * p.hand.length);
         }
 
