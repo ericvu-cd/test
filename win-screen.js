@@ -53,14 +53,18 @@ function showWinScreen(winner) {
     const uiLock = document.getElementById("ui-lock");
     if (uiLock) uiLock.style.display = "none";
 
-    // 寫入初始手牌快照
+    // 寫入初始手牌快照 → 組成「🏆本局結果」總結段落
     if (typeof initialHands !== "undefined" && initialHands.length > 0) {
-        const diff = typeof gameDifficulty !== "undefined" ? gameDifficulty : "?";
-        const lines = initialHands.map(p => {
-            const fishList = p.hand.map(f => `${f.n}(燈${f.l}/${f.d}/${f.h}/${f.s}/${f.m.join(",")})`).join("、");
-            return `  ${p.name}：${fishList}`;
-        }).join("\n");
-        addLog(`[局末記錄] 難度:${diff} 勝者:${winner.n} 回合:${typeof roundCount !== "undefined" ? roundCount : "?"}\n初始手牌:\n${lines}`, "secret");
+        const meta = (typeof window !== "undefined" && window.gameMeta) ? window.gameMeta : {};
+        const diffShort = meta.diffShort || (gameDifficulty <= 0.4 ? "新手" : gameDifficulty >= 0.9 ? "專業" : "標準");
+        gameEndSummary = {
+            location: meta.locationLabel || "未指定海線",
+            diffText: `${diffShort}（${gameDifficulty}）`,
+            winnerName: winner.n,
+            totalRounds: typeof roundCount !== "undefined" ? roundCount : "?",
+            initialHands: initialHands
+        };
+        if (typeof renderLog === "function") renderLog();
     }
 
     // ── BGM 切換 ──

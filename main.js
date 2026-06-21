@@ -298,7 +298,7 @@ function closeInfo() {
 }
 
 // 日誌視窗功能
-// 開啟「出牌紀錄」視窗（內容由 addLog() 持續累積）。
+// 開啟「出牌紀錄」視窗（內容由 renderLog() 依 roundLog／gameEndSummary 重新組出）。
 function openLog() {
     document.getElementById("log-modal").style.display = "flex";
 }
@@ -946,32 +946,104 @@ function renderTable() {
 
 
 
-let logPlainText = []; // 純文字 log，供複製分析用
+let logPlainText = ""; // 純文字版完整報告，供複製分析用（由 renderLog() 重新計算）
+let roundLog = [];      // 結構化回合紀錄：[{round, callerName, isMazu, summonText, plays:[], shares:[], notes:[]}, ...]
+let preGameMessage = ""; // 開場集結訊息（回合0，永遠顯示在報告最下方）
+let gameEndSummary = null; // 遊戲結束時寫入：{location, diffText, winnerName, totalRounds, initialHands}
 
 /**
- * 新增一筆訊息到「出牌紀錄」面板（同時保留一份純文字版供複製）。
- * @param {string} m    要顯示的訊息（可含 HTML）
- * @param {string} type 樣式類型："cmd"（系統指令）/"secret"（神祕資訊）/"success"（成功）
- * 最新訊息永遠插入在最上方（insertAdjacentHTML 'afterbegin'）。
+ * 取得（或建立）指定回合的結構化紀錄物件。
+ * 同一回合內多次呼叫會回傳同一個物件，方便逐步補上召喚／出牌／贈牌等資訊。
  */
-function addLog(m, type="") {
+function getRoundBucket(r) {
+    let b = roundLog.find(x => x.round === r);
+    if (!b) {
+        b = { round: r, callerName: null, isMazu: false, summonText: null, plays: [], shares: [], notes: [] };
+        roundLog.push(b);
+    }
+    return b;
+}
+
+// 燈號 → emoji
+function lightEmoji(l) {
+    return l === 1 ? "🟢" : (l === 2 ? "🟡" : "🔴");
+}
+
+function escapeHtml(s) {
+    return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+// 將單一文字段落（block，內部可能含多行、含空白行分段）依行內容套上樣式 class
+function logBlockToHtml(block) {
+    return block.split("\n").map(line => {
+        if (line === "") return `<div class="log-gap"></div>`;
+        let cls = "log-line";
+        if (/^═+$/.test(line)) cls += " log-divider-heavy";
+        else if (/^─+$/.test(line)) cls += " log-divider-light";
+        else if (line.startsWith("🏆") || line.startsWith("🎴")) cls += " log-title";
+        else if (/^R\d+$/.test(line)) cls += " log-round-num";
+        else if (line.startsWith("✅")) cls += " log-pass";
+        else if (line.startsWith("❌")) cls += " log-fail";
+        else if (line.startsWith("⚠")) cls += " log-warn";
+        else if (line.startsWith("📜")) cls += " log-summon-caller";
+        else if (line.startsWith("🔄") || line.startsWith("🐟")) cls += " log-share";
+        else if (line.startsWith("任務地點") || line.startsWith("難度：") || line.startsWith("總回合") || line.startsWith("勝者")) cls += " log-meta";
+        return `<div class="${cls}">${escapeHtml(line)}</div>`;
+    }).join("");
+}
+
+// 組出「🏆本局結果 + 🎴初始手牌」總結段落（遊戲結束時才會有資料）
+function buildSummaryBlock(s) {
+    const EQ = "═".repeat(30), DASH = "─".repeat(30);
+    const handsText = s.initialHands.map(p => {
+        const cards = p.hand.map(f => `${lightEmoji(f.l)} ${f.n}`);
+        const lines = [];
+        for (let i = 0; i < cards.length; i += 3) lines.push(cards.slice(i, i + 3).join("　"));
+        return `${p.name}\n${lines.join("\n")}`;
+    }).join("\n\n");
+
+    return `${EQ}\n🏆 本局結果\n${EQ}\n\n任務地點：${s.location}\n難度：${s.diffText}\n總回合：${s.totalRounds}\n\n勝者：${s.winnerName}\n\n${DASH}\n🎴 初始手牌\n${DASH}\n\n${handsText}`;
+}
+
+// 組出單一回合段落（召喚揭曉／出牌結果／贈牌／備註）
+function buildRoundBlock(rd) {
+    const EQ = "═".repeat(30);
+    const mid = [];
+    if (rd.callerName) mid.push(`📜 ${rd.callerName}抽到神秘召喚`);
+    if (rd.summonText) mid.push(rd.summonText);
+    if (rd.isMazu) {
+        if (rd.shares.length) mid.push(rd.shares.map(sh => `🔄 ${sh.from} → ${sh.to}\n🐟 ${sh.card}`).join("\n\n"));
+    } else if (rd.plays.length) {
+        mid.push(rd.plays.map(p => `${p.success ? "✅" : "❌"} ${p.name}　${lightEmoji(p.light)}${p.card}`).join("\n"));
+    }
+    if (rd.notes.length) mid.push(rd.notes.join("\n"));
+
+    const parts = [`${EQ}\nR${rd.round}\n${EQ}`];
+    if (mid.length) parts.push(mid.join("\n\n"));
+    return parts.join("\n\n");
+}
+
+/**
+ * 依目前的 gameEndSummary / roundLog / preGameMessage 重新組出整份「出牌紀錄」，
+ * 同時更新畫面上的 #log-messages 面板與供複製用的純文字 logPlainText。
+ * 顯示順序：本局結果（若已結束）→ 回合 R{最大}…R1（新到舊）→ 開場集結訊息。
+ */
+function renderLog() {
+    const segments = [];
+    if (gameEndSummary) segments.push(buildSummaryBlock(gameEndSummary));
+    [...roundLog].sort((a, b) => b.round - a.round).forEach(rd => segments.push(buildRoundBlock(rd)));
+    if (preGameMessage) segments.push(preGameMessage);
+
+    logPlainText = segments.join("\n\n");
+
     const l = document.getElementById("log-messages");
-    let className = "log-entry";
-    if(type === "cmd") className += " log-cmd";
-    if(type === "secret") className += " log-secret";
-    if(type === "success") className += " log-success";
-    const rPrefix = roundCount > 0 ? `[R${roundCount}] ` : "";
-    // 純文字版本（移除 HTML 標籤）
-    const plainLine = `${rPrefix}${m.replace(/<[^>]*>/g, "")}`;
-    logPlainText.unshift(plainLine); // 同樣最新在前
-    const prefix = roundCount > 0 ? `<span style="color:#aaa; font-size:0.85em;">[R${roundCount}]</span> ` : "";
-    l.insertAdjacentHTML('afterbegin', `<div class="${className}">> ${prefix}${m}</div>`);
+    if (l) l.innerHTML = segments.map(seg => `<div class="log-block">${logBlockToHtml(seg)}</div>`).join("");
 }
 
 // 將純文字版出牌紀錄複製到剪貼簿；若瀏覽器不支援 clipboard API（常見於部分手機瀏覽器），
 // fallback 成跳出一個可手動長按選取全文的 textarea。
 function copyLog() {
-    const text = logPlainText.join("\n");
+    const text = logPlainText;
     const btn = document.getElementById("log-copy-btn");
     navigator.clipboard.writeText(text).then(() => {
         btn.textContent = "✓ 已複製";
@@ -1429,13 +1501,19 @@ function startGame() {
         name: p.n,
         hand: p.hand.map(f => ({ n: f.n, l: f.l, d: f.d, m: [...f.m], h: f.h, s: f.s }))
     }));
-    logPlainText = []; // 清空上局紀錄
+    // 清空上局紀錄
+    roundLog = [];
+    preGameMessage = "";
+    gameEndSummary = null;
     // 重置行為型勳章追蹤
     badgeTracker = { playerCards: [], returnCount: 0, mazuCompleted: false, mazuGiftCard: null };
     
     const diffLabel = gameDifficulty <= 0.4 ? "新手(難度0.4)" : gameDifficulty >= 0.9 ? "專業(難度0.9)" : "標準(難度0.7)";
+    const diffShort = gameDifficulty <= 0.4 ? "新手" : gameDifficulty >= 0.9 ? "專業" : "標準";
     const locationLabel = currentLocation ? currentLocation.name : "未指定海線";
-    addLog(`守護團集結！任務地點：${locationLabel}。難度：${diffLabel}。注意觀察大家的出牌...`);
+    window.gameMeta = { locationLabel, diffLabel, diffShort };
+    preGameMessage = `守護團集結！任務地點：${locationLabel}。難度：${diffLabel}。注意觀察大家的出牌...`;
+    renderLog();
 
     // 顯示等待藍框（HTML 已預先填好文字）
     const overlay = document.getElementById("summon-focus-overlay");
@@ -1525,7 +1603,12 @@ function showSummonFocus(duration, callback) {
 function autoStep() {
     lockUI(); // 每回合開始立刻鎖定
     if (deckS.length === 0) { 
-        addLog("召喚卡已用盡！開始結算剩餘手牌...", "cmd");
+        if (roundCount > 0) {
+            getRoundBucket(roundCount).notes.push("⚠ 召喚卡已用盡，開始結算剩餘手牌...");
+        } else {
+            preGameMessage += "\n⚠ 召喚卡已用盡，開始結算剩餘手牌...";
+        }
+        renderLog();
                 // 找出手中剩餘卡牌最少的玩家
         let winner = players[0];
         for (let i = 1; i < players.length; i++) {
@@ -1559,14 +1642,21 @@ function autoStep() {
 
     if (callerIdx === 0) {
         SFX.draw(); // 玩家抽到召喚牌
-        addLog(`【${players[0].n}】抽到召喚：${currentS.t.replace(/\n/g, " ")}`, "cmd");
+        {
+            const b = getRoundBucket(roundCount);
+            b.callerName = players[0].n;
+            b.isMazu = !!currentS.isMazu;
+            b.summonText = currentS.t;
+        }
+        renderLog();
         const sdEl = document.getElementById("summon-display");
         sdEl.style.display = "flex";
         sdEl.innerText = (currentS.isMazu ? "【神明指示】\n" : "【你的召喚】\n") + currentS.t;
         phase = currentS.isMazu ? "PLAYER_MAZU" : "PLAYER_TURN";
         renderUI();
     } else {
-        addLog(`【${caller.n}】抽到了一張神祕召喚。`, "secret");
+        getRoundBucket(roundCount).callerName = caller.n;
+        renderLog();
         const sdEl2 = document.getElementById("summon-display");
         sdEl2.style.display = "flex";
         sdEl2.innerText = `【${caller.n}】抽到了神祕召喚！\n觀察對手出的魚，推敲召喚是什麼...`;
@@ -1621,7 +1711,12 @@ function autoStep() {
  */
 function handleMazuAI(caller) {
     document.getElementById("summon-display").innerText = "【神明庇佑揭曉】\n" + currentS.t;
-    addLog(`揭曉神明召喚：${currentS.t.replace(/\n/g, " ")}`, "cmd");
+    {
+        const b = getRoundBucket(roundCount);
+        b.isMazu = true;
+        b.summonText = currentS.t;
+    }
+    renderLog();
 
     setTimeout(() => {
         if (caller.hand.length === 0) { finishRound(); return; }
@@ -1659,7 +1754,8 @@ function handleMazuAI(caller) {
             // ── 若送給玩家，解鎖魚紋章 ──
             if (!target.isAI) progress.unlockFish(window.playerName, card.n);
             SFX.gift();
-            addLog(`✨ ${caller.n} 分享了一張【${card.n}】給 ${target.n}！`, "success");
+            getRoundBucket(roundCount).shares.push({ from: caller.n, to: target.n, card: card.n });
+            renderLog();
             
             // 3. 如果接收者是 AI，接著說話
             if (target.isAI) {
@@ -1724,7 +1820,8 @@ function confirmMazuGift(cardIdx, target) {
 
     target.hand.push(card);
     SFX.gift();
-    addLog(`✨ ${players[0].n}分享了【${card.n}】給 ${target.n}！`, "success");
+    getRoundBucket(roundCount).shares.push({ from: players[0].n, to: target.n, card: card.n });
+    renderLog();
 
     // 記錄媽祖贈牌
     badgeTracker.mazuCompleted = true;
@@ -1992,7 +2089,13 @@ function showResult() {
         // AI 是召喚者時，全員出牌後才揭曉召喚條件
         if (callerIdx !== 0 && currentS && !currentS.isMazu) {
             const callerName = players[callerIdx].n;
-            addLog(`揭曉《${callerName}》的神秘召喚：${currentS.t.replace(/\n/g, " ")}`, "cmd");
+            {
+                const b = getRoundBucket(roundCount);
+                b.callerName = callerName;
+                b.isMazu = false;
+                b.summonText = currentS.t;
+            }
+            renderLog();
             document.getElementById("summon-display").innerText = `【${callerName}的召喚】\n${currentS.t}`;
         }
         table.forEach(t => {
@@ -2040,14 +2143,14 @@ function showResult() {
                 feature: finalFeatureStr
             });
 
+            getRoundBucket(roundCount).plays.unshift({ name: player.n, card: t.card.n, light: t.card.l, success: isSuccess });
+
             if (isSuccess) {
-                addLog(`${player.n} 成功送出【${t.card.n}】`, "success");
                 // 記錄玩家出牌（成功）
                 if (!player.isAI) badgeTracker.playerCards.push({ card: t.card, isSuccess: true });
             } else {
                 // 先暫存，等結算頁關閉後再動畫退回
                 pendingReturns.push({ card: t.card, player });
-                addLog(`${player.n} 的【${t.card.n}】不符規律，退回。`);
                 // 記錄玩家出牌（退回）並累計退牌數
                 if (!player.isAI) {
                     badgeTracker.playerCards.push({ card: t.card, isSuccess: false });
@@ -2055,6 +2158,7 @@ function showResult() {
                 }
             }
         });
+        renderLog();
 
         renderUI();
 
@@ -2375,7 +2479,8 @@ function aiChooseCard(p) {
 
         // 問題3：手上沒有符合牌時，記錄到 log 讓玩家知道
         if (validCards.length === 0) {
-            addLog(`${p.n} 手上沒有符合召喚的牌，隨機出牌。`, "secret");
+            getRoundBucket(roundCount).notes.push(`⚠ ${p.n}沒有符合牌，隨機出牌`);
+            renderLog();
             return Math.floor(Math.random() * p.hand.length);
         }
 
