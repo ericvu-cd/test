@@ -160,7 +160,7 @@ document.addEventListener('DOMContentLoaded', () => {
     preloadImages('P', 9);  // 預載故事 P1-P9
     preloadImages('F', 18); // 預載說明 F1-F18
     preloadFishImages();     // 預載所有魚圖片
-    initOceanCaustics();     // 初始化海洋光束
+    // initOceanCaustics() 已由 MP4 影片取代，不再需要
 });
 
 // 預載魚圖片
@@ -1309,19 +1309,18 @@ function stopFish() {
 // 切回前景時若先前在遊戲中則恢復動畫，並視 sfxEnabled 狀態決定是否恢復播放音樂。
 document.addEventListener('visibilitychange', () => {
     const inGame = document.body.classList.contains('game-started');
+    const vid = document.getElementById('ocean-bg-video');
     if (document.hidden) {
-        stopFish();
-        stopBubbles();
+        // 切到背景：暫停影片與音樂
+        if (vid) vid.pause();
         const bgm = document.getElementById('bgm');
         if (bgm && !bgm.paused) { bgm._wasPlaying = true; bgm.pause(); }
     } else {
-        if (inGame) {
-            startFish();
-            startBubbles();
-        }
+        // 回到前景：恢復影片與音樂
+        if (inGame && vid) vid.play().catch(() => {});
         const bgm = document.getElementById('bgm');
         if (bgm && bgm._wasPlaying && sfxEnabled) { bgm._wasPlaying = false; bgm.play().catch(() => {}); }
-        else if (bgm) { bgm._wasPlaying = false; } // 靜音狀態下也清旗標
+        else if (bgm) { bgm._wasPlaying = false; }
     }
 });
 
@@ -1349,11 +1348,26 @@ function initChatLayer() {
  *   啟動背景特效（光束／魚群／氣泡）、淡出歡迎畫面、顯示遊戲內 UI 按鈕（音樂/紀錄/收集等）、
  *   嘗試播放背景音樂，並在 3.5 秒淡出轉場結束後呼叫 startGame() 正式開局。
  */
+function initOceanVideo(locationName) {
+    const ocean = document.getElementById("ocean");
+    if (!ocean) return;
+    let vid = document.getElementById("ocean-bg-video");
+    if (!vid) {
+        vid = document.createElement("video");
+        vid.id = "ocean-bg-video";
+        vid.autoplay = true; vid.loop = true; vid.muted = true; vid.playsInline = true;
+        vid.style.cssText = "position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;pointer-events:none;";
+        ocean.insertBefore(vid, ocean.firstChild);
+    }
+    vid.src = `image/${locationName}.mp4`;
+    vid.load();
+    vid.play().catch(() => {});
+}
+
 function initGame() {
-	initOceanCaustics();
 	initChatLayer();
-	startFish();    // ← 遊戲開始才啟動魚
-	startBubbles(); // ← 遊戲開始才啟動氣泡
+	// DOM 魚群/氣泡/光束已由 MP4 影片背景取代，不再啟動
+	// startFish(); startBubbles(); initOceanCaustics();
 	document.body.classList.add('game-started');
 	
     // ✅ 改用加入 class 的方式觸發淡出
@@ -1432,6 +1446,7 @@ function startGame() {
     const currentLocation = (typeof locationDB !== "undefined" && locationDB.find)
         ? locationDB.find(loc => loc.id === selectedLocationId) || locationDB[0]
         : null;
+    initOceanVideo(currentLocation ? currentLocation.name : "苗栗龍鳳漁港");
     const locationFishNames = currentLocation ? new Set(currentLocation.fishPool) : null;
 
     // ── 解鎖漁港章（進入漁港即解鎖）──
