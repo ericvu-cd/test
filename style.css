@@ -1,8 +1,6 @@
 html {
     height: 100%;
-    background: url('image/game-bg.png') no-repeat center center;
-    background-size: cover;
-    background-attachment: scroll;
+    background: #000;
 }
 /* 禁用長按彈出瀏覽器選單與文字選取（全手機遊戲通用設定） */
 * {
@@ -35,15 +33,16 @@ body {
     height: 100dvh;
     overflow: hidden;
     background: transparent;
+    transform: translateZ(0);
 }
-/* 讓 body 底下的所有東西預設先消失 */
-body > *:not(#welcome-screen):not(#intro-screen):not(#collection-modal):not(#collection-zoom-overlay) {
+/* 讓 body 底下的所有東西預設先消失（影片排除，避免 opacity transition 打斷 GPU 合成） */
+body > *:not(#welcome-screen):not(#intro-screen):not(#collection-modal):not(#collection-zoom-overlay):not(#ocean-bg-video):not(#ocean-bg-png) {
     visibility: hidden;
     opacity: 0;
 }
 
 /* 當遊戲開始，給 body 加一個類別，讓內容顯現 */
-body.game-started > *:not(#welcome-screen):not(#intro-screen):not(#collection-modal):not(#collection-zoom-overlay) {
+body.game-started > *:not(#welcome-screen):not(#intro-screen):not(#collection-modal):not(#collection-zoom-overlay):not(#ocean-bg-video):not(#ocean-bg-png) {
     visibility: visible;
     opacity: 1;
     transition: opacity 1s ease;
@@ -186,6 +185,8 @@ body.game-started > *:not(#welcome-screen):not(#intro-screen):not(#collection-mo
     transition: all 0.3s;
     border-bottom: 1px solid rgba(255,255,255,0.08);
     z-index: 10;
+    will-change: transform;
+    transform: translateZ(0);
 }
 .box { 
     flex: 1; margin: 0; padding: 0; border: none; background: transparent; 
@@ -233,14 +234,18 @@ body.game-started > *:not(#welcome-screen):not(#intro-screen):not(#collection-mo
 
 /* 輪到誰的動畫特效 */
 @keyframes aiPulseGlow {
-    0%   { transform: scale(1);   box-shadow: 0 0 6px 1px currentColor; }
-    50%  { transform: scale(1.8); box-shadow: 0 0 18px 4px currentColor; }
-    100% { transform: scale(1);   box-shadow: 0 0 6px 1px currentColor; }
+    /* opacity-only：讓合成器處理，不觸發 repaint */
+    0%,100% { opacity: 0.65; }
+    50%      { opacity: 1; }
 }
 .box.is-caller .avatar-img {
     animation: aiPulseGlow 5s ease-in-out infinite;
     border-color: #ffdfba !important;
     color: #ffdfba !important;
+    /* 固定縮放取代動態 scale，靜態不耗效能 */
+    transform: scale(1.15) translateZ(0);
+    box-shadow: 0 0 14px 3px currentColor;
+    will-change: opacity;
 }
 /* 玩家輪次的高亮（is-caller：玩家是召喚者，AI 跟牌中）*/
 @keyframes isCallerPulse {
@@ -404,6 +409,8 @@ body.game-started > *:not(#welcome-screen):not(#intro-screen):not(#collection-mo
     min-height: 0;
     background: transparent;
     z-index: 1;
+    will-change: transform;
+    transform: translateZ(0);
 }
 
 
@@ -742,6 +749,8 @@ body.game-started > *:not(#welcome-screen):not(#intro-screen):not(#collection-mo
     border-radius: 15px 15px 0 0;
     position: relative;
     z-index: 10;
+    will-change: transform;
+    transform: translateZ(0);
 }
 .hand { display: flex; overflow-x: auto; gap: 6px; padding-bottom: 5px; min-height: 126px; align-items: flex-end; -webkit-overflow-scrolling: touch; }
 
@@ -859,7 +868,10 @@ body.game-started > *:not(#welcome-screen):not(#intro-screen):not(#collection-mo
     touch-action: manipulation;
     overflow: hidden;
     transform-style: preserve-3d;
-    transition: transform 0.6s ease, box-shadow 0.22s ease, filter 0.22s ease;
+    /* 把每張卡提升到獨立合成層，翻牌時不污染影片合成 */
+    will-change: transform;
+    transform: translateZ(0);
+    transition: transform 0.6s ease, box-shadow 0.22s ease;
 
     background: transparent;
 
@@ -908,6 +920,16 @@ body.game-started > *:not(#welcome-screen):not(#intro-screen):not(#collection-mo
 /* 翻轉觸發 class */
 #player-hand .card.flipped {
     transform: rotateY(180deg);
+}
+
+/* CSS 自動翻牌動畫：取代 JS setInterval，由合成器執行不佔主執行緒 */
+@keyframes cardFlipCycle {
+    0%, 45%   { transform: rotateY(0deg); }
+    50%, 95%  { transform: rotateY(180deg); }
+    100%      { transform: rotateY(0deg); }
+}
+#player-hand .card.card-auto-flip {
+    animation: cardFlipCycle 10s ease-in-out infinite;
 }
 
 /* 反面：魚名下方的特性標籤容器 */
@@ -987,7 +1009,8 @@ body.game-started > *:not(#welcome-screen):not(#intro-screen):not(#collection-mo
     border-radius: 15px;
     overflow: visible;
     transform-style: preserve-3d;
-    transition: transform 0.6s ease, box-shadow 0.22s ease, filter 0.22s ease;
+    will-change: transform;
+    transition: transform 0.6s ease, box-shadow 0.22s ease;
 }
 
 /* 符合條件的紅點標記 — 貼在卡片右上角外側，像通知徽章 */

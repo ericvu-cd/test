@@ -1349,19 +1349,27 @@ function initChatLayer() {
  *   嘗試播放背景音樂，並在 3.5 秒淡出轉場結束後呼叫 startGame() 正式開局。
  */
 function initOceanVideo(locationName) {
-    const ocean = document.getElementById("ocean");
-    if (!ocean) return;
     let vid = document.getElementById("ocean-bg-video");
     if (!vid) {
         vid = document.createElement("video");
         vid.id = "ocean-bg-video";
         vid.autoplay = true; vid.loop = true; vid.muted = true; vid.playsInline = true;
-        vid.style.cssText = "position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;pointer-events:none;";
-        ocean.insertBefore(vid, ocean.firstChild);
+        vid.style.cssText = "position:fixed;top:0;left:0;width:100%;height:100%;object-fit:cover;z-index:-1;pointer-events:none;";
+        document.body.appendChild(vid);
     }
     vid.src = `image/${locationName}.mp4`;
     vid.load();
     vid.play().catch(() => {});
+
+    // 漁港底部裝飾PNG（MP4上一層，固定在畫面底部，全寬等比）
+    let png = document.getElementById("ocean-bg-png");
+    if (!png) {
+        png = document.createElement("img");
+        png.id = "ocean-bg-png";
+        png.style.cssText = "position:fixed;bottom:0;left:0;width:100%;height:auto;z-index:0;pointer-events:none;opacity:0.3;";
+        document.body.appendChild(png);
+    }
+    png.src = `image/${locationName}.png`;
 }
 
 function initGame() {
