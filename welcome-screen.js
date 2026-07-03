@@ -994,6 +994,13 @@
 		window.playerName = typedName || '守護員';
 		sessionStorage.setItem('selectedLocationId', window.selectedLocationId);
 
+		/* 按下按鈕的當下，就把選中的漁港 id 鎖進一個獨立變數，直接往下傳給 initGame()。
+		   不要仰賴 3 秒轉場動畫「結束後」才重新去讀 window.selectedLocationId／sessionStorage——
+		   這 3 秒空窗期內，不管什麼原因（背景頁面被系統回收、瀏覽器行為等）讓那兩個共用值
+		   變成 null，都會導致 initGame() 抓到錯的地點。鎖進區域變數、當參數傳遞，
+		   就能徹底避開這整類「延遲讀取共用可變狀態」造成的競爭問題。 */
+		var lockedLocationId = window.selectedLocationId;
+
 		/* 同步結算報告狀態到遊戲中按鈕 */
 		if(typeof showSummaryMode !== 'undefined') showSummaryMode = _rptOn;
 		var rBtn = document.getElementById('report-control');
@@ -1038,7 +1045,7 @@
 				wsEl.style.opacity         = '0';   /* 先藏起來，避免歸位瞬間被看到 */
 				wsEl.style.transform       = '';
 				wsEl.style.transformOrigin = '';
-				if(typeof initGame === 'function') initGame();
+				if(typeof initGame === 'function') initGame(lockedLocationId);
 				/* 遊戲畫面淡入需要 1 秒（body.game-started 的 transition），
 				   遮罩跟著淡出，蓋過這段切換空檔，淡完後移除 */
 				zoomMask.style.transition = 'opacity 1s ease';
@@ -1046,7 +1053,7 @@
 				setTimeout(function(){ zoomMask.remove(); }, 1050);
 			}, 3000);
 		} else {
-			if(typeof initGame === 'function') initGame();
+			if(typeof initGame === 'function') initGame(lockedLocationId);
 		}
 	};
 

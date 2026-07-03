@@ -1132,7 +1132,13 @@ function initOceanVideo(locationId) {
     vid.play().catch(() => {});
 }
 
-function initGame() {
+// 由 wsStartGame() 在按下「守護漁港」的當下鎖住並傳入，
+// 全程用這個值，不再於 initGame()／startGame() 執行當下重新讀取
+// window.selectedLocationId／sessionStorage，避免 3 秒轉場動畫期間
+// 這兩個共用可變狀態被清空所造成的「選錯地點」問題。
+let lockedGameLocationId = null;
+
+function initGame(lockedLocationId) {
 	initChatLayer();
 	document.body.classList.add('game-started');
 
@@ -1140,13 +1146,19 @@ function initGame() {
     const welcomeScreen = document.getElementById("welcome-screen");
     welcomeScreen.classList.add("fade-out");
 
+    // 優先使用呼叫端直接傳入的值；沒有傳入時（例如舊版呼叫方式）才 fallback
+    // 回原本讀 window.selectedLocationId／sessionStorage 的邏輯，維持相容。
+    lockedGameLocationId = lockedLocationId
+        || window.selectedLocationId
+        || sessionStorage.getItem("selectedLocationId")
+        || "longfeng";
+
     // 提早開始緩衝背景海洋影片：不用等 3.5 秒淡出轉場結束才開始下載，
     // 讓影片有更多時間（淡出轉場 3.5 秒 + startGame 後渲染 2 秒 ≈ 5.5 秒）
     // 在畫面真正需要它之前完成緩衝，降低弱網環境下開局卡頓的機率。
     {
-        const earlyLocationId = window.selectedLocationId || sessionStorage.getItem("selectedLocationId") || "longfeng";
         const earlyLocation = (typeof locationDB !== "undefined" && locationDB.find)
-            ? locationDB.find(loc => loc.id === earlyLocationId) || locationDB[0]
+            ? locationDB.find(loc => loc.id === lockedGameLocationId) || locationDB[0]
             : null;
         initOceanVideo(earlyLocation ? earlyLocation.id : "longfeng");
     }
@@ -1219,7 +1231,7 @@ function startGame() {
         progress.unlockCompanion(window.playerName, char.n);
     });	
 	
-    const selectedLocationId = window.selectedLocationId || sessionStorage.getItem("selectedLocationId") || "longfeng";
+    const selectedLocationId = lockedGameLocationId || window.selectedLocationId || sessionStorage.getItem("selectedLocationId") || "longfeng";
     const matchedLocation = (typeof locationDB !== "undefined" && locationDB.find)
         ? locationDB.find(loc => loc.id === selectedLocationId)
         : null;
