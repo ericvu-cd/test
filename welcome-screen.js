@@ -975,7 +975,7 @@
 	 *   2. 記住暱稱（localStorage）、把目前設定（暱稱/結算報告開關）同步給 main.js
 	 *   3. 視覺效果：以選中漁港的螢幕座標為縮放中心（transform-origin），
 	 *      把整個 welcome-screen 放大 2.5 倍並淡出，製造「鏡頭推近港口」的轉場感
-	 *   4. 轉場動畫結束（2.05 秒）後才呼叫 main.js 的 initGame() 正式開局
+	 *   4. 轉場動畫結束（3.05 秒）後才呼叫 main.js 的 initGame() 正式開局
 	 */
 	window.wsStartGame = function(){
 		if(!window.selectedLocationId){
@@ -1020,16 +1020,31 @@
 			/* 計算 transform-origin：以港口為縮放中心 */
 			var ox = (dotX / cW * 100).toFixed(1) + '%';
 			var oy = (dotY / cH * 100).toFixed(1) + '%';
-			wsEl.style.transition        = 'transform 2s cubic-bezier(.4,0,.2,1), opacity 0.8s ease';
+
+			/* 黑色遮罩：墊在 welcome-screen 正下方，蓋住縮放期間可能露出的殘留背景
+			   （transform-origin 是用漁港在地圖容器內的座標換算成視窗百分比，
+			     精準度受地圖容器位置/縮放影響，遮罩可確保不管誤差多少都不會露餡） */
+			var zoomMask = document.createElement('div');
+			zoomMask.id = 'ws-zoom-mask';
+			zoomMask.style.cssText = 'position:fixed;inset:0;background:#000;z-index:999;pointer-events:none;opacity:1;';
+			document.body.appendChild(zoomMask);
+
+			wsEl.style.transition        = 'transform 3s cubic-bezier(.4,0,.2,1)';
 			wsEl.style.transformOrigin   = ox + ' ' + oy;
-			wsEl.style.transform         = 'scale(2.5)';
-			wsEl.style.opacity           = '0';
+			wsEl.style.transform         = 'scale(5)';
 			setTimeout(function(){
+				wsEl.style.animation       = 'none';  /* 解除 welcomeFadeIn(forwards)對opacity的鎖定 */
 				wsEl.style.transition      = '';
+				wsEl.style.opacity         = '0';   /* 先藏起來，避免歸位瞬間被看到 */
 				wsEl.style.transform       = '';
 				wsEl.style.transformOrigin = '';
 				if(typeof initGame === 'function') initGame();
-			}, 2050);
+				/* 遊戲畫面淡入需要 1 秒（body.game-started 的 transition），
+				   遮罩跟著淡出，蓋過這段切換空檔，淡完後移除 */
+				zoomMask.style.transition = 'opacity 1s ease';
+				zoomMask.style.opacity    = '0';
+				setTimeout(function(){ zoomMask.remove(); }, 1050);
+			}, 3000);
 		} else {
 			if(typeof initGame === 'function') initGame();
 		}

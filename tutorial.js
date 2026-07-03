@@ -428,8 +428,7 @@ function startTutorial() {
     document.getElementById("log-btn").style.display        = "none";
 
     document.body.classList.add("game-started");
-    if (typeof startFish    === "function") startFish();
-    if (typeof startBubbles === "function") startBubbles();
+    if (typeof initOceanVideo === "function") initOceanVideo("苗栗龍鳳漁港");
     if (typeof closePreview === "function") closePreview();
 
     const focusOverlay = document.getElementById("summon-focus-overlay");
@@ -857,9 +856,6 @@ function tutorFinish() {
 
     // 停止教學 BGM
     if (typeof infoBGM !== "undefined") infoBGM.pause();
-
-    if (typeof stopFish    === "function") stopFish();
-    if (typeof stopBubbles === "function") stopBubbles();
 
     document.body.classList.remove("game-started");
 

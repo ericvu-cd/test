@@ -35,14 +35,29 @@ body {
     background: transparent;
     transform: translateZ(0);
 }
+
+#ocean-bg-video {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100dvh;
+    object-fit: cover;
+    z-index: -1;
+    pointer-events: none;
+    transform: translateZ(0);
+    will-change: transform;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    contain: layout paint size;
+}
 /* 讓 body 底下的所有東西預設先消失（影片排除，避免 opacity transition 打斷 GPU 合成） */
-body > *:not(#welcome-screen):not(#intro-screen):not(#collection-modal):not(#collection-zoom-overlay):not(#ocean-bg-video):not(#ocean-bg-png) {
+body > *:not(#welcome-screen):not(#intro-screen):not(#collection-modal):not(#collection-zoom-overlay):not(#ocean-bg-video) {
     visibility: hidden;
     opacity: 0;
 }
 
 /* 當遊戲開始，給 body 加一個類別，讓內容顯現 */
-body.game-started > *:not(#welcome-screen):not(#intro-screen):not(#collection-modal):not(#collection-zoom-overlay):not(#ocean-bg-video):not(#ocean-bg-png) {
+body.game-started > *:not(#welcome-screen):not(#intro-screen):not(#collection-modal):not(#collection-zoom-overlay):not(#ocean-bg-video) {
     visibility: visible;
     opacity: 1;
     transition: opacity 1s ease;
@@ -354,6 +369,8 @@ body.game-started > *:not(#welcome-screen):not(#intro-screen):not(#collection-mo
 .mazu-gift-card-fly {
     position: absolute;
     animation: cardFly 2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    will-change: transform, opacity;
+    backface-visibility: hidden;
 }
 @keyframes cardFly {
     0%   { opacity: 1; transform: scale(1) translate(0, 0); }
@@ -375,6 +392,8 @@ body.game-started > *:not(#welcome-screen):not(#intro-screen):not(#collection-mo
     z-index: 5001;
     pointer-events: none;
     min-width: 260px;
+    will-change: transform, opacity, box-shadow;
+    backface-visibility: hidden;
 }
 @keyframes bannerPop {
     from { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
@@ -416,127 +435,6 @@ body.game-started > *:not(#welcome-screen):not(#intro-screen):not(#collection-mo
 
 
 
-#bubbles { position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow: hidden; pointer-events: none; z-index: 2; }
-.bubble {
-    position: absolute;
-    bottom: 0;
-    border-radius: 50%;
-    /* 外框：細邊 + 左上亮、右下暗，模擬玻璃球輪廓 */
-    border: 1.5px solid rgba(255,255,255,0.35);
-    background: radial-gradient(
-        circle at 32% 28%,
-        rgba(255,255,255,0.55)  0%,
-        rgba(200,235,255,0.18) 35%,
-        rgba(140,200,255,0.06) 65%,
-        rgba(80,160,220,0.10)  100%
-    );
-    /* 多層 box-shadow：內高光 + 外透光 + 底部陰影 */
-    box-shadow:
-        inset  2px  2px  5px rgba(255,255,255,0.55),
-        inset -2px -2px  5px rgba(80,160,220,0.20),
-        0 2px 8px rgba(0,30,80,0.18),
-        0 0 6px rgba(150,210,255,0.15);
-    animation: rise linear forwards;
-    will-change: transform, opacity;
-}
-
-/* 氣泡內部小高光點（用 ::before） */
-.bubble::before {
-    content: "";
-    position: absolute;
-    top: 12%;
-    left: 16%;
-    width: 28%;
-    height: 22%;
-    border-radius: 50%;
-    background: rgba(255,255,255,0.75);
-}
-
-/* 氣泡底部反光弧（用 ::after） */
-.bubble::after {
-    content: "";
-    position: absolute;
-    bottom: 14%;
-    right: 14%;
-    width: 22%;
-    height: 12%;
-    border-radius: 50%;
-    background: rgba(180,225,255,0.45);
-}
-@keyframes rise {
-    0%   { transform: translateY(0)       translateX(0);   opacity: 0; }
-    8%   { opacity: 0.75; }
-    40%  { transform: translateY(-38vh)   translateX(var(--drift-x, 4px));  opacity: 0.65; }
-    70%  { transform: translateY(-68vh)   translateX(calc(var(--drift-x, 4px) * -0.5)); opacity: 0.45; }
-    100% { transform: translateY(-105vh)  translateX(var(--drift-x, 4px));  opacity: 0; }
-}
-
-#fish-layer { position: absolute; width: 100%; height: 100%; pointer-events: none; overflow: hidden; z-index: 1; }
-
-/* =============================================
-   水面光束層（Caustics 海洋光影）
-   ============================================= */
-#ocean-caustics {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    z-index: 0;
-    overflow: hidden;
-    -webkit-transform: translateZ(0);
-    transform: translateZ(0);
-}
-.caustic-beam {
-    position: absolute;
-    top: -20%;
-    width: 60px;
-    height: 160%;
-    background: linear-gradient(to bottom,
-        rgba(255,255,255,0.0) 0%,
-        rgba(180,230,255,0.06) 30%,
-        rgba(150,210,255,0.10) 50%,
-        rgba(180,230,255,0.06) 70%,
-        rgba(255,255,255,0.0) 100%
-    );
-    border-radius: 50%;
-    transform-origin: top center;
-    -webkit-filter: blur(3px);
-    filter: blur(3px);
-    transition: background 1.2s ease, filter 1.2s ease;
-}
-
-/* 媽祖金黃光束 */
-#ocean-caustics.mazu-beams .caustic-beam {
-    background: linear-gradient(to bottom,
-        rgba(255,215,0,0.0) 0%,
-        rgba(255,185,30,0.18) 20%,
-        rgba(245,165,10,0.32) 45%,
-        rgba(255,200,50,0.22) 70%,
-        rgba(255,215,0,0.0) 100%
-    );
-    -webkit-filter: blur(4px);
-    filter: blur(4px);
-}
-#ocean-caustics.mazu-beams .caustic-beam:nth-child(1) { width: 80px; }
-#ocean-caustics.mazu-beams .caustic-beam:nth-child(3) { width: 100px; }
-#ocean-caustics.mazu-beams .caustic-beam:nth-child(5) { width: 75px; }
-/* 預設：只有第3條（正中間）保持動態，其餘靜止 */
-.caustic-beam:nth-child(1) { left: 8%;  animation: beamSway 7s  2.0s ease-in-out infinite; animation-play-state: paused; }
-.caustic-beam:nth-child(2) { left: 22%; animation: beamSway 9s  0.5s ease-in-out infinite; width: 40px; opacity: 0.7; animation-play-state: paused; }
-.caustic-beam:nth-child(3) { left: 42%; animation: beamSway 11s 1.2s ease-in-out infinite; }
-.caustic-beam:nth-child(4) { left: 63%; animation: beamSway 8s  3.5s ease-in-out infinite; width: 35px; opacity: 0.6; animation-play-state: paused; }
-.caustic-beam:nth-child(5) { left: 80%; animation: beamSway 10s 0.0s ease-in-out infinite; animation-play-state: paused; }
-/* 玩家回合或媽祖時：全部恢復 */
-#ocean-caustics.beams-active .caustic-beam,
-#ocean-caustics.mazu-beams  .caustic-beam { animation-play-state: running; }
-
-@keyframes beamSway {
-    0%   { transform: rotate(-8deg) scaleX(1.0); opacity: 0.5; }
-    25%  { transform: rotate(-2deg) scaleX(1.3); opacity: 0.9; }
-    50%  { transform: rotate( 6deg) scaleX(0.9); opacity: 0.6; }
-    75%  { transform: rotate( 2deg) scaleX(1.2); opacity: 0.8; }
-    100% { transform: rotate(-8deg) scaleX(1.0); opacity: 0.5; }
-}
-
 /* 深海底霧：底部暗化，增加深度感 */
 #ocean::after {
     content: "";
@@ -550,145 +448,6 @@ body.game-started > *:not(#welcome-screen):not(#intro-screen):not(#collection-mo
     );
     pointer-events: none;
     z-index: 0;
-}
-
-/* =============================================
-   魚體系統
-   ============================================= */
-.fish {
-    position: absolute;
-    will-change: transform;
-}
-
-/* 魚身：改用立體漸層取代平面純色 */
-.fish-body {
-    position: relative;
-    border-radius: 50% 40% 40% 50%;
-    transform-origin: center;
-    /* 漸層在 JS 中動態設定，此處為 fallback */
-    overflow: visible;
-}
-
-/* 魚腹高光條：疊在魚身上製造立體圓潤感 */
-.fish-body::before {
-    content: "";
-    position: absolute;
-    top: 12%;
-    left: 15%;
-    width: 55%;
-    height: 38%;
-    border-radius: 50%;
-    background: linear-gradient(
-        135deg,
-        rgba(255,255,255,0.45) 0%,
-        rgba(255,255,255,0.10) 60%,
-        transparent 100%
-    );
-    pointer-events: none;
-}
-
-/* 魚身暗部（腹部下方陰影，增加立體感） */
-.fish-body::after {
-    content: "";
-    position: absolute;
-    bottom: 5%;
-    left: 10%;
-    width: 75%;
-    height: 40%;
-    border-radius: 50%;
-    background: radial-gradient(ellipse at center,
-        rgba(0,0,0,0.18) 0%,
-        transparent 80%
-    );
-    pointer-events: none;
-}
-
-/* 魚鰭（背鰭） */
-.fish-fin {
-    position: absolute;
-    top: -28%;
-    left: 28%;
-    width: 0;
-    height: 0;
-    border-left: 0px solid transparent;
-    border-right: 0px solid transparent;
-    /* border-bottom 在 JS 中動態設定 */
-    opacity: 0.75;
-    transform-origin: bottom center;
-}
-
-/* =============================================
-   動畫：尾擺、游動、波動
-   ============================================= */
-
-/* 魚尾：右邊寬（尾端展開）、左邊尖（接魚身根部）
-   魚往左游，尾巴從魚身右邊伸出，旋轉軸在左邊尖端 */
-.fish-tail {
-    position: absolute;
-    left: 100%;
-    transform-origin: left center;
-    clip-path: polygon(100% 0%, 100% 100%, 0% 50%);
-    will-change: transform;
-}
-
-/* 魚眼：加雙層高光讓眼睛有神 */
-.fish-eye {
-    position: absolute;
-    background: radial-gradient(circle at 35% 30%,
-        rgba(60,60,80,0.5) 0%,
-        rgba(0,0,0,0.85) 55%,
-        rgba(0,0,0,0.9) 100%
-    );
-    border-radius: 50%;
-    top: 28%;
-    left: 18%;
-    box-shadow: 0 0 3px rgba(0,0,0,0.5);
-}
-/* 主高光 */
-.fish-eye::after {
-    content: "";
-    position: absolute;
-    background: white;
-    border-radius: 50%;
-    width: 35%;
-    height: 35%;
-    top: 10%;
-    left: 10%;
-}
-/* 副高光（小光點，更有神） */
-.fish-eye::before {
-    content: "";
-    position: absolute;
-    background: rgba(255,255,255,0.6);
-    border-radius: 50%;
-    width: 18%;
-    height: 18%;
-    bottom: 18%;
-    right: 12%;
-}
-
-/* 尾擺：振幅和波動同步節奏 */
-@keyframes tailWag {
-    0%   { transform: rotate(-35deg); }
-    50%  { transform: rotate( 35deg); }
-    100% { transform: rotate(-35deg); }
-}
-
-/* 游動：X方向純線性移動（Y軸波動由外層 wrapper 負責） */
-@keyframes swim {
-    0%   { transform: translateX(0); }
-    100% { transform: translateX(-130vw); }
-}
-
-/* 上下波動：振幅更大、用三角函數韻律，讓魚真正「飄」起來 */
-@keyframes fishWave {
-    0%   { transform: translateY(0px) rotate(0deg); }
-    15%  { transform: translateY(calc(var(--wave-amp, 12px) * -0.7)) rotate(calc(var(--tilt-amp, 3deg) * -0.5)); }
-    30%  { transform: translateY(calc(var(--wave-amp, 12px) * -1)) rotate(calc(var(--tilt-amp, 3deg) * -1)); }
-    50%  { transform: translateY(0px) rotate(0deg); }
-    65%  { transform: translateY(calc(var(--wave-amp, 12px) *  0.7)) rotate(calc(var(--tilt-amp, 3deg) *  0.5)); }
-    80%  { transform: translateY(calc(var(--wave-amp, 12px) *  1)) rotate(calc(var(--tilt-amp, 3deg) *  1)); }
-    100% { transform: translateY(0px) rotate(0deg); }
 }
 
 #summon-display { z-index: 205; position: relative; background: rgba(0,20,60,0.82); padding: 10px; border-radius: 12px; width: 92%; text-align: center; box-shadow: 0 8px 24px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.15); margin-bottom: 5px; font-weight: bold; min-height: 50px; border: 3px solid rgba(100,180,255,0.3); font-size: 1.05rem; color: #e0f4ff; display: flex; align-items: center; justify-content: center; line-height: 1.4; white-space: pre-wrap; box-sizing: border-box; transition: all 0.3s; text-shadow: 0 1px 8px rgba(0,0,0,0.8); }
@@ -1087,6 +846,7 @@ body.game-started > *:not(#welcome-screen):not(#intro-screen):not(#collection-mo
     box-shadow: 0 4px 10px rgba(0,0,0,0.2);
     white-space: nowrap;
     animation: fadeInOut 3s ease forwards;
+    contain: layout paint;
 }
 
 @keyframes fadeInOut {
@@ -1113,6 +873,12 @@ body.game-started > *:not(#welcome-screen):not(#intro-screen):not(#collection-mo
     max-width: none !important;
     opacity: 1 !important;
     animation: countdownBreathe 1.8s ease-in-out infinite !important;
+    will-change: transform, opacity;
+}
+.countdown-bubble-count {
+    display: inline-block;
+    min-width: 1.2em;
+    text-align: center;
 }
 @keyframes countdownBreathe {
     0%, 100% { box-shadow: 0 4px 10px rgba(119,217,168,0.3); }

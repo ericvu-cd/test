@@ -136,8 +136,6 @@ let roundChatCount = 0; // 每回合對話上限計數器（上限 2）
 let sfxEnabled = sessionStorage.getItem("sfxEnabled") !== "false";
 let showSummaryMode = true; // 預設開啟結算頁面
 let roundReport = [];       // 每回合出牌結果紀錄
-let handFlipTimers = [];     // 手牌翻轉計時器
-
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 // 預載圖片功能
@@ -160,7 +158,6 @@ document.addEventListener('DOMContentLoaded', () => {
     preloadImages('P', 9);  // 預載故事 P1-P9
     preloadImages('F', 18); // 預載說明 F1-F18
     preloadFishImages();     // 預載所有魚圖片
-    // initOceanCaustics() 已由 MP4 影片取代，不再需要
 });
 
 // 預載魚圖片
@@ -811,19 +808,19 @@ function closePreview() {
  *   - 是否輪到玩家操作（套用 .my-turn 樣式高亮手牌區）
  * 幾乎每個遊戲狀態改變後都會呼叫這個函式來同步畫面。
  */
-function renderUI() {
-
-    players.forEach((p, i) => { 
+// 只更新 AI 頭像旁的卡片數量圖示與牌組剩餘次數，不動玩家手牌 DOM。
+// 用於「AI 出牌」這類玩家手牌內容根本沒變化的時機，避免不必要的整個手牌重建。
+function renderAIStatus() {
+    players.forEach((p, i) => {
         if(i > 0) {
 			const isLastCard = p.hand.length === 1;
             const dangerClass = isLastCard ? "ai-last-card-danger" : "";
-            
-            // 將閃爍類別套用在包覆 🎴 的容器上
+
             const cardsIcon = `
                 <span class="${dangerClass}" style="letter-spacing: -5px; display: inline-block; white-space: nowrap;">
                     ${"🎴".repeat(p.hand.length)}
                 </span>`;
-            
+
             document.getElementById(p.id).innerHTML = `
                 <div class="avatar-img">${p.avatar}</div>
                 <div class="ai-name">${p.n}</div>
@@ -832,7 +829,6 @@ function renderUI() {
         }
     });
 
-// --- 優化 3: 牌組告急閃爍 ---
     const deckInfo = document.getElementById("deck-info");
     deckInfo.innerText = `剩餘${deckS.length}次召喚`;
     if (deckS.length <= 5) {
@@ -840,19 +836,20 @@ function renderUI() {
     } else {
         deckInfo.classList.remove("deck-danger");
     }
-    
+}
+
+function renderUI() {
+
+    renderAIStatus();
+
 	const handEl = document.getElementById("player-hand");
     handEl.innerHTML = "";
-
-    // 清除所有舊翻轉計時器，避免疊加
-    handFlipTimers.forEach(t => clearInterval(t));
-    handFlipTimers = [];
 
     const isNormalTask = currentS && !currentS.isMazu && phase === "PLAYER_TURN" && callerIdx === 0;
 
     players[0].hand.forEach((f, idx) => {
         const c = document.createElement("div");
-        c.className = `card light-${f.l}`;
+        c.className = `card light-${f.l} card-auto-flip`;
         const isValid = isNormalTask && currentS.c(f);
 
         // 正面：魚名 + 魚圖
@@ -876,16 +873,6 @@ function renderUI() {
 
         // 手牌點擊：放大預覽，並帶有出牌功能
         c.onclick = () => showCardPreview(idx, f, true);
-
-        // 每 5 秒翻轉；若卡片已離開 DOM 則自動清除
-        const timer = setInterval(() => {
-            if (c.isConnected) {
-                c.classList.toggle("flipped");
-            } else {
-                clearInterval(timer);
-            }
-        }, 5000);
-        handFlipTimers.push(timer);
 
         handEl.appendChild(c);
     });
@@ -925,23 +912,29 @@ document.getElementById("card-preview-overlay").onclick = (e) => {
 };
 
 // 重新渲染「海洋桌面」上目前已出的牌（table 陣列），最新一張會套用出牌動畫樣式。
+// 注意：這裡改成「只補上還沒渲染的新卡片」，不清空重建整個桌面——
+// 因為 table 陣列在一輪內只會被 push（新增），不會中途移除單張卡，
+// 整個桌面只有在 autoStep() 開新回合時才會被真正清空（table=[] 同時 innerHTML=""）。
+// 如果每次都 innerHTML="" 再整個重建，桌面卡片越多，重建成本就越高，
+// 到回合後段（例如第 3、4 位玩家出牌）會明顯造成主執行緒卡頓。
 function renderTable() {
     const zone = document.getElementById("table");
-    zone.innerHTML = "";
-    table.forEach((t, index) => {
+    const existingCount = zone.children.length;
+    for (let index = existingCount; index < table.length; index++) {
+        const t = table[index];
         const c = document.createElement("div");
         c.className = `card light-${t.card.l}`;
         c.innerHTML = `<div class="card-n">${t.card.n}</div><div class="card-i">${getFishTags(t.card)}</div>`;
-        
+
         // 海洋區卡片點擊：放大預覽，但不帶功能
         c.onclick = () => showCardPreview(null, t.card, false);
-        
+
         zone.appendChild(c);
-        if (index === table.length - 1) { 
-            void c.offsetWidth; 
-            c.classList.add("card-played"); 
+        if (index === table.length - 1) {
+            void c.offsetWidth;
+            c.classList.add("card-played");
         }
-    });
+    }
 }
 
 
@@ -1089,252 +1082,6 @@ function toggleMusic() {
     }
 }
 
-const BUBBLE_MAX = 6;       // 同時最多幾顆
-const BUBBLE_INTERVAL = 1200; // 每 1200ms 嘗試生一顆
-let _bubbleTimer = null;
-
-// 在 #bubbles 容器內產生一顆隨機大小、隨機飄移方向的氣泡，動畫結束後自動移除。
-function createBubble() {
-    const container = document.getElementById("bubbles");
-    if (!container) return;
-    if (container.children.length >= BUBBLE_MAX) return; // 超過上限就跳過
-    const b = document.createElement("div");
-    b.className = "bubble";
-    const size = 4 + Math.random() * 18;
-    b.style.left = Math.random() * 100 + "%";
-    b.style.width  = size + "px";
-    b.style.height = size + "px";
-    const duration = 6 + Math.random() * 9;
-    b.style.animationDuration = duration + "s";
-    // 每顆泡泡獨立的左右飄移方向與距離（-8px ~ +8px）
-    const drift = (Math.random() * 16 - 8).toFixed(1);
-    b.style.setProperty("--drift-x", drift + "px");
-    container.appendChild(b);
-    setTimeout(() => b.remove(), duration * 1000);
-}
-
-// 啟動氣泡產生計時器（每 BUBBLE_INTERVAL 毫秒嘗試生一顆，重複呼叫不會疊加計時器）。
-function startBubbles() {
-    if (_bubbleTimer) return;
-    _bubbleTimer = setInterval(createBubble, BUBBLE_INTERVAL);
-}
-
-// 停止氣泡產生計時器（背景分頁/離開遊戲畫面時呼叫，節省效能）。
-function stopBubbles() {
-    if (_bubbleTimer) { clearInterval(_bubbleTimer); _bubbleTimer = null; }
-}
-
-// =============================================
-// 🐟 魚體調色盤（每種魚有亮色/中色/暗色三層）
-// =============================================
-// 背景魚群的配色組合：每組含高光(hi)／中間色(mid)／陰影(lo)／尾鰭(tail)／
-// 胸鰭(fin)／發光暈染(glow) 六種顏色，createFish() 會隨機挑一組套用在魚身漸層上。
-const fishPalettes = [
-    // 海藍色
-    { hi: "rgba(190,235,255,1)", mid: "rgba(100,185,255,0.95)", lo: "rgba(40,110,200,0.9)",  tail: "rgba(60,140,220,0.95)", fin: "rgba(80,160,235,0.8)",  glow: "rgba(100,190,255,0.45)" },
-    // 珊瑚橘
-    { hi: "rgba(255,220,170,1)", mid: "rgba(255,165,80,0.95)",  lo: "rgba(200,100,30,0.9)",  tail: "rgba(215,120,50,0.95)", fin: "rgba(240,150,70,0.8)",  glow: "rgba(255,175,90,0.40)" },
-    // 翠綠色
-    { hi: "rgba(195,250,210,1)", mid: "rgba(110,215,150,0.95)", lo: "rgba(40,150,90,0.9)",   tail: "rgba(60,175,110,0.95)", fin: "rgba(90,200,130,0.8)",  glow: "rgba(130,225,165,0.45)" },
-    // 薰衣草紫
-    { hi: "rgba(235,210,255,1)", mid: "rgba(180,130,255,0.95)", lo: "rgba(110,70,210,0.9)",  tail: "rgba(140,90,225,0.95)", fin: "rgba(165,115,245,0.8)", glow: "rgba(185,145,255,0.45)" },
-    // 金黃色
-    { hi: "rgba(255,245,180,1)", mid: "rgba(255,210,60,0.95)",  lo: "rgba(190,145,10,0.9)",  tail: "rgba(210,165,30,0.95)", fin: "rgba(245,200,50,0.8)",  glow: "rgba(255,215,80,0.40)" },
-    // 青藍色
-    { hi: "rgba(185,250,255,1)", mid: "rgba(70,215,235,0.95)",  lo: "rgba(20,155,175,0.9)",  tail: "rgba(40,180,200,0.95)", fin: "rgba(70,210,230,0.8)",  glow: "rgba(90,220,240,0.45)" },
-    // 玫瑰粉（新增）
-    { hi: "rgba(255,215,225,1)", mid: "rgba(255,150,175,0.95)", lo: "rgba(210,80,115,0.9)",  tail: "rgba(230,110,145,0.95)",fin: "rgba(255,140,165,0.8)", glow: "rgba(255,165,190,0.40)" },
-    // 銀白色（遠景常見）
-    { hi: "rgba(240,248,255,1)", mid: "rgba(200,225,245,0.90)", lo: "rgba(140,175,210,0.85)", tail: "rgba(160,195,225,0.90)",fin: "rgba(185,215,240,0.75)",glow: "rgba(210,235,250,0.35)" },
-];
-
-// =============================================
-// 🌊 海洋光束初始化（只執行一次）
-// =============================================
-// 在海洋容器最底層插入 5 道光束（caustic-beam），模擬海面灑落的光影效果；只會初始化一次。
-function initOceanCaustics() {
-    const ocean = document.getElementById("ocean");
-    if (!ocean || document.getElementById("ocean-caustics")) return;
-    const layer = document.createElement("div");
-    layer.id = "ocean-caustics";
-    for (let i = 0; i < 5; i++) {
-        const beam = document.createElement("div");
-        beam.className = "caustic-beam";
-        layer.appendChild(beam);
-    }
-    // 插在 ocean 的最前面（最底層）
-    ocean.insertBefore(layer, ocean.firstChild);
-}
-
-// =============================================
-// 🐟 魚體建立（完整強化版）
-// =============================================
-/**
- * 動態建立一條會從畫面右側游到左側的背景裝飾魚。
- * @param {boolean} forceSprint 是否強制建立「衝刺魚」（近景、速度快、發光較強的特殊魚）
- *
- * 依隨機深度（depth 0~2，由 cfg 陣列決定大小／透明度／速度等參數）模擬遠中近三層視差，
- * 越靠近鏡頭（depth 2）的魚越大、越不透明、游得越慢、擺動幅度越大。
- * 魚游完整段動畫後（setTimeout 對齊 speed 秒數）會自動從 DOM 移除，避免記憶體持續增加。
- */
-function createFish(forceSprint = false) {
-    const palette = fishPalettes[Math.floor(Math.random() * fishPalettes.length)];
-
-    // ── 深度分層 ──────────────────────────────────
-    const isSprint = forceSprint || Math.random() < 0.05;
-    const depth = isSprint ? 2 : Math.floor(Math.random() * 3);
-
-    const cfg = [
-        { scale: 0.28, opacity: 0.28, speedBase: 22, speedVar: 10, waveAmp: 5,  tiltAmp: 1.5, wagSpeed: 0.55, finH: 0.30 },
-        { scale: 0.58, opacity: 0.52, speedBase: 12, speedVar: 7,  waveAmp: 14, tiltAmp: 3.0, wagSpeed: 0.40, finH: 0.35 },
-        { scale: 1.00, opacity: 0.90, speedBase: 5,  speedVar: 5,  waveAmp: 24, tiltAmp: 5.0, wagSpeed: 0.28, finH: 0.40 },
-    ][depth];
-
-    const speed    = isSprint ? 7 + Math.random() * 3 : cfg.speedBase + Math.random() * cfg.speedVar;
-    const waveDur  = isSprint ? 1.4 : 1.8 + Math.random() * 2.5;
-    const waveDelay = isSprint ? 0 : Math.random() * 2;
-    const topPct   = isSprint ? 15 + Math.random() * 60 : 8 + Math.random() * 72;
-
-    const size = 40 * cfg.scale;
-    const h    = size * 0.48;
-
-    const bodyGrad = `
-        radial-gradient(ellipse at 38% 32%,
-            ${palette.hi}   0%,
-            ${palette.mid}  45%,
-            ${palette.lo}   100%
-        )
-    `;
-
-    // 衝刺魚發光加強
-    const glowMult = isSprint ? 0.6 : 0.5;
-    const glowMult2 = isSprint ? 1.5 : 1.2;
-    const bodyShadow = `
-        inset -2px -2px 5px rgba(0,0,0,0.25),
-        inset  1px  1px 4px rgba(255,255,255,0.15),
-        0 0 ${size * glowMult}px ${palette.glow},
-        0 0 ${size * glowMult2}px ${palette.glow.replace("0.4","0.15").replace("0.45","0.15").replace("0.35","0.12").replace("0.40","0.12").replace("0.30","0.10")}
-    `;
-
-    const wrapper = document.createElement("div");
-    wrapper.className = "fish";
-    wrapper.style.cssText = `
-        position: absolute;
-        top: ${topPct}%;
-        right: -120px;
-        opacity: ${cfg.opacity};
-        --wave-amp: ${cfg.waveAmp}px;
-        --tilt-amp: ${cfg.tiltAmp}deg;
-        animation: fishWave ${waveDur}s ${waveDelay}s ease-in-out infinite;
-        ${isSprint ? "filter: brightness(1.3) saturate(1.2);" : ""}
-    `;
-
-    const inner = document.createElement("div");
-    inner.style.cssText = `animation: swim ${speed}s linear forwards;`;
-
-    const body = document.createElement("div");
-    body.className = "fish-body";
-    body.style.cssText = `
-        width: ${size}px;
-        height: ${h}px;
-        background: ${bodyGrad};
-        box-shadow: ${bodyShadow};
-        animation: fishBodySway ${waveDur}s ${waveDelay}s ease-in-out infinite;
-    `;
-
-    const fin = document.createElement("div");
-    fin.className = "fish-fin";
-    const finH = h * cfg.finH;
-    const finW = size * 0.28;
-    fin.style.cssText = `
-        border-left:   ${finW * 0.35}px solid transparent;
-        border-right:  ${finW * 0.65}px solid transparent;
-        border-bottom: ${finH}px solid ${palette.fin};
-        animation-duration: ${waveDur * 0.9}s;
-        animation-delay:    ${waveDelay}s;
-    `;
-
-    const tail = document.createElement("div");
-    tail.className = "fish-tail";
-    const tailW = size * 0.25;
-    const tailH = h * 0.70;
-    const tailTop = (h - tailH) / 2;
-    tail.style.cssText = `
-        width:      ${tailW}px;
-        height:     ${tailH}px;
-        top:        ${tailTop}px;
-        background: ${palette.tail};
-        animation:  tailWag ${isSprint ? "0.22s" : cfg.wagSpeed + "s"} ${waveDelay}s ease-in-out infinite;
-    `;
-
-    const eye = document.createElement("div");
-    eye.className = "fish-eye";
-    const es = Math.max(3, h * 0.20);
-    eye.style.cssText = `width:${es}px; height:${es}px;`;
-
-    body.appendChild(fin);
-    body.appendChild(tail);
-    body.appendChild(eye);
-    inner.appendChild(body);
-    wrapper.appendChild(inner);
-    document.getElementById("fish-layer").appendChild(wrapper);
-
-    setTimeout(() => wrapper.remove(), speed * 1000 + 500);
-}
-
-// 普通魚：遊戲開始後才啟動，4.5 秒一條，最多同時 6 條
-const FISH_MAX = 5;
-const FISH_INTERVAL = 4500;
-let _fishTimer = null;
-let _sprintTimer = null;
-
-// 啟動背景魚群生成（固定間隔嘗試生一條一般魚，並另外排程不定期的衝刺魚）。
-function startFish() {
-    if (_fishTimer) return;
-    _fishTimer = setInterval(() => {
-        const layer = document.getElementById("fish-layer");
-        if (layer && layer.children.length < FISH_MAX) createFish();
-    }, FISH_INTERVAL);
-    scheduleSprintFish();
-}
-
-// 停止所有背景魚群生成計時器（一般魚與衝刺魚都會停止）。
-function stopFish() {
-    if (_fishTimer)  { clearInterval(_fishTimer);  _fishTimer  = null; }
-    if (_sprintTimer){ clearTimeout(_sprintTimer); _sprintTimer = null; }
-}
-
-// ── Page Visibility API：背景時暫停動畫省電 ──────────────
-// Page Visibility API：分頁切到背景時暫停魚群／氣泡動畫與背景音樂以節省效能與電力，
-// 切回前景時若先前在遊戲中則恢復動畫，並視 sfxEnabled 狀態決定是否恢復播放音樂。
-document.addEventListener('visibilitychange', () => {
-    const inGame = document.body.classList.contains('game-started');
-    const vid = document.getElementById('ocean-bg-video');
-    if (document.hidden) {
-        // 切到背景：暫停影片與音樂
-        if (vid) vid.pause();
-        const bgm = document.getElementById('bgm');
-        if (bgm && !bgm.paused) { bgm._wasPlaying = true; bgm.pause(); }
-    } else {
-        // 回到前景：恢復影片與音樂
-        if (inGame && vid) vid.play().catch(() => {});
-        const bgm = document.getElementById('bgm');
-        if (bgm && bgm._wasPlaying && sfxEnabled) { bgm._wasPlaying = false; bgm.play().catch(() => {}); }
-        else if (bgm) { bgm._wasPlaying = false; }
-    }
-});
-
-// 衝刺魚：每 15-25 秒強制產生一條近景快魚
-// 每隔 15~25 秒隨機排程一次「衝刺魚」（近景、快速通過畫面的特殊魚），並遞迴排下一次。
-function scheduleSprintFish() {
-    const delay = 15000 + Math.random() * 10000;
-    _sprintTimer = setTimeout(() => {
-        const layer = document.getElementById("fish-layer");
-        if (layer && layer.children.length < FISH_MAX) createFish(true);
-        scheduleSprintFish();
-    }, delay);
-}
-
 // 建立一個固定定位的圖層，專門用來放置 AI 角色頭頂彈出的對話泡泡（showChat 會用到）。
 function initChatLayer() {
     if (document.getElementById("chat-layer")) return;
@@ -1348,39 +1095,61 @@ function initChatLayer() {
  *   啟動背景特效（光束／魚群／氣泡）、淡出歡迎畫面、顯示遊戲內 UI 按鈕（音樂/紀錄/收集等）、
  *   嘗試播放背景音樂，並在 3.5 秒淡出轉場結束後呼叫 startGame() 正式開局。
  */
-function initOceanVideo(locationName) {
+// locationId 為 db.js／HARBORS 裡的純英文代碼（例如 "badouzi"），
+// 用來組出影片檔名 image/{id}.mp4。改用 id 而不是中文全名，
+// 是為了避免中文檔名在「程式碼字串」與「伺服器實際檔名」之間，
+// 因全形/半形標點、輸入法選字等因素造成打不出來的隱性不一致。
+function initOceanVideo(locationId) {
     let vid = document.getElementById("ocean-bg-video");
     if (!vid) {
         vid = document.createElement("video");
         vid.id = "ocean-bg-video";
         vid.autoplay = true; vid.loop = true; vid.muted = true; vid.playsInline = true;
-        vid.style.cssText = "position:fixed;top:0;left:0;width:100%;height:100%;object-fit:cover;z-index:-1;pointer-events:none;";
         document.body.appendChild(vid);
     }
-    vid.src = `image/${locationName}.mp4`;
+    const targetSrc = `image/${locationId}.mp4`;
+    // 避免重複呼叫（initGame 提早緩衝 + startGame 再呼叫一次）時，
+    // 用同一個網址又重新 load() 一次，把前面已經緩衝的進度打掉重來。
+    if (vid.dataset.loadedSrc === targetSrc) {
+        vid.play().catch(() => {});
+        return;
+    }
+    vid.dataset.loadedSrc = targetSrc;
+
+    // 診斷用：影片載入失敗時（例如檔名對不上、404）瀏覽器預設會停格在
+    // 上一支成功播放過的影片，畫面上看起來會像是「抓錯地點」，但其實只是
+    // 沒有真的切換過去。這裡明確攔截失敗事件，印出實際請求的檔名方便比對。
+    vid.onerror = () => {
+        console.error(
+            `[背景影片載入失敗] 目標檔名：${targetSrc}，` +
+            `請確認 image/ 資料夾內的檔名是否完全一致（含全形/半形標點、副檔名大小寫）。` +
+            `畫面目前可能仍停留在上一支成功播放的影片，看起來像「選錯地點」。`
+        );
+    };
+
+    vid.src = targetSrc;
     vid.load();
     vid.play().catch(() => {});
-
-    // 漁港底部裝飾PNG（MP4上一層，固定在畫面底部，全寬等比）
-    let png = document.getElementById("ocean-bg-png");
-    if (!png) {
-        png = document.createElement("img");
-        png.id = "ocean-bg-png";
-        png.style.cssText = "position:fixed;bottom:0;left:0;width:100%;height:auto;z-index:0;pointer-events:none;opacity:0.3;";
-        document.body.appendChild(png);
-    }
-    png.src = `image/${locationName}.png`;
 }
 
 function initGame() {
 	initChatLayer();
-	// DOM 魚群/氣泡/光束已由 MP4 影片背景取代，不再啟動
-	// startFish(); startBubbles(); initOceanCaustics();
 	document.body.classList.add('game-started');
-	
+
     // ✅ 改用加入 class 的方式觸發淡出
     const welcomeScreen = document.getElementById("welcome-screen");
     welcomeScreen.classList.add("fade-out");
+
+    // 提早開始緩衝背景海洋影片：不用等 3.5 秒淡出轉場結束才開始下載，
+    // 讓影片有更多時間（淡出轉場 3.5 秒 + startGame 後渲染 2 秒 ≈ 5.5 秒）
+    // 在畫面真正需要它之前完成緩衝，降低弱網環境下開局卡頓的機率。
+    {
+        const earlyLocationId = window.selectedLocationId || sessionStorage.getItem("selectedLocationId") || "longfeng";
+        const earlyLocation = (typeof locationDB !== "undefined" && locationDB.find)
+            ? locationDB.find(loc => loc.id === earlyLocationId) || locationDB[0]
+            : null;
+        initOceanVideo(earlyLocation ? earlyLocation.id : "longfeng");
+    }
 	
     // 啟動音樂與日誌
     document.getElementById("music-control").style.display = "flex";
@@ -1451,10 +1220,18 @@ function startGame() {
     });	
 	
     const selectedLocationId = window.selectedLocationId || sessionStorage.getItem("selectedLocationId") || "longfeng";
-    const currentLocation = (typeof locationDB !== "undefined" && locationDB.find)
-        ? locationDB.find(loc => loc.id === selectedLocationId) || locationDB[0]
+    const matchedLocation = (typeof locationDB !== "undefined" && locationDB.find)
+        ? locationDB.find(loc => loc.id === selectedLocationId)
         : null;
-    initOceanVideo(currentLocation ? currentLocation.name : "苗栗龍鳳漁港");
+    if (!matchedLocation && typeof locationDB !== "undefined") {
+        console.warn(
+            `[地點比對失敗] selectedLocationId = ${JSON.stringify(selectedLocationId)}，` +
+            `在 locationDB 裡找不到對應的 id，已 fallback 使用 locationDB[0]（${locationDB[0] && locationDB[0].name}）。` +
+            `請檢查選場景畫面（例如 welcome-screen.js）寫入 selectedLocationId 時，是否跟 db.js 裡的 id 完全一致（含大小寫、空白）。`
+        );
+    }
+    const currentLocation = matchedLocation || (typeof locationDB !== "undefined" ? locationDB[0] : null);
+    initOceanVideo(currentLocation ? currentLocation.id : "longfeng");
     const locationFishNames = currentLocation ? new Set(currentLocation.fishPool) : null;
 
     // ── 解鎖漁港章（進入漁港即解鎖）──
@@ -1558,12 +1335,6 @@ function updateCallerHighlight() {
             else el.classList.remove("is-caller");
         }
     });
-    // 玩家回合（含媽祖）才全開光束，其他時間只留第3條
-    const caustics = document.getElementById("ocean-caustics");
-    if (caustics) {
-        const isPlayerActive = phase === "PLAYER_TURN" || phase === "PLAYER_MAZU";
-        caustics.classList.toggle("beams-active", isPlayerActive);
-    }
 }
 
 let summonFocusTimer = null;
@@ -1655,8 +1426,6 @@ function autoStep() {
     roundChatCount = 0; // 重置對話計數器
 	document.getElementById("table").innerHTML = "";
     document.getElementById("summon-display").classList.remove("mazu-glow");
-    const causticsReset = document.getElementById("ocean-caustics");
-    if (causticsReset) causticsReset.classList.remove("mazu-beams");
     
     currentS = deckS.pop();
     renderUI();
@@ -1706,8 +1475,6 @@ function autoStep() {
     showSummonFocus(1500, () => {
         if (currentS.isMazu) {
             document.getElementById("summon-display").classList.add("mazu-glow");
-            const caustics = document.getElementById("ocean-caustics");
-            if (caustics) caustics.classList.add("mazu-beams");
             SFX.mazu();
             if (callerIdx === 0) unlockUI(); // 玩家是媽祖召喚者，解鎖讓選牌
             else handleMazuAI(caller);
@@ -1894,6 +1661,9 @@ function playCardFlyAnimation(card, fromEl, callback) {
         border: 1.5px solid rgba(160,200,255,0.3);
         box-shadow: 0 0 0 3px rgba(80,120,180,0.2), 0 8px 24px rgba(0,10,40,0.6), 0 0 16px rgba(100,160,255,0.25);
         transition: none;
+        transform: translateZ(0);
+        will-change: transform, opacity;
+        backface-visibility: hidden;
     `;
 
     const lightBg = card.l === 1 ? "#d4f5e2" : card.l === 2 ? "#fef3cd" : "#ffd6da";
@@ -1997,7 +1767,7 @@ function aiMove(pI, cI) {
     const fromEl = document.getElementById(p.id);
     playCardFlyAnimation(f, fromEl, () => renderTable());
 
-    renderUI();
+    renderAIStatus();
 
     const isCorrect = currentS && currentS.c ? currentS.c(f) : null;
 
@@ -2054,6 +1824,9 @@ function playCardReturnAnimation(card, toEl, callback) {
         border: 1.5px solid rgba(255,100,100,0.5);
         box-shadow: 0 0 0 3px rgba(180,60,60,0.2), 0 8px 24px rgba(40,0,0,0.5), 0 0 16px rgba(255,80,80,0.2);
         transition: none;
+        transform: translateZ(0);
+        will-change: transform, opacity;
+        backface-visibility: hidden;
     `;
     fly.innerHTML = `
         <div style="background:${lightBg}; font-size:0.85rem; font-weight:900; text-align:center; padding:5px 2px; color:#444; border-bottom:1px solid rgba(0,0,0,0.1);">${card.n}</div>
@@ -2223,7 +1996,7 @@ function showCountdownBubble(seconds, callback) {
     bubble.style.cssText = `
         position: fixed;
         left: 50%;
-        transform: translateX(-50%);
+        transform: translateX(-50%) translateZ(0);
         bottom: 130px;
         z-index: 1500;
         font-size: 1.2rem;
@@ -2231,10 +2004,12 @@ function showCountdownBubble(seconds, callback) {
         pointer-events: none;
     `;
     layer.appendChild(bubble);
+    bubble.innerHTML = `<span class="countdown-bubble-icon">📋</span> <span class="countdown-bubble-count"></span> 秒後進入結算，可先點牌放大查看`;
+    const countEl = bubble.querySelector(".countdown-bubble-count");
 
     let remaining = seconds;
     function tick() {
-        bubble.innerText = `📋 ${remaining} 秒後進入結算，可先點牌放大查看`;
+        if (countEl) countEl.textContent = remaining;
         if (remaining <= 0) {
             bubble.remove();
             callback();
@@ -2721,6 +2496,9 @@ function showMazuGiftEffect(fromName, toName, card, targetEl, fromEl) {
         --fly-y: ${endY - startY}px;
         --fly-x2: ${endX - startX + 20}px;
         --fly-y2: ${endY - startY - 20}px;
+        transform: translateZ(0);
+        will-change: transform, opacity;
+        backface-visibility: hidden;
     `;
     flyCard.innerHTML = `
         <div style="background:${mazuLightBg}; font-size:0.85rem; font-weight:900; text-align:center; padding:5px 2px; color:#444; border-bottom:1px solid rgba(0,0,0,0.1);">${card.n}</div>
