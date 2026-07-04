@@ -290,15 +290,7 @@ body.game-started > *:not(#welcome-screen):not(#intro-screen):not(#collection-mo
 }
 /* 光暈：靜態 box-shadow + opacity 閃爍，不用 blur */
 #player-zone.my-turn::after {
-    content: "";
-    position: absolute;
-    top: -4px; left: 0; right: 0;
-    height: 4px;
-    background: rgba(255, 210, 60, 0.7);
-    border-radius: 0;
-    box-shadow: 0 0 10px 3px rgba(255, 200, 60, 0.45);
-    animation: myTurnPulse 1.5s ease-in-out infinite;
-    pointer-events: none;
+    display: none;
 }
 
 
@@ -455,6 +447,7 @@ body.game-started > *:not(#welcome-screen):not(#intro-screen):not(#collection-mo
     justify-content: center;
     opacity: 0;
     pointer-events: none;
+    overflow: hidden;
 }
 
 /* 遮罩內的召喚框複製體 */
@@ -465,6 +458,9 @@ body.game-started > *:not(#welcome-screen):not(#intro-screen):not(#collection-mo
     padding: 28px 32px;
     width: 82%;
     max-width: 420px;
+    max-height: 78vh;
+    overflow-y: auto;
+    box-sizing: border-box;
     text-align: center;
     color: #e0f4ff;
     font-size: 1.6rem;
@@ -492,7 +488,7 @@ body.game-started > *:not(#welcome-screen):not(#intro-screen):not(#collection-mo
 
 /* 玩家區：極淡半透明 */
 #player-zone {
-    background: rgba(0, 10, 30, 0.7);
+    background: transparent;
     padding: 8px;
     border-top: 1px solid rgba(100,180,255,0.2);
     transition: all 0.3s;
@@ -909,13 +905,9 @@ body.game-started > *:not(#welcome-screen):not(#intro-screen):not(#collection-mo
     color: rgba(255, 210, 120, 0.85);
     letter-spacing: 0.1em;
     padding: 2px 0 1px;
-    animation: drawerArrowBounce 1.3s ease-in-out infinite;
+    transform: scale(1.1);
     pointer-events: none;
     user-select: none;
-}
-@keyframes drawerArrowBounce {
-    0%, 100% { transform: translateY(0);   opacity: 0.7; }
-    50%       { transform: translateY(-4px); opacity: 1;   }
 }
 
 /* =============================================
