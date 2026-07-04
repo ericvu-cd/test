@@ -1175,17 +1175,26 @@
 	   重新定位漁港座標（畫面尺寸可能已變）、啟動海浪動畫、重新抽一次當日天氣與封港事件。 */
 	var _wsEl = document.getElementById('welcome-screen');
 	if(_wsEl){
+		// 用「上升緣」偵測（從不可見 → 可見的那一刻才動作），
+		// 而不是「只要目前可見，任何 style 屬性變動都算一次」。
+		// 原本的寫法會讓 ZOOM 轉場期間（wsStartGame 改 transform/opacity/
+		// transition 等 style 屬性、但沒有動到 display）被誤判成
+		// 「welcome-screen 又重新顯示了」，導致 rollAndApplyWeather()
+		// 在轉場過程中被重複呼叫、重新抽一次封港事件，
+		// 有機會把玩家剛選好、已經鎖定的漁港判定為封港、清空選擇。
+		var _wsWasVisible = (_wsEl.style.display !== 'none' && _wsEl.style.display !== '');
 		new MutationObserver(function(){
 			var visible = (_wsEl.style.display !== 'none' && _wsEl.style.display !== '');
-			if(visible){
+			if(visible && !_wsWasVisible){
 				positionHarbors();
 				setTimeout(positionHarbors, 50);
 				setTimeout(positionHarbors, 200);
 				if(window._wsStartWaves) window._wsStartWaves();
 				if(typeof window.rollAndApplyWeather === 'function') window.rollAndApplyWeather();
-			} else {
+			} else if(!visible && _wsWasVisible){
 				if(window._wsStopWaves) window._wsStopWaves();
 			}
+			_wsWasVisible = visible;
 		}).observe(_wsEl, { attributes:true, attributeFilter:['style','class'] });
 	}
 

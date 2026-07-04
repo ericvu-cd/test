@@ -279,12 +279,14 @@ body.game-started > *:not(#welcome-screen):not(#intro-screen):not(#collection-mo
 }
 #player-zone.my-turn {
     border-top: 3px solid rgba(255, 210, 60, 0.85);
-    background: linear-gradient(
-        to top,
-        rgba(255, 200, 60, 0.15) 0%,
-        rgba(255, 200, 60, 0.05) 60%,
-        transparent 100%
-    ) !important;
+    background:
+        linear-gradient(
+            to top,
+            rgba(255, 200, 60, 0.15) 0%,
+            rgba(255, 200, 60, 0.05) 60%,
+            transparent 100%
+        ),
+        rgba(0, 10, 30, 0.7) !important;
 }
 /* 光暈：靜態 box-shadow + opacity 閃爍，不用 blur */
 #player-zone.my-turn::after {
@@ -501,7 +503,7 @@ body.game-started > *:not(#welcome-screen):not(#intro-screen):not(#collection-mo
 
 /* 玩家區：極淡半透明 */
 #player-zone {
-    background: rgba(0, 10, 30, 0.55);
+    background: rgba(0, 10, 30, 0.7);
     padding: 8px;
     border-top: 1px solid rgba(100,180,255,0.2);
     transition: all 0.3s;
