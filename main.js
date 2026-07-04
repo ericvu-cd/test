@@ -808,8 +808,21 @@ function closePreview() {
  *   - 是否輪到玩家操作（套用 .my-turn 樣式高亮手牌區）
  * 幾乎每個遊戲狀態改變後都會呼叫這個函式來同步畫面。
  */
-// 只更新 AI 頭像旁的卡片數量圖示與牌組剩餘次數，不動玩家手牌 DOM。
-// 用於「AI 出牌」這類玩家手牌內容根本沒變化的時機，避免不必要的整個手牌重建。
+// 目前正在出牌的 AI 玩家索引（players 陣列的 index），-1 代表沒有 AI 正在行動中。
+// 由 setActiveAI()／clearActiveAI() 統一設定/清除，renderAIStatus() 依此決定要顯示 jpg 還是 webp 頭像。
+// 從「輪到該 AI」的那一刻開始顯示 webp，直到牠出牌動畫真正完成才切回 jpg，
+// 涵蓋整個該 AI 的回合，而不是出牌那瞬間才短暫顯示。
+let activeAIIdx = -1;
+
+function setActiveAI(idx) {
+    activeAIIdx = idx;
+    renderAIStatus();
+}
+function clearActiveAI() {
+    activeAIIdx = -1;
+    renderAIStatus();
+}
+
 function renderAIStatus() {
     players.forEach((p, i) => {
         if(i > 0) {
@@ -821,8 +834,11 @@ function renderAIStatus() {
                     ${"🎴".repeat(p.hand.length)}
                 </span>`;
 
+            // 預設用靜態 jpg，只有正在出牌的那位 AI（activeAIIdx 對到的 index）才切換成動態 webp。
+            const avatarHtml = (i === activeAIIdx) ? p.avatarWebp : p.avatarJpg;
+
             document.getElementById(p.id).innerHTML = `
-                <div class="avatar-img">${p.avatar}</div>
+                <div class="avatar-img">${avatarHtml}</div>
                 <div class="ai-name">${p.n}</div>
                 <div class="ai-cards">${cardsIcon}</div>
             `;
@@ -1218,14 +1234,18 @@ function startGame() {
 
     // 3. 將選出的 AI 加入 players 陣列，同時解鎖同伴章
     aiPool.forEach((char, index) => {
+        // 頭像：預設用 jpg（靜態），只有輪到該 AI 出牌那一刻才切換成 webp（動態）。
+        // jpg 路徑用同檔名、副檔名換成 .jpg 推導出來，請確保 image/ 資料夾內
+        // 每個角色都同時有 xxx.jpg（靜態版）跟 xxx.webp（動態版）兩個檔案。
+        const jpgSrc = char.img.replace(/\.webp$/i, ".jpg");
         players.push({
             n: char.n,
             hand: [],
             isAI: true,
             id: `ai-${index + 1}`,
             personality: char.personality,
-            // 統一頭像渲染方式
-            avatar: `<img src="${char.img}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`
+            avatarJpg: `<img src="${jpgSrc}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`,
+            avatarWebp: `<img src="${char.img}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`
         });
         // 解鎖同伴章
         progress.unlockCompanion(window.playerName, char.n);
@@ -1408,6 +1428,8 @@ function showSummonFocus(duration, callback) {
  */
 function autoStep() {
     lockUI(); // 每回合開始立刻鎖定
+    // 保險：清掉上一輪可能殘留的「AI 出牌中」頭像動圖狀態
+    activeAIIdx = -1; // 保險：清掉上一輪可能殘留的「AI 出牌中」頭像動圖狀態
     if (deckS.length === 0) { 
         if (roundCount > 0) {
             getRoundBucket(roundCount).notes.push("⚠ 召喚卡已用盡，開始結算剩餘手牌...");
@@ -1442,7 +1464,17 @@ function autoStep() {
     currentS = deckS.pop();
     renderUI();
     const caller = players[callerIdx];
-    updateCallerHighlight(); 
+    updateCallerHighlight();
+
+    // 頭像 webp／jpg 現在只跟「這回合誰是召喚者」綁在一起：
+    // 召喚者是 AI → 整回合（從這裡開始，到下一輪 autoStep 重新判定為止）都顯示 webp；
+    // 召喚者是玩家 → 沒有 AI 需要顯示 webp，全部維持 jpg。
+    // 跟牌動作本身（aiMove）不再單獨觸發 webp 切換。
+    if (callerIdx !== 0) {
+        setActiveAI(callerIdx);
+    } else {
+        clearActiveAI();
+    }
 
     if (callerIdx === 0) {
         SFX.draw(); // 玩家抽到召喚牌
@@ -1770,7 +1802,7 @@ async function playerAction(idx) {
 function aiMove(pI, cI) {
     const p = players[pI];
 	if (!p.hand[cI]) return;
-	
+
     const f = p.hand.splice(cI, 1)[0];
 
     SFX.cardAI();
