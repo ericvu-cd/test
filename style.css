@@ -269,7 +269,6 @@ body.game-started > *:not(#welcome-screen):not(#intro-screen):not(#collection-mo
 }
 #player-zone.is-caller {
     border-top: 2px solid rgba(255, 179, 71, 0.3);
-    animation: isCallerPulse 1.5s ease-in-out infinite;
 }
 
 /* ===== 玩家回合強化提示（my-turn：玩家需要出牌）===== */
@@ -455,17 +454,17 @@ body.game-started > *:not(#welcome-screen):not(#intro-screen):not(#collection-mo
     background: rgba(0,20,60,0.92);
     border: 1px solid rgba(100,180,255,0.5);
     border-radius: 20px;
-    padding: 28px 32px;
+    padding: 20px 22px;
     width: 82%;
     max-width: 420px;
     max-height: 78vh;
-    overflow-y: auto;
+    overflow: hidden;
     box-sizing: border-box;
     text-align: center;
     color: #e0f4ff;
-    font-size: 1.6rem;
+    font-size: 1.35rem;
     font-weight: bold;
-    line-height: 1.6;
+    line-height: 1.5;
     white-space: pre-wrap;
     box-shadow: 0 0 60px rgba(100,180,255,0.2), 0 16px 40px rgba(0,0,0,0.6);
     text-shadow: 0 1px 8px rgba(0,0,0,0.8);
