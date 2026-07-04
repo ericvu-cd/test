@@ -267,9 +267,7 @@ body.game-started > *:not(#welcome-screen):not(#intro-screen):not(#collection-mo
     0%, 100% { border-top-color: rgba(255, 179, 71, 0.3); }
     50%       { border-top-color: rgba(255, 220, 80, 0.8); }
 }
-#player-zone.is-caller {
-    border-top: 2px solid rgba(255, 179, 71, 0.3);
-}
+/* 玩家是召喚者、AI 跟牌中時：player-zone 目前不做任何額外邊框樣式 */
 
 /* ===== 玩家回合強化提示（my-turn：玩家需要出牌）===== */
 @keyframes myTurnPulse {
@@ -277,7 +275,6 @@ body.game-started > *:not(#welcome-screen):not(#intro-screen):not(#collection-mo
     50%       { opacity: 1;   }
 }
 #player-zone.my-turn {
-    border-top: 3px solid rgba(255, 210, 60, 0.85);
     background:
         linear-gradient(
             to top,
