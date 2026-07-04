@@ -437,20 +437,9 @@ body.game-started > *:not(#welcome-screen):not(#intro-screen):not(#collection-mo
 
 
 
-/* 深海底霧：底部暗化，增加深度感 */
-#ocean::after {
-    content: "";
-    position: absolute;
-    bottom: 0; left: 0; right: 0;
-    height: 40%;
-    background: linear-gradient(to top,
-        rgba(0,10,40,0.55) 0%,
-        rgba(0,15,50,0.25) 60%,
-        transparent 100%
-    );
-    pointer-events: none;
-    z-index: 0;
-}
+
+
+
 
 #summon-display { z-index: 205; position: relative; background: rgba(0,20,60,0.82); padding: 10px; border-radius: 12px; width: 92%; text-align: center; box-shadow: 0 8px 24px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.15); margin-bottom: 5px; font-weight: bold; min-height: 50px; border: 3px solid rgba(100,180,255,0.3); font-size: 1.05rem; color: #e0f4ff; display: flex; align-items: center; justify-content: center; line-height: 1.4; white-space: pre-wrap; box-sizing: border-box; transition: all 0.3s; text-shadow: 0 1px 8px rgba(0,0,0,0.8); }
 
@@ -814,7 +803,7 @@ body.game-started > *:not(#welcome-screen):not(#intro-screen):not(#collection-mo
 #header { font-size: 1.3rem; padding: 10px; }
 .avatar-img { width: 40px; height: 40px; font-size: 1.3rem; border-width: 2px; }
 .ai-name { font-size: 0.85rem; }
-#ocean { margin: 5px; border-radius: 12px; padding-top: 35px; }
+#ocean { margin: 5px 5px 0 5px; border-radius: 12px; padding-top: 35px; }
 #deck-info { font-size: 0.8rem; padding: 4px 10px; top: 5px; left: 5px; background: rgba(252, 230, 127, 0.6); }
 #summon-display { font-size: 1.05rem; padding: 10px; width: 92%; min-height: 50px; margin-bottom: 5px; border-width: 3px; border-radius: 12px; }
 .hand { min-height: 126px; gap: 6px; padding-bottom: 5px; }
