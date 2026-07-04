@@ -669,20 +669,22 @@
 
 	/* ══ 歡迎頁地圖邏輯 ══════════════════════════════════ */
 
-	/* ── 漁港資料（百分比座標對應 tw.png 原圖） ──
-	   tw.png 原圖尺寸約 760×1344。
-	   台灣島在圖中：北端約 top 14%、南端約 top 87%，
-	   西岸約 left 13%、東岸約 left 82%。
-	   以下座標 px/py 均為原圖百分比，JS 會換算為實際像素。
+	/* ── 漁港座標（百分比座標對應 tw.png 原圖） ──
+	   實際數值已移至 db.js 的 locationDB（每筆資料的 px/py 欄位）。
+	   getHarbors() 每次呼叫都即時從 locationDB 組出 { id: {px, py} }，
+	   而不是在這支檔案載入的當下就組好一份固定的物件：
+	   因為 index.html 裡 <script src="db.js"> 是排在 welcome-screen.js
+	   之後才載入，若在這裡的最上層直接組一次 HARBORS，會拿到還沒定義
+	   的 locationDB。之後要調整漁港在地圖上的位置，只需改 db.js 裡
+	   對應漁港的 px/py，不用動這支檔案。
 	*/
-	var HARBORS = {
-		badouzi:  { px: 0.816, py: 0.165 }, /* 基隆八斗子：東北角海岸 */
-		nanfangao:{ px: 0.864, py: 0.289 }, /* 宜蘭南方澳：東岸中上   */
-		longfeng: { px: 0.416, py: 0.288 }, /* 苗栗龍鳳：西岸中上     */
-		wuqi:     { px: 0.316, py: 0.359 }, /* 台中梧棲：西岸中段     */
-		anping:   { px: 0.163, py: 0.645 }, /* 台南安平：西南岸       */
-		donggang: { px: 0.278, py: 0.755 }, /* 屏東東港 */
-	};
+	function getHarbors(){
+		var out = {};
+		(typeof locationDB !== 'undefined' ? locationDB : []).forEach(function(loc){
+			out[loc.id] = { px: loc.px, py: loc.py };
+		});
+		return out;
+	}
 
 	/* 徽章資料（配合 db.js locationDB） */
 	var HARBOR_INFO = {
@@ -728,8 +730,9 @@
 	function positionHarbors(){
 		var r = getImgRect();
 		if(!r.width) return;
-		Object.keys(HARBORS).forEach(function(id){
-			var h  = HARBORS[id];
+		var harbors = getHarbors();
+		Object.keys(harbors).forEach(function(id){
+			var h  = harbors[id];
 			var el = document.getElementById('wsh-'+id);
 			if(!el) return;
 			var x = r.left + h.px * r.width;
@@ -830,7 +833,7 @@
 
 		/* 移動小船 */
 		var r    = getImgRect();
-		var h    = HARBORS[id];
+		var h    = getHarbors()[id];
 		var boat = document.getElementById('ws-boat');
 		if(boat && h){
 			boat.style.left = (r.left + h.px * r.width)  + 'px';
