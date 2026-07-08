@@ -2823,3 +2823,104 @@ function closeContact() {
     var iframe = document.querySelector('iframe[name="contact-iframe"]');
     if (iframe) iframe._submitted = false;
 }
+
+/* ═════════════════════════════════════════════════════════════
+   效能／耗電優化：App 切到背景時暫停音樂、音效與動畫
+   ─────────────────────────────────────────────────────────────
+   手機瀏覽器切到背景（鎖螢幕、切別的 App、切分頁）時，若沒有主動
+   暫停，BGM／Web Audio／所有 CSS infinite 動畫都會繼續在背景跑，
+   是很典型的隱形耗電來源。
+
+   這裡刻意不去「點名」個別的 bgm 變數，因為專案裡實際上散落著好幾組
+   各自獨立的音樂：主畫面 #bgm、intro.js 的 bgmEl、圖鑑/新手教學共用
+   的 main.js infoBGM、win-screen.js 內部作用域的 winBgm……未來很可能
+   還會再加。只認 id="bgm" 的舊寫法，就是為什麼新手教學切背景時音樂
+   沒被暫停到（教學用的是 infoBGM，不是 #bgm）。
+
+   改成攔截 HTMLMediaElement.prototype.play，凡是被呼叫過 play() 的
+   <audio>／<video>（不論是 DOM 裡的元素還是 `new Audio()` 產生、沒
+   掛在 DOM 上的物件）都會自動被追蹤，背景暫停時全部一起暫停、回到
+   前景時只恢復「當初真的是我們暫停的那些」，不會動到使用者自己按過
+   靜音、原本就沒在播的音樂。之後不管哪個檔案再新增一組 BGM，都不用
+   回來改這支腳本。
+   ═════════════════════════════════════════════════════════════ */
+(function () {
+
+    // ── 自動追蹤所有播放過的 <audio>/<video> ──
+    var _knownMedia = new Set();
+    var _origPlay = HTMLMediaElement.prototype.play;
+    HTMLMediaElement.prototype.play = function () {
+        _knownMedia.add(this);
+        return _origPlay.apply(this, arguments);
+    };
+
+    var _pausedByUs = new Set();
+
+    function pauseForBackground() {
+        // 1. 暫停所有「目前正在播放」的音樂／音效（只記錄是我們暫停的，
+        //    使用者自己本來就暫停/靜音的不會被誤記到）
+        _pausedByUs.clear();
+        _knownMedia.forEach(function (media) {
+            if (!media.paused) {
+                _pausedByUs.add(media);
+                media.pause();
+            }
+        });
+
+        // 2. 暫停 SFX 用的 Web Audio（合成音效的 AudioContext）
+        try {
+            if (window.SFX && typeof SFX.getCtx === 'function') {
+                var ctx = SFX.getCtx();
+                if (ctx && ctx.state === 'running') ctx.suspend();
+            }
+        } catch (e) { /* AudioContext 尚未建立或不支援，略過 */ }
+
+        // 3. 暫停所有 CSS infinite 動畫（呼吸光暈、箭頭閃爍、翻牌等，
+        //    不論目前在主畫面、教學、圖鑑還是勝負畫面都會套用到）
+        document.body.classList.add('app-bg-paused');
+
+        // 4. 停止 welcome-screen 漣漪 canvas 的 requestAnimationFrame 迴圈
+        if (typeof window._wsStopWaves === 'function') {
+            window._wsStopWaves();
+        }
+    }
+
+    function resumeFromBackground() {
+        // 1. 只恢復剛剛真的是被我們暫停掉的那些音樂
+        _pausedByUs.forEach(function (media) {
+            media.play().catch(function () { /* 需要使用者互動才能播放時忽略 */ });
+        });
+        _pausedByUs.clear();
+
+        // 2. 恢復 Web Audio
+        try {
+            if (window.SFX && typeof SFX.getCtx === 'function') {
+                var ctx = SFX.getCtx();
+                if (ctx && ctx.state === 'suspended') ctx.resume();
+            }
+        } catch (e) { /* 略過 */ }
+
+        // 3. 恢復 CSS 動畫
+        document.body.classList.remove('app-bg-paused');
+
+        // 4. 若 welcome-screen 目前可見，重新啟動漣漪動畫
+        var ws = document.getElementById('welcome-screen');
+        if (ws && ws.style.display !== 'none' && ws.style.display !== '' &&
+            typeof window._wsStartWaves === 'function') {
+            window._wsStartWaves();
+        }
+    }
+
+    document.addEventListener('visibilitychange', function () {
+        if (document.hidden) {
+            pauseForBackground();
+        } else {
+            resumeFromBackground();
+        }
+    });
+
+    // iOS Safari 部分情境（滑掉 App、直接關螢幕）只會觸發 pagehide，
+    // 不一定會先觸發 visibilitychange，額外補一層保險。
+    window.addEventListener('pagehide', pauseForBackground);
+
+})();

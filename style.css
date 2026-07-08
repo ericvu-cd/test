@@ -15,6 +15,12 @@ input, textarea {
     user-select: text;
 }
 :root { --p: #1976D2; --ai1: #D32F2F; --ai2: #388E3C; --ai3: #7B1FA2; }
+/* 效能／耗電優化：App 切到背景（見 perf.js）時，暫停所有 CSS
+   infinite 動畫（呼吸光暈、箭頭閃爍、自動翻牌等），避免背景空跑。 */
+body.app-bg-paused,
+body.app-bg-paused * {
+    animation-play-state: paused !important;
+}
 /* 等待鎖定遮罩：透明但攔截所有觸控 */
 #ui-lock {
     display: none;
@@ -609,10 +615,6 @@ body.game-started > *:not(#welcome-screen):not(#intro-screen):not(#collection-mo
     position: relative;
     touch-action: manipulation;
     overflow: hidden;
-    transform-style: preserve-3d;
-    /* 把每張卡提升到獨立合成層，翻牌時不污染影片合成 */
-    will-change: transform;
-    transform: translateZ(0);
     transition: transform 0.6s ease, box-shadow 0.22s ease;
 
     background: transparent;
@@ -624,6 +626,19 @@ body.game-started > *:not(#welcome-screen):not(#intro-screen):not(#collection-mo
         0 0 10px rgba(100,160,255,0.18),
         0 8px 16px rgba(0,10,40,0.55),
         0 18px 36px rgba(0,5,30,0.4);
+}
+
+/* 效能優化：不再讓「每一張卡」永久提升為獨立 GPU 合成層。
+   之前 will-change / preserve-3d / translateZ(0) 是套在 .card 這個
+   基礎規則上，代表整場遊戲裡所有已出的桌面牌、AI 展示牌、手牌全部
+   永久佔用合成層，牌越多、手機 GPU 記憶體與耗電就越高。
+   現在只在「真的會 3D 翻轉／位移」的狀態 class 上才提升合成層，
+   動畫結束、class 移除後就會自動釋放合成層。 */
+.card.is-valid,
+.card.flipped,
+.card.card-auto-flip {
+    transform-style: preserve-3d;
+    will-change: transform;
 }
 
 /* 鐵框內側細線 — 桌面大卡 */
@@ -750,8 +765,6 @@ body.game-started > *:not(#welcome-screen):not(#intro-screen):not(#collection-mo
     position: relative;
     border-radius: 15px;
     overflow: visible;
-    transform-style: preserve-3d;
-    will-change: transform;
     transition: transform 0.6s ease, box-shadow 0.22s ease;
 }
 
@@ -799,7 +812,7 @@ body.game-started > *:not(#welcome-screen):not(#intro-screen):not(#collection-mo
 #deck-info { font-size: 0.8rem; padding: 4px 10px; top: 5px; left: 5px; background: rgba(252, 230, 127, 0.6); }
 #summon-display { font-size: 1.05rem; padding: 10px; width: 92%; min-height: 50px; margin-bottom: 5px; border-width: 3px; border-radius: 12px; }
 .hand { min-height: 126px; gap: 6px; padding-bottom: 5px; }
-.card { width: 74px; height: 115px; border-radius: 8px; border-width: 1px; transform-style: preserve-3d; }
+.card { width: 74px; height: 115px; border-radius: 8px; border-width: 1px; }
 .card-n { font-size: 0.8rem; padding: 4px 1px; border-bottom-width: 1px; }
 .card-i { padding: 2px; }
 .tag { font-size: 0.6rem; padding: 2px 4px; border-radius: 4px; margin: 1px; line-height: 1.1; }

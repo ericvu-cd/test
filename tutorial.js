@@ -428,7 +428,7 @@ function startTutorial() {
     document.getElementById("log-btn").style.display        = "none";
 
     document.body.classList.add("game-started");
-    if (typeof initOceanVideo === "function") initOceanVideo("苗栗龍鳳漁港");
+    if (typeof initOceanVideo === "function") initOceanVideo("longfeng");
     if (typeof closePreview === "function") closePreview();
 
     const focusOverlay = document.getElementById("summon-focus-overlay");
@@ -463,11 +463,20 @@ function startTutorial() {
 // 🃏 玩家與牌組
 // ======================
 function setupTutorialPlayers() {
+    // renderAIStatus()（main.js）讀的是 p.avatarWebp / p.avatarJpg，
+    // 不是 p.avatar，先前這裡只給了 avatar 屬性，導致教學模式進到
+    // renderAIStatus() 時 avatarHtml 變成 undefined，畫面就顯示出
+    // 文字 "undefined"。教學用的表情符號不需要分靜態/動態兩種圖，
+    // 兩個屬性給同一份內容即可。
+    const octopusAvatar = '<div style="font-size:2rem;">🐙</div>';
+    const turtleAvatar  = '<div style="font-size:2rem;">🐢</div>';
+    const crabAvatar    = '<div style="font-size:2rem;">🦀</div>';
+
     players = [
         { n:"你",       hand:[], isAI:false },
-        { n:"章魚船長", hand:[], isAI:true, id:"ai-1", avatar:'<div style="font-size:2rem;">🐙</div>' },
-        { n:"海龜智者", hand:[], isAI:true, id:"ai-2", avatar:'<div style="font-size:2rem;">🐢</div>' },
-        { n:"螃蟹俠客", hand:[], isAI:true, id:"ai-3", avatar:'<div style="font-size:2rem;">🦀</div>' }
+        { n:"章魚船長", hand:[], isAI:true, id:"ai-1", avatarWebp:octopusAvatar, avatarJpg:octopusAvatar },
+        { n:"海龜智者", hand:[], isAI:true, id:"ai-2", avatarWebp:turtleAvatar,  avatarJpg:turtleAvatar  },
+        { n:"螃蟹俠客", hand:[], isAI:true, id:"ai-3", avatarWebp:crabAvatar,    avatarJpg:crabAvatar    }
     ];
 }
 
