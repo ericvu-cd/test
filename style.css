@@ -1078,10 +1078,12 @@ body.game-started > *:not(#welcome-screen):not(#intro-screen):not(#collection-mo
     /* cubic-bezier 增加一點點「Q彈」的感覺 */
 }
 
-/* AI 最後一張牌的閃爍效果 */
+/* AI 最後一張牌的閃爍效果：只動 transform + opacity，交給合成器處理，
+   不再用 filter: drop-shadow（會逐幀重繪）。紅色光暈改用固定的
+   text-shadow，只在套用 class 當下算一次，動畫過程中不會重算。 */
 @keyframes last-card-blink {
-    0%, 100% { transform: scale(1); filter: drop-shadow(0 0 2px red); }
-    50% { transform: scale(1.3); filter: drop-shadow(0 0 10px red); }
+    0%, 100% { transform: scale(1);   opacity: 1; }
+    50%      { transform: scale(1.3); opacity: 0.55; }
 }
 
 .ai-last-card-danger {
@@ -1089,6 +1091,7 @@ body.game-started > *:not(#welcome-screen):not(#intro-screen):not(#collection-mo
     animation: last-card-blink 0.6s infinite ease-in-out;
     /* 讓 🎴 變色或加強存在感 */
     position: relative;
+    text-shadow: 0 0 4px red, 0 0 8px red;
 }
 
 /* 牌堆告急閃爍 */

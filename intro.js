@@ -307,8 +307,17 @@ setTimeout(function () {
   if (c) c.style.opacity = '1';
 }, 2000);
 
-/* ── 開場邏輯 ── */
-if (sessionStorage.getItem('skipIntro') !== '1') {
+/* ── 開場邏輯 ──
+   注意：不能再靠 sessionStorage.getItem('skipIntro') 判斷要不要執行。
+   index.html 最上面那段 inline script 在偵測到 skipIntro==='1' 時，
+   會先把 #intro-screen 整個元素移除，然後立刻把旗標本身也清掉
+   （sessionStorage.removeItem）。intro.js 在那之後才載入，如果還用
+   同一個旗標判斷，會讀到「已經被清掉」的狀態、誤判成不用跳過，
+   接著去抓一個其實已經被移除的 #intro-screen，導致
+   introScr.addEventListener 打在 null 上炸掉。
+   改成直接檢查 #intro-screen 元素本身還在不在，才是真正的事實來源。 */
+var __introScreenEl = document.getElementById('intro-screen');
+if (__introScreenEl) {
   (function () {
     var IMGS = ['image/P1.jpg','image/P2.jpg','image/P3.jpg','image/P4.jpg','image/P5.jpg','image/P6.jpg','image/P7.jpg','image/P8.jpg','image/P9.jpg'];
     var STAY = 11400, BREATH_DUR = 6000, FADE_OUT = 900, BLACK = 400, FADE_IN = 800;
@@ -334,7 +343,7 @@ if (sessionStorage.getItem('skipIntro') !== '1') {
       setTimeout(function () { if (hintEl) hintEl.classList.add('show'); }, 1100);
     }, 600);
 
-    var introScr = document.getElementById('intro-screen');
+    var introScr = __introScreenEl;
     introScr.addEventListener('click', startComic, { once: true });
 
     function startComic() {

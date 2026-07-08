@@ -138,6 +138,40 @@ let showSummaryMode = true; // 預設開啟結算頁面
 let roundReport = [];       // 每回合出牌結果紀錄
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
+// 省電模式：整場遊戲期間持續播放的背景海洋影片是目前最大的耗電來源
+// （不像其他偶發動畫只跑幾秒），開啟後改用「凍結在目前這一幀」的方式
+// 顯示背景，不再持續解碼。玩家自己的選擇存在 sessionStorage；如果玩家
+// 從沒選過，預設跟隨手機系統的「減少動態效果」設定。
+let powerSaveMode = (function () {
+    const saved = sessionStorage.getItem("powerSaveMode");
+    if (saved !== null) return saved === "true";
+    return !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+})();
+
+// 依目前 powerSaveMode 套用到背景影片與切換按鈕的圖示。
+function applyPowerSaveMode() {
+    const vid = document.getElementById("ocean-bg-video");
+    const btn = document.getElementById("power-save-control");
+    if (powerSaveMode) {
+        if (vid && !vid.paused) vid.pause(); // 直接凍結在目前這一幀，不用另外準備靜態圖
+        if (btn) { btn.innerText = "🔋"; btn.style.opacity = "1"; btn.title = "省電模式：開（點擊關閉）"; }
+    } else {
+        // 只有遊戲已經開始（body 有 game-started）才需要恢復播放；
+        // 還沒開始遊戲時 ocean-bg-video 可能根本還沒建立。
+        if (vid && vid.paused && document.body.classList.contains("game-started")) {
+            vid.play().catch(() => {});
+        }
+        if (btn) { btn.innerText = "🔋"; btn.style.opacity = "0.4"; btn.title = "省電模式：關（點擊開啟）"; }
+    }
+}
+
+// 切換省電模式，並記住玩家這次的選擇。
+function togglePowerSave() {
+    powerSaveMode = !powerSaveMode;
+    sessionStorage.setItem("powerSaveMode", powerSaveMode ? "true" : "false");
+    applyPowerSaveMode();
+}
+
 // 預載圖片功能
 /**
  * 依編號批次預載圖片（例如 prefix="P" → image/P1.jpg ~ image/P{count}.jpg）。
@@ -1120,14 +1154,14 @@ function initOceanVideo(locationId) {
     if (!vid) {
         vid = document.createElement("video");
         vid.id = "ocean-bg-video";
-        vid.autoplay = true; vid.loop = true; vid.muted = true; vid.playsInline = true;
+        vid.autoplay = !powerSaveMode; vid.loop = true; vid.muted = true; vid.playsInline = true;
         document.body.appendChild(vid);
     }
     const targetSrc = `image/${locationId}.mp4`;
     // 避免重複呼叫（initGame 提早緩衝 + startGame 再呼叫一次）時，
     // 用同一個網址又重新 load() 一次，把前面已經緩衝的進度打掉重來。
     if (vid.dataset.loadedSrc === targetSrc) {
-        vid.play().catch(() => {});
+        if (!powerSaveMode) vid.play().catch(() => {});
         return;
     }
     vid.dataset.loadedSrc = targetSrc;
@@ -1145,7 +1179,12 @@ function initOceanVideo(locationId) {
 
     vid.src = targetSrc;
     vid.load();
-    vid.play().catch(() => {});
+    // 省電模式開啟時，先解碼出第一幀當靜態背景就好，不要讓它一路播下去。
+    if (powerSaveMode) {
+        vid.addEventListener("loadeddata", () => vid.pause(), { once: true });
+    } else {
+        vid.play().catch(() => {});
+    }
 }
 
 // 由 wsStartGame() 在按下「守護漁港」的當下鎖住並傳入，
@@ -1184,6 +1223,8 @@ function initGame(lockedLocationId) {
 	document.getElementById("report-control").style.display = "flex";
     document.getElementById("log-btn").style.display = "flex";
     document.getElementById("collection-btn").style.display = "flex";
+    document.getElementById("power-save-control").style.display = "flex";
+    applyPowerSaveMode();
     const music = document.getElementById("bgm");
     const btn = document.getElementById("music-control");
     if (sfxEnabled) {
