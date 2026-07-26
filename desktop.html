@@ -48,37 +48,27 @@
         </div>
     </div>
 
-	<script>
-		(function () {
-			var DESIGN_W = 422;
-			var DESIGN_H = 892;
-			var outer = document.getElementById('frame-outer');
-			var iframe = document.getElementById('frame-iframe');
+    <script>
+    (function () {
+        var DESIGN_W = 422;
+        var DESIGN_H = 892;
+        var outer = document.getElementById('frame-outer');
+        var iframe = document.getElementById('frame-iframe');
 
-			function fit() {
-				var availW = window.innerWidth * 0.94;
-				var availH = window.innerHeight * 0.94;
-				var scale = Math.min(availW / DESIGN_W, availH / DESIGN_H);
+        function fit() {
+            // 讓可用空間扣掉一點邊距，畫面不會頂到瀏覽器邊緣
+            var availW = window.innerWidth * 0.94;
+            var availH = window.innerHeight * 0.94;
+            var scale = Math.min(availW / DESIGN_W, availH / DESIGN_H);
 
-				iframe.style.transform = 'scale(' + scale + ')';
-				outer.style.width = (DESIGN_W * scale) + 'px';
-				outer.style.height = (DESIGN_H * scale) + 'px';
-			}
+            iframe.style.transform = 'scale(' + scale + ')';
+            outer.style.width = (DESIGN_W * scale) + 'px';
+            outer.style.height = (DESIGN_H * scale) + 'px';
+        }
 
-			// ▼ 新增：畫面變窄（例如平板轉直屏）就跳回手機版
-			function checkOrientation() {
-				if (window.innerWidth <= 700) {
-					window.location.replace('index.html');
-				}
-			}
-
-			fit();
-			checkOrientation();
-			window.addEventListener('resize', function () {
-				fit();
-				checkOrientation();
-			});
-		})();
-	</script>
+        fit();
+        window.addEventListener('resize', fit);
+    })();
+    </script>
 </body>
 </html>
