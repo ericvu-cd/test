@@ -120,6 +120,15 @@ const progress = {
         }
     },
 
+    // 獲勝次數累積（依難度分開計數，每次獲勝都會真的加 1，不是只記一次）
+    recordWin(name, difficultyLabel) {
+        if (!name || !name.trim() || name.trim() === '守護員') return;
+        const data = this.load(name);
+        if (!data.winCounts) data.winCounts = {};
+        data.winCounts[difficultyLabel] = (data.winCounts[difficultyLabel] || 0) + 1;
+        this.save(name, data);
+    },
+
     // 行為型勳章（存入 behaviorBadges 欄位）
     unlockBehaviorBadge(name, badgeName) {
         if (!name || !name.trim() || name.trim() === '守護員') return;
@@ -1224,6 +1233,7 @@ function initGame(lockedLocationId) {
     document.getElementById("log-btn").style.display = "flex";
     document.getElementById("collection-btn").style.display = "flex";
     document.getElementById("power-save-control").style.display = "flex";
+    document.getElementById("leaderboard-control").style.display = "flex";
     applyPowerSaveMode();
     const music = document.getElementById("bgm");
     const btn = document.getElementById("music-control");

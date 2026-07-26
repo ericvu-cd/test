@@ -57,13 +57,13 @@ body {
     contain: layout paint size;
 }
 /* 讓 body 底下的所有東西預設先消失（影片排除，避免 opacity transition 打斷 GPU 合成） */
-body > *:not(#welcome-screen):not(#intro-screen):not(#collection-modal):not(#collection-zoom-overlay):not(#ocean-bg-video) {
+body > *:not(#welcome-screen):not(#intro-screen):not(#collection-modal):not(#collection-zoom-overlay):not(#ocean-bg-video):not(#leaderboard-overlay) {
     visibility: hidden;
     opacity: 0;
 }
 
 /* 當遊戲開始，給 body 加一個類別，讓內容顯現 */
-body.game-started > *:not(#welcome-screen):not(#intro-screen):not(#collection-modal):not(#collection-zoom-overlay):not(#ocean-bg-video) {
+body.game-started > *:not(#welcome-screen):not(#intro-screen):not(#collection-modal):not(#collection-zoom-overlay):not(#ocean-bg-video):not(#leaderboard-overlay) {
     visibility: visible;
     opacity: 1;
     transition: opacity 1s ease;

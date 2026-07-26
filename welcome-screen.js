@@ -118,6 +118,25 @@
 	.ws-icon-btn:active { transform: scale(0.92); }
 	.ws-icon-btn.ws-off { opacity: 0.45; }
 
+	/* ── 排行榜按鈕（查詢性質，藥丸型，跟開關類的 .ws-icon-btn 區隔）── */
+	#ws-lb-btn {
+		display: flex;
+		align-items: center;
+		gap: 4px;
+		padding: 5px 12px;
+		border-radius: 20px;
+		border: 1px solid rgba(80,160,220,0.3);
+		background: rgba(8,22,45,0.75);
+		font-size: 0.78rem;
+		color: #d0eaff;
+		cursor: pointer;
+		margin-left: 10px;
+		white-space: nowrap;
+		-webkit-tap-highlight-color: transparent;
+		transition: background .18s, transform .12s;
+	}
+	#ws-lb-btn:active { transform: scale(0.95); }
+
 	/* ── Toast 提示 ── */
 	#ws-toast {
 		position: absolute;
@@ -533,6 +552,7 @@
 		<div id="ws-topbar">
 			<div id="ws-top-title">
 				<div id="ws-title-text">台灣海線任務</div>
+				<div id="ws-lb-btn" onclick="openLeaderboard()" title="守護排行榜">🏆 排行榜</div>
 			</div>
 			<div id="ws-top-icons">
 				<div class="ws-icon-btn" id="ws-sfx-btn" onclick="wsToggleSound()" title="音效・音樂">🔊</div>
