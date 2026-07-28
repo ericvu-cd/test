@@ -1105,6 +1105,27 @@ body.game-started > *:not(#welcome-screen):not(#intro-screen):not(#collection-mo
     50% { opacity: 0.5; }
 }
 
+/* 桌機展示版（desktop.html iframe）沒有觸控滑動，
+   這些按鈕預設隱藏，只有 body 被加上 .desktop-mode 時才顯示，
+   手機正常瀏覽完全不受影響。 */
+.desktop-only-btn {
+    display: none;
+}
+body.desktop-mode .desktop-only-btn {
+    display: block;
+}
+/* 手牌左右箭頭：桌機模式下才變成可點擊按鈕（手機上維持純視覺提示，不受影響） */
+body.desktop-mode .hand-arrow {
+    pointer-events: auto;
+    cursor: pointer;
+}
+body.desktop-mode .hand-arrow:hover {
+    background: linear-gradient(to right, rgba(0,10,30,0.75), rgba(0,10,30,0.15));
+}
+body.desktop-mode #arrow-right:hover {
+    background: linear-gradient(to left, rgba(0,10,30,0.75), rgba(0,10,30,0.15));
+}
+
 /* 手牌左右溢出指示箭頭（純視覺，手機觸控滑動用） */
 .hand-arrow {
     position: absolute;

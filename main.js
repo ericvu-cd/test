@@ -197,10 +197,25 @@ function preloadImages(prefix, count) {
 // DOMContentLoaded 即刻預載（比 load 早，不等 BGM/大圖載完）
 // DOMContentLoaded 比 window.onload 更早觸發（不必等 BGM、大圖等資源全部載完），
 // 在這裡就先把開場故事圖、說明圖鑑、所有魚卡圖片都預先載入快取。
+// ── 桌機展示模式偵測（desktop.html 用 iframe 包住 index.html?embedded=1）──
+// 只有在 iframe 裡執行才視為桌機展示模式；手機直接開永遠是 false，不受影響。
+const isDesktopMode = (window.self !== window.top);
+
+// 手牌左右按鈕：桌機展示模式專用（手機用觸控滑動，不需要這個）。
+// 一次捲動約 2 張卡的寬度（卡片74px + 間距6px ≈ 80px/張）。
+function scrollHand(direction) {
+    const hand = document.getElementById("player-hand");
+    if (!hand) return;
+    hand.scrollBy({ left: direction * 160, behavior: "smooth" });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     preloadImages('P', 9);  // 預載故事 P1-P9
     preloadImages('F', 18); // 預載說明 F1-F18
     preloadFishImages();     // 預載所有魚圖片
+    if (isDesktopMode) {
+        document.body.classList.add('desktop-mode');
+    }
 });
 
 // 預載魚圖片

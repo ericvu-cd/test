@@ -2,8 +2,6 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 	<script>
         (function() {
             var ua = navigator.userAgent;
@@ -27,6 +25,7 @@
             }
         })();
     </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>海紋守護團 台灣海線任務</title>
     <link rel="icon" href="data:,">
     <link rel="stylesheet" href="style.css">
@@ -163,6 +162,9 @@
             <button class="ctrl-btn" onclick="closeInfo()">X</button>
         </div>
         <div id="info-page-num" style="position:absolute; top:20px; left:20px; color:white; background:rgba(0,0,0,0.2); padding:5px 10px; border-radius:20px;">1 / 18</div>
+        <!-- 桌機展示版專用：沒有觸控滑動，加左右按鈕當替代操作，預設隱藏，只在 desktop-mode 顯示 -->
+        <button id="info-prev-btn" class="ctrl-btn desktop-only-btn" onclick="prevInfo()" style="position:absolute; left:14px; top:50%; transform:translateY(-50%); font-size:1.3rem; padding:8px 14px;">‹</button>
+        <button id="info-next-btn" class="ctrl-btn desktop-only-btn" onclick="nextInfo()" style="position:absolute; right:14px; top:50%; transform:translateY(-50%); font-size:1.3rem; padding:8px 14px;">›</button>
     </div>
 
     <div id="card-preview-overlay">
@@ -186,9 +188,9 @@
 
 		<div id="player-zone" style="position: relative; overflow: hidden;">
 			<div id="drawer-up-arrow" style="display:none;">▲ 上滑/左滑/右滑選牌</div>
-			<div id="arrow-left" class="hand-arrow"></div>
+			<div id="arrow-left" class="hand-arrow" onclick="scrollHand(-1)"></div>
 			<div id="player-hand" class="hand"></div>
-			<div id="arrow-right" class="hand-arrow"></div>
+			<div id="arrow-right" class="hand-arrow" onclick="scrollHand(1)"></div>
 		</div>
 
     <!-- 排行榜（收集分數計算＋UI）現在併在 win-screen.js 裡了 -->
