@@ -68,35 +68,6 @@
 
         fit();
         window.addEventListener('resize', fit);
-
-        /* ── 橫直屏方案 C：寬度變窄時，若遊戲還沒開始，跳回沉浸式手機版 ──
-           iframe 與本頁同源，可直接讀取內部 index.html 的 body class 來判斷
-           遊戲是否已開始（main.js 的 initGame() 會加上 .game-started，
-           涵蓋新手教學）。讀取失敗（例如 iframe 尚未載入完成）時保守視為
-           「已開始」，寧可不跳轉，也不要在牌局進行中誤跳轉打斷玩家。 */
-        var redirecting = false;
-
-        function isGameStarted() {
-            try {
-                var idoc = iframe.contentDocument;
-                return !!(idoc && idoc.body && idoc.body.classList.contains('game-started'));
-            } catch (e) {
-                return true;
-            }
-        }
-
-        function toMobileIfNeeded() {
-            if (redirecting) return;
-            if (window.innerWidth <= 700 && !isGameStarted()) {
-                redirecting = true;
-                window.location.replace('index.html');
-            }
-        }
-
-        window.addEventListener('resize', toMobileIfNeeded);
-        window.addEventListener('orientationchange', function () {
-            setTimeout(toMobileIfNeeded, 100); // 等版面穩定後再量測寬度
-        });
     })();
     </script>
 </body>

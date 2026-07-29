@@ -2,7 +2,6 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<script>
         (function() {
             var ua = navigator.userAgent;
@@ -17,42 +16,16 @@
     </script>
 	<script>
         /* 桌機/寬螢幕自動導向「手機外框」展示版（desktop.html），
-           手機直接開（寬度 <=700）完全不受影響、不會跳轉。
-
-           橫直屏方案 C：
-             - 遊戲開始前（尚未 initGame()，body 還沒有 .game-started）：
-               持續監聽 resize/orientationchange，寬度一旦 >700 就動態導向
-               desktop.html，不管開場當下手機是橫是直，畫面都能立刻對版。
-             - 遊戲開始後（body 已經有 .game-started，含新手教學）：
-               不再監聽/跳轉，鎖定目前模式，避免玩到一半旋轉手機導致整頁
-               重載、牌局進度遺失（目前牌局狀態只存在記憶體變數，沒有存檔機制）。 */
+           手機直接開（寬度 <=700）完全不受影響、不會跳轉。 */
         (function() {
             var params = new URLSearchParams(window.location.search);
             var inIframe = (window.self !== window.top);
-            var redirecting = false;
-
-            function toDesktopIfNeeded() {
-                if (inIframe || params.has('embedded') || redirecting) return;
-                // 遊戲（含教學）已開始就鎖定，不再判斷
-                if (document.body && document.body.classList.contains('game-started')) return;
-                if (window.innerWidth > 700) {
-                    redirecting = true;
-                    window.location.replace('desktop.html');
-                }
+            if (window.innerWidth > 700 && !inIframe && !params.has('embedded')) {
+                window.location.replace('desktop.html');
             }
-
-            // 初始載入判斷（沿用原本邏輯；此時 document.body 尚未存在，
-            // 等同於「視為遊戲尚未開始」，行為與舊版完全一致）
-            toDesktopIfNeeded();
-
-            // 持續監聽方向變化；是否真的跳轉由 toDesktopIfNeeded() 內的
-            // .game-started 判斷把關
-            window.addEventListener('resize', toDesktopIfNeeded);
-            window.addEventListener('orientationchange', function () {
-                setTimeout(toDesktopIfNeeded, 100); // 等版面穩定後再量測寬度
-            });
         })();
     </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>海紋守護團 台灣海線任務</title>
     <link rel="icon" href="data:,">
     <link rel="stylesheet" href="style.css">
