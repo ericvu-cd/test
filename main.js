@@ -680,6 +680,14 @@ function closeCollection() {
     if (modal) modal.remove();
 }
 
+/* ⚠️ phase 狀態機說明（新增狀態或修改流程前請先看這裡）：
+   - "WAIT"          等待中／非玩家操作階段（例如動畫播放、AI思考中）
+   - "PLAYER_TURN"   輪到玩家出牌，等待 playerAction() 被觸發
+   - "PLAYER_MAZU"   玩家抽到媽祖籤，等待 confirmMazuGift() 選擇贈送對象
+   - "AI_FOLLOWING"  AI 依序跟牌中
+   - "RESULT"        本輪／本局結算顯示中
+   這個變數會被 tutorial.js 的 patchPlayerAction() 讀取（判斷是否為
+   PLAYER_MAZU 階段），修改狀態名稱或新增狀態時記得同步檢查 tutorial.js。 */
 let players = [], deckS = [], table = [], currentS = null, callerIdx = 0, phase = "WAIT";
 let initialHands = []; // 各局開始時的初始手牌快照，遊戲結束時寫入 LOG
 
@@ -780,6 +788,10 @@ let previewTimeout = null;
  * @param {number|null} idx - 手牌索引，如果是海洋區卡片則傳 null
  * @param {HTMLElement} originalCardEl - 原始卡片 DOM
  * @param {boolean} isHand - 是否為手牌 (決定是否顯示操作按鈕)
+ *
+ * ⚠️ 此函式會被 tutorial.js 的 patchShowCardPreview() 整個攔截包裝
+ *    （monkey-patch，見 tutorial.js 對應區塊的警語）。若修改此函式的
+ *    名稱或參數簽名，務必同步檢查 tutorial.js。
  */
 function showCardPreview(idx, fish, isHand = true) {
     const overlay = document.getElementById("card-preview-overlay");
@@ -1711,6 +1723,9 @@ function showMazuTargetSelect(cardIdx) {
 // 媽祖贈牌：確認送出
 // 玩家確認媽祖贈牌對象後：把卡從玩家手牌移除、播放贈牌動畫、
 // 加入對方手牌、記錄行為勳章（mazuCompleted），最後進入結算流程。
+// ⚠️ 教學模式進行中時，tutorial.js 的 patchPlayerAction() 內部會暫時
+//    整個覆蓋這個 window.confirmMazuGift（monkey-patch），教學結束/
+//    離開媽祖籤流程後才會還原。修改此函式簽名時請同步檢查 tutorial.js。
 function confirmMazuGift(cardIdx, target) {
     const card = players[0].hand.splice(cardIdx, 1)[0];
 
@@ -1812,6 +1827,10 @@ function playCardFlyAnimation(card, fromEl, callback) {
  *     3. 隨機讓 1~2 位 AI 對這張牌做出反應（受每回合對話上限 roundChatCount 限制）
  *     4. 依序讓其餘所有 AI（非召喚者）跟牌出牌（aiMove），中間穿插延遲製造節奏感
  *     5. 全部出完後解鎖 UI 並呼叫 showResult() 進入結算判定
+ *
+ * ⚠️ 此函式會被 tutorial.js 的 patchPlayerAction() 整個攔截包裝
+ *    （monkey-patch，見 tutorial.js 對應區塊的警語）。若修改此函式的
+ *    名稱或參數簽名，務必同步檢查 tutorial.js。
  */
 async function playerAction(idx) {
     if (navigator.vibrate) navigator.vibrate(30);
@@ -2959,6 +2978,9 @@ function closeContact() {
         _pausedByUs.clear();
 
         // 2. 恢復 Web Audio
+        // 註：這裡呼叫 resume() 沒有 iOS 手勢限制的問題，因為 AudioContext
+        // 早在使用者一開始點擊進入遊戲時就已經被解鎖過一次了，這裡只是
+        // 從背景返回時恢復被系統自動 suspend 掉的狀態（詳見 sfx.js 檔頭）。
         try {
             if (window.SFX && typeof SFX.getCtx === 'function') {
                 var ctx = SFX.getCtx();

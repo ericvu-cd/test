@@ -50,6 +50,10 @@
 
     <script>
     (function () {
+        /* ⚠️ 這是遊戲版面的「設計基準尺寸」，跟 index.html 的手機版排版是
+           對應死的（目前 436x892）。如果之後調整遊戲的版面比例／改了
+           style.css 裡跟版面尺寸相關的設定，這裡也要同步改，不然桌機
+           展示版縮放出來的畫面比例會跟手機版對不上。 */
         var DESIGN_W = 436;
         var DESIGN_H = 892;
         var outer = document.getElementById('frame-outer');

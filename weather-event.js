@@ -1,6 +1,22 @@
 /* ═════════════════════════════════════════════
    天氣海象 + 突發事件系統
    每次 welcome-screen 顯示時重新抽選一次
+
+   ⚠️ 跨檔案依賴注意（重要）：
+   本檔案用到的 weatherDB / eventDB 定義在 db.js，HARBOR_INFO 定義在
+   welcome-screen.js（見該檔案 window.HARBOR_INFO）。但 index.html 裡
+   <script> 標籤的載入順序是：
+       weather-event.js → welcome-screen.js → ... → db.js → main.js
+   也就是本檔案「載入時」，這些變數其實都還不存在！
+   之所以目前運作正常，是因為本檔案的函式都只在
+   window.rollAndApplyWeather() 被「呼叫」的當下才去讀取這些變數
+   （呼叫時機是玩家進到選港口畫面之後，那時候 db.js / welcome-screen.js
+   早就載入完了）。rollAndApplyWeather() 內有針對 weatherDB/eventDB
+   做 typeof 防呆，但 HARBOR_INFO 沒有，純粹是靠「呼叫時機夠晚」在保護，
+   不是靠邏輯保護。
+   → 請勿在頁面載入當下（script 執行的最外層）直接呼叫本檔案內的函式，
+     一定要等使用者實際進入選港口流程後才會被觸發。
+   → 若之後要調整 index.html 的 script 載入順序，務必連帶檢查這裡。
    ═════════════════════════════════════════════ */
 (function(){
 
@@ -66,7 +82,7 @@
 			var isOpen = result.portStatus[id];
 			el.classList.toggle('ws-closed', !isOpen);
 			if(!isOpen){
-				var info = HARBOR_INFO[id] || {};
+				var info = HARBOR_INFO[id] || {}; /* ← 依賴 welcome-screen.js 的 window.HARBOR_INFO，見檔頭警語 */
 				var reason = result.closedByEvent[id] || result.weather.name;
 				closedList.push((info.shortName || info.name || id) + '（' + reason + '）');
 			}
