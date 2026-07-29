@@ -32,6 +32,14 @@
                    characterDB（AI 角色）、locationDB（漁港）、dialogueDB（AI 台詞）
      sfx.js      — SFX 音效物件
      win-screen.js — showWinScreen()
+
+   ⚠️ 反向依賴（會被其他檔案動態改寫，修改時要留意）：
+     tutorial.js 會在載入後整個覆蓋（monkey-patch）本檔案定義的
+     playerAction()、confirmMazuGift()、showCardPreview() 三個函式，
+     藉此插入新手教學邏輯。這代表：
+       1) index.html 裡 tutorial.js 的 <script> 必須排在 main.js 之後。
+       2) 若在本檔案修改這三個函式的名稱或參數簽名，tutorial.js 會悄悄
+          失效（不會報錯，但新手教學會表現異常），務必同步檢查 tutorial.js。
    ═══════════════════════════════════════════════════════════════════════ */
 
 let gameDifficulty = 0.4;
@@ -680,14 +688,10 @@ function closeCollection() {
     if (modal) modal.remove();
 }
 
-/* ⚠️ phase 狀態機說明（新增狀態或修改流程前請先看這裡）：
-   - "WAIT"          等待中／非玩家操作階段（例如動畫播放、AI思考中）
-   - "PLAYER_TURN"   輪到玩家出牌，等待 playerAction() 被觸發
-   - "PLAYER_MAZU"   玩家抽到媽祖籤，等待 confirmMazuGift() 選擇贈送對象
-   - "AI_FOLLOWING"  AI 依序跟牌中
-   - "RESULT"        本輪／本局結算顯示中
-   這個變數會被 tutorial.js 的 patchPlayerAction() 讀取（判斷是否為
-   PLAYER_MAZU 階段），修改狀態名稱或新增狀態時記得同步檢查 tutorial.js。 */
+/* phase 狀態機五個值的完整說明見檔頭（第 23~28 行）。
+   ⚠️ 這個變數會被 tutorial.js 的 patchPlayerAction() 讀取（判斷是否為
+   PLAYER_MAZU 階段），修改狀態名稱或新增狀態時記得同步檢查 tutorial.js，
+   並同步更新檔頭的狀態說明，避免兩處描述不一致。 */
 let players = [], deckS = [], table = [], currentS = null, callerIdx = 0, phase = "WAIT";
 let initialHands = []; // 各局開始時的初始手牌快照，遊戲結束時寫入 LOG
 
@@ -786,7 +790,8 @@ let previewTimeout = null;
 
 /**
  * @param {number|null} idx - 手牌索引，如果是海洋區卡片則傳 null
- * @param {HTMLElement} originalCardEl - 原始卡片 DOM
+ * @param {Object} fish - fishDB 的魚卡資料物件（不是 DOM 元素），用來取得
+ *                 燈號 l、名稱 n、介紹 i 等欄位渲染放大預覽卡
  * @param {boolean} isHand - 是否為手牌 (決定是否顯示操作按鈕)
  *
  * ⚠️ 此函式會被 tutorial.js 的 patchShowCardPreview() 整個攔截包裝
