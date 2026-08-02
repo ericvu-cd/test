@@ -15,7 +15,7 @@
 //                      見 main.js 發牌邏輯 fishD.filter(f => f.e === 1)），其餘數字
 //                      沒有特殊意義，純粹用來排除易牌
 //    score              收集分數（我的海紋收集 / 排行榜計分用，見下方
-//                      DIFFICULTY_SCORES 附近的收集分數說明區塊）
+//                      difficultyDB / BEHAVIOR_BADGE_DB 附近的收集分數說明區塊）
 //    i     intro      圖鑑介紹文字（顯示在魚卡說明頁）
 // ══════════════════════════════════════════════════════════════
 const fishDB = [
@@ -80,9 +80,11 @@ const fishDB = [
 // 要調整漁港氣泡在地圖上的位置，只需修改這裡的 px/py 數值即可。
 //
 // 其餘欄位說明：
-//   id          漁港代碼，會對應到 weather-event.js 的 PORT_IDS、DOM id
-//               （例如 wsh-<id>）等多處，改動時務必全域搜尋同步修改
-//   name        漁港全名（顯示用）
+//   id          漁港代碼，會對應到 weather-event.js（動態由本表產生 PORT_IDS）、
+//               DOM id（例如 wsh-<id>）等多處，改動時務必全域搜尋同步修改
+//   name        漁港全名（顯示用；歡迎頁右下角面板標題用這個）
+//   shortName   漁港簡稱（顯示用；歡迎頁封港提示、weather-event.js 用這個）
+//   stars       漁港難度／推薦星等（顯示用，歡迎頁右下角面板標題旁的星星）
 //   area        所屬海線分區（顯示用）
 //   badge       選擇這個漁港出海、完成一局後可解鎖的「漁港章」名稱
 //   badgeScore  這枚漁港章的收集分數（win-screen.js 排行榜計分用）
@@ -94,6 +96,8 @@ const locationDB = [
         id: "longfeng",
         name: "苗栗龍鳳漁港",
         area: "苗栗海線",
+        shortName: "龍鳳漁港",
+        stars: "★★★",
         badge: "龍鳳初航章",
         badgeScore: 15,
         px: 0.416, py: 0.288, // 地圖座標（tw.png 原圖百分比：西岸中上）
@@ -113,6 +117,8 @@ const locationDB = [
         id: "badouzi",
         name: "基隆八斗子漁港",
         area: "北部海線",
+        shortName: "八斗子漁港",
+        stars: "★★★★",
         badge: "北岬海紋章",
         badgeScore: 17,
         px: 0.816, py: 0.165, // 地圖座標（tw.png 原圖百分比：東北角海岸）
@@ -132,6 +138,8 @@ const locationDB = [
         id: "nanfangao",
         name: "宜蘭南方澳漁港",
         area: "東北海線",
+        shortName: "南方澳漁港",
+        stars: "★★★★★",
         badge: "洄光海紋章",
         badgeScore: 18,
         px: 0.864, py: 0.289, // 地圖座標（tw.png 原圖百分比：東岸中上）
@@ -151,6 +159,8 @@ const locationDB = [
         id: "wuqi",
         name: "台中梧棲漁港",
         area: "中部海線",
+        shortName: "梧棲漁港",
+        stars: "★",
         badge: "中港豐海章",
         badgeScore: 12,
         px: 0.316, py: 0.359, // 地圖座標（tw.png 原圖百分比：西岸中段）
@@ -170,6 +180,8 @@ const locationDB = [
         id: "anping",
         name: "台南安平漁港",
         area: "西南海線",
+        shortName: "安平漁港",
+        stars: "★★",
         badge: "安平豐海章",
         badgeScore: 14,
         px: 0.163, py: 0.645, // 地圖座標（tw.png 原圖百分比：西南岸）
@@ -189,6 +201,8 @@ const locationDB = [
         id: "donggang",
         name: "屏東東港漁港",
         area: "南部黑潮海線",
+        shortName: "東港漁港",
+        stars: "★★★★",
         badge: "黑潮守護章",
         badgeScore: 17,
         px: 0.278, py: 0.755, // 地圖座標（tw.png 原圖百分比：南部海岸）
@@ -610,29 +624,74 @@ const characterDB = [
 //  同伴角色分數在上面 characterDB 每筆的 score 欄位。
 // ══════════════════════════════════════════════════════════════
 
-// 難度章分數：對應玩家選擇的難度
-const DIFFICULTY_SCORES = {
-    "新手": 12,
-    "標準": 16,
-    "專業": 18
-};
+// ══════════════════════════════════════════════════════════════
+//  難度設定資料庫（原本 value/label 門檻散落在 welcome-screen.js 的
+//  難度按鈕、main.js／win-screen.js 好幾處重複的
+//  `gameDifficulty <= 0.4 ? "新手" : ...` 判斷式、以及本檔案原本
+//  分開的 DIFFICULTY_SCORES / WIN_BONUS_SCORE，現在統一併在這裡）
+//  欄位說明：
+//    value       對應 gameDifficulty 的數值（AI 出牌準確率、發牌邏輯用）
+//    label       難度顯示名稱（難度章、排行榜計分 key 也用這個字串）
+//    scoreBadge  難度章收集分數（原 DIFFICULTY_SCORES）
+//    winBonus    每次獲勝的加成分數，會依勝場數累加（原 WIN_BONUS_SCORE）
+//  ⚠️ 目前程式假設固定 3 級（新手/標準/專業），getDifficultyInfo() 的
+//  判斷邏輯是「<=第一級用第一級、>=最後一級用最後一級、其餘用中間那一級」，
+//  若要改成 4 級以上，getDifficultyInfo() 也要跟著改寫判斷方式。
+// ══════════════════════════════════════════════════════════════
+const difficultyDB = [
+    { value: 0.4, label: "新手", scoreBadge: 12, winBonus: 1 },
+    { value: 0.7, label: "標準", scoreBadge: 16, winBonus: 2 },
+    { value: 0.9, label: "專業", scoreBadge: 18, winBonus: 3 }
+];
 
-// 行為勳章分數：依解鎖條件難度手動分三級（判定條件見 win-screen.js）
-const BEHAVIOR_BADGE_SCORES = {
+// 依目前 gameDifficulty 數值，找出對應的難度設定物件（見上方註解的假設）
+function getDifficultyInfo(value) {
+    if (value <= difficultyDB[0].value) return difficultyDB[0];
+    if (value >= difficultyDB[difficultyDB.length - 1].value) return difficultyDB[difficultyDB.length - 1];
+    return difficultyDB[1];
+}
+
+// 相容用途：舊程式碼（win-screen.js 的 computeCollectionStats）原本直接查這兩個
+// 物件，這裡從 difficultyDB 動態產生，維持同樣的查詢介面，但只有一份資料來源。
+const DIFFICULTY_SCORES = {};
+const WIN_BONUS_SCORE = {};
+difficultyDB.forEach(function (d) {
+    DIFFICULTY_SCORES[d.label] = d.scoreBadge;
+    WIN_BONUS_SCORE[d.label] = d.winBonus;
+});
+
+// ══════════════════════════════════════════════════════════════
+//  行為型勳章資料庫（原本 icon/desc 寫死在 main.js 的 openCollection()
+//  內部、win-screen.js 的 BADGE_META_SHARE 又各自重複了一次 icon，
+//  分數則在本檔案的 BEHAVIOR_BADGE_SCORES。現在三處併成這一份。）
+//  欄位說明：
+//    key    勳章代碼（同時也是顯示名稱，main.js/win-screen.js 判定解鎖用）
+//    icon   勳章圖示 emoji
+//    desc   解鎖條件說明文字（顯示在收集圖鑑）
+//    score  收集分數（win-screen.js 排行榜計分用）
+// ══════════════════════════════════════════════════════════════
+const BEHAVIOR_BADGE_DB = [
     // 一般：只需特定牌型組合，不要求出牌全對
-    "綠燈先鋒": 15, "一支釣達人": 15, "紅燈護送員": 15, "養殖支持者": 15, "深海傳說": 15,
+    { key: "綠燈先鋒",  icon: "🟢", desc: "本局出牌全為綠燈（至少3張）", score: 15 },
+    { key: "一支釣達人", icon: "🎣", desc: "本局出4張以上一支釣漁法的魚", score: 15 },
+    { key: "紅燈護送員", icon: "🔴", desc: "本局出3張以上紅燈魚", score: 15 },
+    { key: "養殖支持者", icon: "🌾", desc: "本局出3張以上養殖魚", score: 15 },
+    { key: "深海傳說",   icon: "🐋", desc: "本局出過鯨鯊（禁止捕撈）", score: 15 },
     // 進階：要求出牌全對成功，或更高數量／多樣性門檻
-    "完美永續局": 25, "百發百中": 25, "珊瑚守護者": 25, "漁法通": 25, "近海英雄": 25, "浴火重生": 25,
+    { key: "完美永續局", icon: "🏆", desc: "全綠燈＋全符合召喚＋獲勝", score: 25 },
+    { key: "浴火重生",   icon: "🔄", desc: "被退牌3張以上仍獲勝", score: 25 },
+    { key: "百發百中",   icon: "💯", desc: "零退牌且至少出4張獲勝", score: 25 },
+    { key: "珊瑚守護者", icon: "🪸", desc: "本局出過全部3種定棲性綠燈魚", score: 25 },
+    { key: "漁法通",     icon: "🎯", desc: "本局出牌涵蓋5種以上不同漁法", score: 25 },
+    { key: "近海英雄",   icon: "🌏", desc: "全近海魚＋全符合召喚（至少4張）獲勝", score: 25 },
     // 王牌：同時滿足多重高難度條件
-    "海紋守護王": 60
-};
+    { key: "海紋守護王", icon: "👑", desc: "完美永續局＋百發百中＋浴火重生同時達成", score: 60 }
+];
 
-// 勝場加成：每次獲勝都真的累加（次數 × 每勝分數），不是「贏過一次就好」
-const WIN_BONUS_SCORE = {
-    "新手": 1,
-    "標準": 2,
-    "專業": 3
-};
+// 相容用途：舊程式碼（win-screen.js 的 computeCollectionStats）原本直接查一個
+// { key: score } 物件，這裡從 BEHAVIOR_BADGE_DB 動態產生，維持同樣的查詢介面。
+const BEHAVIOR_BADGE_SCORES = {};
+BEHAVIOR_BADGE_DB.forEach(function (b) { BEHAVIOR_BADGE_SCORES[b.key] = b.score; });
 
 // ══════════════════════════════════════════════════════════════
 //  AI 角色台詞資料庫

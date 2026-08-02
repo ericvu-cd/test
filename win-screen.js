@@ -6,8 +6,10 @@ function showWinScreen(winner) {
     const isPlayer = !winner.isAI;
 
     // ── 勝利時解鎖難度章 + 累積獲勝次數 ──
+    // 難度標籤改查 db.js 的 difficultyDB（getDifficultyInfo()），
+    // 不再用 gameDifficulty <= 0.4 這種門檻硬判斷。
     if (isPlayer) {
-        const diffLabelShort = gameDifficulty <= 0.4 ? "新手" : gameDifficulty >= 0.9 ? "專業" : "標準";
+        const diffLabelShort = getDifficultyInfo(gameDifficulty).label;
         progress.unlockDifficulty(window.playerName, diffLabelShort);
         progress.recordWin(window.playerName, diffLabelShort);
     }
@@ -57,7 +59,7 @@ function showWinScreen(winner) {
     // 寫入初始手牌快照 → 組成「🏆本局結果」總結段落
     if (typeof initialHands !== "undefined" && initialHands.length > 0) {
         const meta = (typeof window !== "undefined" && window.gameMeta) ? window.gameMeta : {};
-        const diffShort = meta.diffShort || (gameDifficulty <= 0.4 ? "新手" : gameDifficulty >= 0.9 ? "專業" : "標準");
+        const diffShort = meta.diffShort || getDifficultyInfo(gameDifficulty).label;
         gameEndSummary = {
             location: meta.locationLabel || "未指定海線",
             diffText: `${diffShort}（${gameDifficulty}）`,
@@ -490,16 +492,17 @@ function _restartGame(winBgm, gameBgm, particleTimer) {
 // 📤 分享勳章成就卡片
 // =============================================
 
-const BADGE_META_SHARE = {
-    "綠燈先鋒":"🟢","一支釣達人":"🎣","完美永續局":"🏆",
-    "紅燈護送員":"🔴","養殖支持者":"🌾","深海傳說":"🐋",
-    "浴火重生":"🔄","百發百中":"💯","海紋守護王":"👑",
-    "珊瑚守護者":"🪸","漁法通":"🎯","近海英雄":"🌏"
-};
+// 依勳章 key 查 db.js BEHAVIOR_BADGE_DB 的 icon（原本這裡另外寫死一份 BADGE_META_SHARE，
+// 跟 main.js openCollection() 用的圖示是同一份資料，現在統一從 db.js 查，不用維護兩份）
+function _badgeIcon(badgeKey) {
+    if (typeof BEHAVIOR_BADGE_DB === "undefined") return "⭐";
+    const b = BEHAVIOR_BADGE_DB.find(function (x) { return x.key === badgeKey; });
+    return (b && b.icon) ? b.icon : "⭐";
+}
 
 async function shareAchievementCard(isPlayer, winner, badgeKey) {
-    const icon = BADGE_META_SHARE[badgeKey] || "⭐";
-    const diffLabel = gameDifficulty <= 0.4 ? "新手" : gameDifficulty >= 0.9 ? "專業" : "標準";
+    const icon = _badgeIcon(badgeKey);
+    const diffLabel = getDifficultyInfo(gameDifficulty).label;
 
     const W = 390, H = 693;
     const canvas = document.createElement("canvas");
@@ -611,7 +614,7 @@ async function shareAchievementCard(isPlayer, winner, badgeKey) {
 // =============================================
 
 async function shareGameCard(isPlayer, winner) {
-    const diffLabel = gameDifficulty <= 0.4 ? "新手" : gameDifficulty >= 0.9 ? "專業" : "標準";
+    const diffLabel = getDifficultyInfo(gameDifficulty).label;
     const rounds = typeof roundCount !== "undefined" ? roundCount : 0;
 
     const W = 390, H = 693;
@@ -727,10 +730,13 @@ function fallbackDownload(canvas, name = "海紋守護團") {
    ┌─────────┬──────────────────────────────────────────────┐
    │ 魚圖鑑   │ db.js fishDB 每筆的 score 欄位                  │
    │ 同伴角色 │ db.js characterDB 每筆的 score 欄位             │
-   │ 難度章   │ db.js DIFFICULTY_SCORES                        │
-   │ 行為勳章 │ db.js BEHAVIOR_BADGE_SCORES                    │
+   │ 難度章   │ db.js difficultyDB 每筆的 scoreBadge 欄位       │
+   │          │ （DIFFICULTY_SCORES 是從它自動產生的相容查表）  │
+   │ 行為勳章 │ db.js BEHAVIOR_BADGE_DB 每筆的 score 欄位       │
+   │          │ （BEHAVIOR_BADGE_SCORES 是從它自動產生的相容查表）│
    │ 漁港徽章 │ db.js locationDB 每筆的 badgeScore 欄位         │
-   │ 勝場加成 │ db.js WIN_BONUS_SCORE（次數 × 每勝分數，會累加） │
+   │ 勝場加成 │ db.js difficultyDB 每筆的 winBonus 欄位（次數 × │
+   │          │ 每勝分數，會累加；WIN_BONUS_SCORE 是相容查表）  │
    └─────────┴──────────────────────────────────────────────┘
 
    總分沒有上限，就是把玩家實際擁有的所有項目分數加總。
@@ -791,8 +797,8 @@ function computeCollectionStats(name) {
     const fishMax     = (typeof fishDB !== "undefined") ? fishDB.length : 48;
     const harborMax    = (typeof locationDB !== "undefined") ? locationDB.length : 6;
     const companionMax = (typeof characterDB !== "undefined") ? characterDB.length : 6;
-    const behaviorMax  = Object.keys(behaviorScores).length;
-    const difficultyMax = (typeof DIFFICULTY_SCORES !== "undefined") ? Object.keys(DIFFICULTY_SCORES).length : 3;
+    const behaviorMax  = (typeof BEHAVIOR_BADGE_DB !== "undefined") ? BEHAVIOR_BADGE_DB.length : Object.keys(behaviorScores).length;
+    const difficultyMax = (typeof difficultyDB !== "undefined") ? difficultyDB.length : 3;
 
     const totalCount    = fishList.length + behaviorList.length + harborList.length + companionList.length + difficultyList.length;
     const totalCountMax = fishMax + behaviorMax + harborMax + companionMax + difficultyMax;

@@ -42,7 +42,9 @@
           失效（不會報錯，但新手教學會表現異常），務必同步檢查 tutorial.js。
    ═══════════════════════════════════════════════════════════════════════ */
 
-let gameDifficulty = 0.4;
+// 預設難度：讀 db.js 的 difficultyDB 第一級（目前是「新手」0.4），
+// 不在這裡寫死數字，難度設定要改就只改 db.js。
+let gameDifficulty = difficultyDB[0].value;
 
 // ── 對話排隊系統 ────────────────────────
 // 同時間可能有多個 AI 想講話，若直接全部顯示會疊在畫面上互相覆蓋。
@@ -383,7 +385,7 @@ function openCollection() {
     const locationBadges = typeof locationDB !== 'undefined'
         ? locationDB.map(l => l.badge)
         : [];
-    const difficultyBadges = ["新手", "標準", "專業"];
+    const difficultyBadges = difficultyDB.map(d => d.label);
     const fishList = typeof fishDB !== 'undefined' ? fishDB.map(f => f.n) : [];
     const companionList = typeof characterDB !== 'undefined'
         ? characterDB.map(c => ({ n: c.n, img: c.img }))
@@ -395,22 +397,7 @@ function openCollection() {
     const unlockedC = data.companions || [];
     const unlockedBehav = data.behaviorBadges || [];
 
-    const BEHAVIOR_BADGES = [
-        { key: "綠燈先鋒",  icon: "🟢", desc: "本局出牌全為綠燈（至少3張）" },
-        { key: "一支釣達人", icon: "🎣", desc: "本局出4張以上一支釣漁法的魚" },
-        { key: "完美永續局", icon: "🏆", desc: "全綠燈＋全符合召喚＋獲勝" },
-        { key: "紅燈護送員", icon: "🔴", desc: "本局出3張以上紅燈魚" },
-        { key: "養殖支持者", icon: "🌾", desc: "本局出3張以上養殖魚" },
-        { key: "深海傳說",   icon: "🐋", desc: "本局出過鯨鯊（禁止捕撈）" },
-        { key: "浴火重生",   icon: "🔄", desc: "被退牌3張以上仍獲勝" },
-        { key: "百發百中",   icon: "💯", desc: "零退牌且至少出4張獲勝" },
-        { key: "海紋守護王", icon: "👑", desc: "完美永續局＋百發百中＋浴火重生同時達成" },
-        { key: "珊瑚守護者", icon: "🪸", desc: "本局出過全部3種定棲性綠燈魚" },
-        { key: "漁法通",     icon: "🎯", desc: "本局出牌涵蓋5種以上不同漁法" },
-        { key: "近海英雄",   icon: "🌏", desc: "全近海魚＋全符合召喚（至少4張）獲勝" },
-    ];
-
-    const totalAll = locationBadges.length + difficultyBadges.length + fishList.length + companionList.length + BEHAVIOR_BADGES.length;
+    const totalAll = locationBadges.length + difficultyBadges.length + fishList.length + companionList.length + BEHAVIOR_BADGE_DB.length;
     const totalUnlocked = unlockedB.length + unlockedD.length + unlockedF.length + unlockedC.length + unlockedBehav.length;
 
     function pct(got, total) { return total ? Math.round(got / total * 100) : 0; }
@@ -611,7 +598,7 @@ function openCollection() {
             ${difficultyBadgeBlock(difficultyBadges, unlockedD)}
             ${companionBadgeBlock(companionList, unlockedC)}
             ${fishBadgeBlock(fishList, unlockedF)}
-            ${behaviorBadgeBlock(BEHAVIOR_BADGES, unlockedBehav)}
+            ${behaviorBadgeBlock(BEHAVIOR_BADGE_DB, unlockedBehav)}
           </div>
         </div>
     `;
@@ -1361,7 +1348,7 @@ function startGame() {
     
     // 新手難度：玩家優先從 e:1（容易）牌池抽牌，AI 從剩餘隨機抽
     // 專業難度：完全隨機，不分等級
-    if (gameDifficulty <= 0.4) {
+    if (gameDifficulty <= difficultyDB[0].value) {
         const easyPool   = fishD.filter(f => f.e === 1);
         const otherPool  = fishD.filter(f => f.e !== 1);
         const playerHand = [];
@@ -1389,7 +1376,7 @@ function startGame() {
     // 4人輪流，玩家(callerIdx=0)的召喚在 deckS 末端：
     //   第1次玩家召喚 → deckS[length-1]（第1回合）
     //   第2次玩家召喚 → deckS[length-5]（第5回合）
-    if (gameDifficulty <= 0.4) {
+    if (gameDifficulty <= difficultyDB[0].value) {
         const playerHand = players[0].hand;
         const isSafe = s => !s.isMazu && playerHand.some(f => { try { return s.c(f); } catch(e) { return false; } });
 
@@ -1423,8 +1410,11 @@ function startGame() {
     // 重置行為型勳章追蹤
     badgeTracker = { playerCards: [], returnCount: 0, mazuCompleted: false, mazuGiftCard: null };
     
-    const diffLabel = gameDifficulty <= 0.4 ? "新手(難度0.4)" : gameDifficulty >= 0.9 ? "專業(難度0.9)" : "標準(難度0.7)";
-    const diffShort = gameDifficulty <= 0.4 ? "新手" : gameDifficulty >= 0.9 ? "專業" : "標準";
+    // 難度標籤/數值改查 db.js 的 difficultyDB（見 getDifficultyInfo()），
+    // 不在這裡重複寫 gameDifficulty <= 0.4 這類門檻判斷。
+    const diffInfo = getDifficultyInfo(gameDifficulty);
+    const diffLabel = `${diffInfo.label}(難度${diffInfo.value})`;
+    const diffShort = diffInfo.label;
     const locationLabel = currentLocation ? currentLocation.name : "未指定海線";
     window.gameMeta = { locationLabel, diffLabel, diffShort };
     preGameMessage = `守護團集結！任務地點：${locationLabel}。難度：${diffLabel}。注意觀察大家的出牌...`;
@@ -1642,7 +1632,7 @@ function handleMazuAI(caller) {
 
         // 目標選擇：70% 送給手牌最少的人（多人並列時隨機選一位），30% 隨機送給任一人
         // 新手模式：AI 只能送給其他 AI，不能送給玩家
-        const isNovice = gameDifficulty <= 0.4;
+        const isNovice = gameDifficulty <= difficultyDB[0].value;
         const others = players.filter(p => p !== caller && (isNovice ? p.isAI : true));
 
         // 若新手模式下其他 AI 全空，fallback 到所有人（避免死鎖）
