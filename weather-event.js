@@ -139,18 +139,16 @@
 
 	/* ══════════════════════════════════════════════════════════
 	   天氣特效（一次性播放，不循環）
-	   由 welcome-screen.js 在進入畫面 5 秒後呼叫一次，播放進 db.js
-	   template（實際上是 welcome-screen.js 注入的 CSS）裡定義好的
-	   .wsfx-* 動畫。全部都是「forwards 定格」或「播完自己歸零」的
-	   一次性 CSS 動畫，這裡只負責生成/擺放元素，不維持任何 JS 計時
-	   迴圈；播放完之後畫面上不會再有東西持續耗效能。
+	   由 welcome-screen.js 在進入畫面 5 秒後呼叫一次，播放 welcome-screen.js
+	   注入的 CSS 裡定義好的 .wsfx-* 動畫。全部都是「forwards 定格」或
+	   「播完自己歸零」的一次性 CSS 動畫，這裡只負責生成/擺放元素，不維持
+	   任何 JS 計時迴圈；播放完之後畫面上不會再有東西持續耗效能。
 	   cloudy（多雲微浪）、cold_front（寒流來襲）刻意不套用任何特效。
 	   ══════════════════════════════════════════════════════════ */
 	function rand(min, max){ return min + Math.random() * (max - min); }
 
 	/* 加一層滿版環境效果（陽光/霧/警戒色），元素本身用 forwards 定格，
-	   不用清理，下次 rollAndApplyWeather() 前 playWeatherFx() 開頭
-	   的 fx.innerHTML='' 會一起清掉 */
+	   不用清理，下次呼叫 playWeatherFx() 時開頭的 fx.innerHTML='' 會一起清掉 */
 	function fxAddLayer(container, cls){
 		var el = document.createElement('div');
 		el.className = cls;
@@ -178,7 +176,7 @@
 	/* 光柱（sunny 專用）：從太陽錨點（跟 .wsfx-sun-glow 同一個 left:92% top:8% 錨點）
 	   往畫面內以不同角度「長出來」，模擬光線灑落進畫面的方向感。
 	   angleFrom/angleTo 定義扇形範圍（單位：deg，CSS rotate 的角度，順時針），
-	   錨點在右上角，所以角度要指向左下方（約 95°~195° 這個扇形範圍）才會朝畫面內灑。 */
+	   錨點在右上角，所以角度要指向左下方（目前 sunny 用的是 100°~190°）才會朝畫面內灑。 */
 	function fxSpawnSunBeams(container, n, angleFrom, angleTo){
 		for(var i = 0; i < n; i++){
 			var t = n > 1 ? i / (n - 1) : 0.5;
@@ -191,16 +189,25 @@
 		}
 	}
 
-	/* 風線（季風／颱風共用）：一次橫掃過畫面就消失 */
-	function fxSpawnWind(container, n, fast){
-		for(var i = 0; i < n; i++){
-			var w = document.createElement('div');
-			w.className = 'wsfx-wind';
-			w.style.setProperty('--y', rand(10, 85).toFixed(1) + '%');
-			w.style.setProperty('--dur', rand(fast ? 0.7 : 1.0, fast ? 1.1 : 1.6).toFixed(2) + 's');
-			w.style.setProperty('--delay', rand(0, fast ? 0.8 : 1.5).toFixed(2) + 's');
-			w.addEventListener('animationend', function(){ this.remove(); }, { once:true });
-			container.appendChild(w);
+	/* 風線（季風／颱風共用）：一次橫掃過畫面就消失。
+	   gustCount 是「陣風」的數量，每陣風實際上是 2 條 y 位置、延遲都
+	   稍微錯開的 .wsfx-wind（每個 .wsfx-wind 自己又用 ::before/::after
+	   疊出雙線頭粗尾細的造型，見 welcome-screen.js 的 CSS），
+	   一陣風＝4 條線疊在一起，比單一條細線更有「一陣風掃過去」的份量感。 */
+	function fxSpawnWind(container, gustCount, fast){
+		for(var i = 0; i < gustCount; i++){
+			var y = rand(10, 82);
+			var dur = rand(fast ? 0.8 : 1.1, fast ? 1.2 : 1.7).toFixed(2) + 's';
+			var baseDelay = rand(0, fast ? 0.8 : 1.5);
+			for(var j = 0; j < 2; j++){
+				var w = document.createElement('div');
+				w.className = 'wsfx-wind';
+				w.style.setProperty('--y', (y + j * rand(1.5, 3.2)).toFixed(1) + '%');
+				w.style.setProperty('--dur', dur);
+				w.style.setProperty('--delay', (baseDelay + j * 0.08).toFixed(2) + 's');
+				w.addEventListener('animationend', function(){ this.remove(); }, { once:true });
+				container.appendChild(w);
+			}
 		}
 	}
 
@@ -230,7 +237,7 @@
 			fxSpawnSparkles(fx, 8, [42, 98], [2, 42]);  // 星光集中在太陽附近，像反光，不是滿畫面亂飄
 
 		} else if(weatherId === 'ne_monsoon' || weatherId === 'sw_flow'){
-			fxSpawnWind(fx, 9, false);
+			fxSpawnWind(fx, 5, false);                  // 5 陣風 × 4 條線 = 20 條線
 
 		} else if(weatherId === 'fog'){
 			fxAddLayer(fx, 'wsfx-fog');
@@ -239,16 +246,11 @@
 			fxSpawnRain(fx, 26, false);
 
 		} else if(typeof weatherId === 'string' && weatherId.indexOf('typhoon') === 0){
-			/* typhoon_east / typhoon_cross / typhoon_south 共用：暴雨＋強風＋警戒色＋地圖輕微搖晃 */
-			fxAddLayer(fx, 'wsfx-warn-vignette');
+			/* typhoon_east / typhoon_cross / typhoon_south 共用：暴雨＋強風，
+			   單純用「雨更急、風更密」表現颱風的強度，不額外疊警戒色暈影、
+			   也不讓地圖跟著搖晃（依需求已移除這兩個效果）。 */
 			fxSpawnRain(fx, 40, true);
-			fxSpawnWind(fx, 14, true);
-			var mapBg = document.getElementById('ws-map-bg');
-			if(mapBg){
-				mapBg.classList.remove('wsfx-shake');
-				void mapBg.offsetWidth; /* 強制 reflow，確保移除/加回同一個 class 動畫會重新觸發 */
-				mapBg.classList.add('wsfx-shake');
-			}
+			fxSpawnWind(fx, 7, true);                   // 7 陣風 × 4 條線 = 28 條線，比季風密
 		}
 		/* cloudy／cold_front／其他未列出的天氣：不套用任何特效 */
 	};

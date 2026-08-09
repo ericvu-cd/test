@@ -569,7 +569,7 @@
 
 	/* ── 天氣特效層（一次性播放，不循環）──
 	   進入 welcome-screen 5 秒後依當日天氣播放一次，播完就停在最終狀態
-	   （環境層如陽光/霧/警戒色）或自行消失（粒子如雨滴/風線/星光），
+	   （環境層如陽光/霧）或自行消失（粒子如雨滴/風線/星光），
 	   完全沒有 infinite 動畫、沒有 JS 計時迴圈，播放完之後畫面上不再有
 	   任何東西在動、也不再耗任何運算資源。 */
 	#ws-weather-fx {
@@ -639,22 +639,39 @@
 		animation: wsfxTwinkle 1.6s ease-in-out forwards;
 		animation-delay: var(--delay, 0s);
 	}
-	/* 季風／颱風共用：風線一次橫掃過畫面就消失 */
+	/* 季風／颱風共用：一次橫掃過畫面就消失。
+	   改版重點：原本只是一條純水平的細線，看起來像刮痕不像風，
+	   現在用 ::before/::after 疊出「兩條前後錯開、頭粗尾細」的風切線
+	   （靠 linear-gradient 做漸層代替真的錐形），移動路徑也不是死板直線，
+	   中段會有一點上下擺動（wsfxWindSwoosh 的 35%/65% 那兩個關鍵影格），
+	   看起來更像一陣風掃過去，而不是一條線平移。 */
 	@keyframes wsfxWindSwoosh {
-		0%   { transform: translateX(0);     opacity: 0;  }
-		15%  { opacity: .85; }
-		85%  { opacity: .85; }
-		100% { transform: translateX(600%);  opacity: 0;  }
+		0%   { transform: translate(0, 0);       opacity: 0;   }
+		12%  { opacity: .85; }
+		35%  { transform: translate(180%, -6%); }
+		65%  { transform: translate(380%, 5%);  }
+		85%  { opacity: .8; }
+		100% { transform: translate(620%, -3%);  opacity: 0;   }
 	}
 	.wsfx-wind {
 		position: absolute;
-		left: -18%; top: var(--y);
-		width: 20%; height: 1.5px;
-		background: linear-gradient(90deg, transparent, rgba(210,235,255,.6), transparent);
+		left: -20%; top: var(--y);
+		width: 15vmin; height: 8px;
 		opacity: 0;
-		animation: wsfxWindSwoosh var(--dur, 1.3s) ease-in forwards;
+		animation: wsfxWindSwoosh var(--dur, 1.4s) ease-in-out forwards;
 		animation-delay: var(--delay, 0s);
 	}
+	.wsfx-wind::before,
+	.wsfx-wind::after {
+		content: '';
+		position: absolute;
+		left: 0; right: 0;
+		height: 1.6px;
+		border-radius: 999px;
+		background: linear-gradient(90deg, transparent, rgba(215,238,255,.9) 55%, rgba(215,238,255,.15));
+	}
+	.wsfx-wind::before { top: 0; }
+	.wsfx-wind::after   { top: 5px; width: 70%; opacity: .75; }
 	/* 海霧瀰漫：整層白霧淡入後停留 */
 	@keyframes wsfxFogIn { from { opacity: 0; } to { opacity: .55; } }
 	.wsfx-fog {
@@ -680,29 +697,6 @@
 		animation: wsfxRainFall var(--dur, 1.1s) linear forwards;
 		animation-delay: var(--delay, 0s);
 	}
-	/* 颱風警戒色：畫面邊緣泛紅，淡入後停留 */
-	@keyframes wsfxWarnIn { from { opacity: 0; } to { opacity: .85; } }
-	.wsfx-warn-vignette {
-		position: absolute;
-		inset: 0;
-		background: radial-gradient(ellipse at center, transparent 55%, rgba(120,20,10,.5) 100%);
-		opacity: 0;
-		animation: wsfxWarnIn 3.5s ease-out forwards;
-	}
-	/* 颱風：地圖輕微搖晃一次（只動 #ws-map-bg，不影響上面的按鈕/面板） */
-	@keyframes wsfxShake {
-		0%   { transform: translateX(0);    }
-		10%  { transform: translateX(-5px); }
-		20%  { transform: translateX(4px);  }
-		30%  { transform: translateX(-4px); }
-		40%  { transform: translateX(3px);  }
-		50%  { transform: translateX(-3px); }
-		60%  { transform: translateX(2px);  }
-		70%  { transform: translateX(-2px); }
-		80%  { transform: translateX(1px);  }
-		100% { transform: translateX(0);    }
-	}
-	.wsfx-shake { animation: wsfxShake .9s ease-in-out 1; }
 	`;
 	document.head.appendChild(_style);
 
