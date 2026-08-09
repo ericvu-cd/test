@@ -521,6 +521,7 @@ function setupTutorialCards() {
         { n:"養殖鱸魚", d:"養殖", l:1, m:["養殖"],   h:"定棲性", s:"全年" }
     ];
     table      = [];
+    document.getElementById("table").innerHTML = ""; // 同步清空桌面 DOM，避免舊卡片殘留畫面（見 main.js renderTable() 註解的清空契約）
     roundCount = 0;
 }
 
@@ -535,6 +536,7 @@ function startPractice1() {
     callerIdx = 0;
     phase     = "PLAYER_TURN";
     table     = [];
+    document.getElementById("table").innerHTML = ""; // 同步清空桌面 DOM，避免舊卡片殘留畫面（見 main.js renderTable() 註解的清空契約）
 
     const sumEl = document.getElementById("summon-display");
     sumEl.style.display = "block";
@@ -580,6 +582,7 @@ async function tutorAfterPlay1(fishPlayed) {
 
     tutorShowSummary(SUMMON_P1, fishPlayed, table, () => {
         table = [];
+        document.getElementById("table").innerHTML = ""; // 同步清空桌面 DOM，避免舊卡片殘留畫面（見 main.js renderTable() 註解的清空契約）
         renderTable();
         renderUI();
         setTimeout(startPractice2, 600);
@@ -598,6 +601,7 @@ function startPractice2() {
     callerIdx = 1;           // 章魚船長召喚，玩家不知條件
     phase     = "PLAYER_TURN";
     table     = [];
+    document.getElementById("table").innerHTML = ""; // 同步清空桌面 DOM，避免舊卡片殘留畫面（見 main.js renderTable() 註解的清空契約）
 
     const sumEl = document.getElementById("summon-display");
     sumEl.innerText = "【章魚船長的召喚】\n觀察對手出的牌，推敲條件...";
@@ -660,6 +664,7 @@ async function tutorAfterPlay2(fishPlayed) {
 
     tutorShowSummary(SUMMON_P2, fishPlayed, table, () => {
         table = [];
+        document.getElementById("table").innerHTML = ""; // 同步清空桌面 DOM，避免舊卡片殘留畫面（見 main.js renderTable() 註解的清空契約）
         // 確保吳郭魚退回（練習2必定出錯）
         if (!players[0].hand.find(f => f.n === "吳郭魚")) {
             players[0].hand.unshift(
@@ -682,6 +687,7 @@ function startPracticeMazu() {
     callerIdx = 0;
     phase     = "PLAYER_MAZU";
     table     = [];
+    document.getElementById("table").innerHTML = ""; // 同步清空桌面 DOM，避免舊卡片殘留畫面（見 main.js renderTable() 註解的清空契約）
 
     const sumEl = document.getElementById("summon-display");
     sumEl.innerText = "【神明指示】\n" + SUMMON_MAZU.t;
@@ -874,6 +880,7 @@ function tutorFinish() {
     document.getElementById("log-btn").style.display   = "flex";
 
     table    = [];
+    document.getElementById("table").innerHTML = ""; // 同步清空桌面 DOM，避免舊卡片殘留畫面（見 main.js renderTable() 註解的清空契約）
     players  = [{ n:"你", hand:[], isAI:false }];
     currentS = null;
     phase    = "WAIT";
