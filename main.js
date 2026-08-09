@@ -1997,18 +1997,7 @@ function showResult() {
     roundReport = [];
     pendingReturns = [];
 
-    // 【測試中】暫時停用「計算結果中」提示泡泡，改為直接開始結算，不延遲
-    // 原本的提示泡泡程式碼保留在下方註解，之後要恢復只要取消註解＋把下面 setTimeout 的
-    // 延遲時間改回 1000 即可
-    // const hint = document.createElement("div");
-    // hint.className = "countdown-bubble";
-    // hint.style.cssText = `position:fixed; left:50%; transform:translateX(-50%); bottom:130px; z-index:3000; pointer-events:none;`;
-    // hint.innerText = "🔍 計算結果中…";
-    // document.body.appendChild(hint);
-
-    setTimeout(() => {
-        // hint.remove();
-        // AI 是召喚者時，全員出牌後才揭曉召喚條件
+    // AI 是召喚者時，全員出牌後才揭曉召喚條件
         if (callerIdx !== 0 && currentS && !currentS.isMazu) {
             const callerName = players[callerIdx].n;
             {
@@ -2099,16 +2088,14 @@ function showResult() {
             return;
         }
 
-        // 顯示倒數氣泡，4秒後進入結算
-        showCountdownBubble(4, () => {
+        // 顯示倒數氣泡，2秒後進入結算
+        showCountdownBubble(2, () => {
             if (showSummaryMode) {
                 showRoundSummary();
             } else {
                 playPendingReturns(() => finishRound());
             }
         });
-
-    }, 0); // 【測試中】原本是 1000，配合上方停用提示泡泡改成 0，之後要恢復記得改回 1000
 }
 
 // 顯示一個會自動倒數的提示泡泡（例如「N 秒後進入結算」），倒數結束後執行 callback。
