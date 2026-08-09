@@ -555,6 +555,23 @@ function startPractice1() {
     }, 600);
 }
 
+// 出一張牌並「等到飛行動畫真正完成」才 resolve，取代原本用固定 sleep(ms) 賭飛行
+// 動畫時間（1550ms）一定夠的寫法——當多張牌連續出牌時，若中間等待時間比 1550ms
+// 短，renderTable() 的「只補上還沒渲染的新卡片」機制會把好幾張牌一次補齊，
+// 導致後出的那張牌在自己的飛行動畫「還沒飛到」海洋區時就先憑空出現在桌上。
+function tutorPlayToTable(pIdx, card, fromEl) {
+    table.push({ pIdx, card });
+    renderUI();
+    return new Promise(resolve => {
+        if (typeof playCardFlyAnimation === "function") {
+            playCardFlyAnimation(card, fromEl, () => { renderTable(); resolve(); });
+        } else {
+            renderTable();
+            resolve();
+        }
+    });
+}
+
 async function tutorAfterPlay1(fishPlayed) {
     tutorClearHighlight();
     tutorHide();
@@ -562,23 +579,17 @@ async function tutorAfterPlay1(fishPlayed) {
 
     await sleep(800);
 
-    // 海龜出野生石斑（養殖，成功）
+    // 海龜出野生石斑（養殖，成功）— 等飛行動畫真正完成再繼續
     const c1 = { n:"野生石斑", d:"養殖", l:1, m:["養殖"], h:"定棲性", s:"全年" };
-    table.push({ pIdx:2, card:c1 });
-    if (typeof playCardFlyAnimation === "function")
-        playCardFlyAnimation(c1, document.getElementById("ai-2"), () => renderTable());
-    renderUI();
-    await sleep(1100);
+    await tutorPlayToTable(2, c1, document.getElementById("ai-2"));
+    await sleep(400); // 停留給玩家看清楚，再出下一張
 
     // 螃蟹出旗魚（遠洋，退牌）
     const c2 = players[3].hand.splice(0,1)[0];
     if (c2) {
-        table.push({ pIdx:3, card:c2 });
-        if (typeof playCardFlyAnimation === "function")
-            playCardFlyAnimation(c2, document.getElementById("ai-3"), () => renderTable());
-        renderUI();
+        await tutorPlayToTable(3, c2, document.getElementById("ai-3"));
     }
-    await sleep(1100);
+    await sleep(700); // 全部出完後停留一下再開結算
 
     tutorShowSummary(SUMMON_P1, fishPlayed, table, () => {
         table = [];
@@ -617,13 +628,10 @@ function startPractice2() {
 
         await sleep(2000);
 
-        // 章魚船長出秋刀魚（洄游性）
+        // 章魚船長出秋刀魚（洄游性）— 等飛行動畫真正完成再繼續
         const aiCard = players[1].hand.splice(0,1)[0];
         if (aiCard) {
-            table.push({ pIdx:1, card:aiCard });
-            if (typeof playCardFlyAnimation === "function")
-                playCardFlyAnimation(aiCard, document.getElementById("ai-1"), () => renderTable());
-            renderUI();
+            await tutorPlayToTable(1, aiCard, document.getElementById("ai-1"));
         }
 
         await sleep(1800);
@@ -648,13 +656,10 @@ async function tutorAfterPlay2(fishPlayed) {
 
     await sleep(800);
 
-    // 海龜跟牌（洄游性，成功）
+    // 海龜跟牌（洄游性，成功）— 等飛行動畫真正完成再繼續
     const c3 = { n:"台灣鯖魚", d:"近海", l:2, m:["圍網"], h:"洄游性", s:"夏秋" };
-    table.push({ pIdx:2, card:c3 });
-    if (typeof playCardFlyAnimation === "function")
-        playCardFlyAnimation(c3, document.getElementById("ai-2"), () => renderTable());
-    renderUI();
-    await sleep(1200);
+    await tutorPlayToTable(2, c3, document.getElementById("ai-2"));
+    await sleep(400);
 
     // 揭曉條件
     document.getElementById("summon-display").innerText =
